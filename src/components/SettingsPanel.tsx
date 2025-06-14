@@ -17,17 +17,16 @@ interface SettingsPanelProps {
 const Panel = styled.div<{ isOpen: boolean }>`
   position: fixed;
   top: 0;
-  right: 0;
+  right: ${props => props.isOpen ? '0' : '-400px'};
   width: 400px;
-  max-width: 100vw;
   height: 100vh;
-  background: ${props => props.theme.background};
-  color: ${props => props.theme.text};
-  box-shadow: -2px 0 8px rgba(0,0,0,0.2);
+  background-color: ${props => props.theme.background};
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+  transition: right 0.3s ease-in-out;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
   z-index: 1000;
-  transform: translateX(${props => (props.isOpen ? '0' : '100%')});
-  transition: transform 0.3s ease;
-  overflow-y: auto;
 `;
 
 const CloseButton = styled.button`
@@ -39,6 +38,20 @@ const CloseButton = styled.button`
   color: ${props => props.theme.text};
   font-size: 1.5rem;
   cursor: pointer;
+`;
+
+const DeveloperLink = styled.a`
+  margin-top: auto;
+  color: ${props => props.theme.text};
+  text-decoration: none;
+  text-align: center;
+  padding: 1rem;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 1;
+  }
 `;
 
 const Form = styled.form`
@@ -219,6 +232,13 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
         ))}
       </ChannelList>
       <Button onClick={onClose}>{t('settings.save')}</Button>
+      <DeveloperLink 
+        href="https://github.com/baydd/" 
+        target="_blank" 
+        rel="noopener noreferrer"
+      >
+        Developer: baydd
+      </DeveloperLink>
     </Panel>
   );
 };
