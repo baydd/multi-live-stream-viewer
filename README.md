@@ -19,7 +19,8 @@ A modern, responsive dashboard for viewing multiple live streams and Twitter fee
 
 - HLS streams (.m3u8)
 - YouTube Live embed links or video IDs
-- Twitch embed links
+- Twitch  links
+- Kick  links
 - DASH streams
 - Twitter user timelines (public accounts)
 
