@@ -1,3 +1,4 @@
+------------------------------------------
 0,2 Beta Update 
 
 bug fix
@@ -19,3 +20,6 @@ Bug Fix
 0,4 Beta Update
 
 New Grid Edit system added
+
+
+-----------------------------------------
