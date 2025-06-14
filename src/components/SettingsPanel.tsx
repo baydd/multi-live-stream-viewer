@@ -40,7 +40,7 @@ const CloseButton = styled.button`
   cursor: pointer;
 `;
 
-const DeveloperLink = styled.a`
+const Developed = styled.a`
   margin-top: auto;
   color: ${props => props.theme.text};
   text-decoration: none;
@@ -232,13 +232,13 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
         ))}
       </ChannelList>
       <Button onClick={onClose}>{t('settings.save')}</Button>
-      <DeveloperLink 
+      <Developed 
         href="https://github.com/baydd/" 
         target="_blank" 
         rel="noopener noreferrer"
       >
-        Developer: baydd
-      </DeveloperLink>
+        Developed: baydd
+      </Developed>
     </Panel>
   );
 };
