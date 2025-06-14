@@ -2,7 +2,7 @@ export interface Stream {
   id: string;
   url: string;
   title: string;
-  platform: 'youtube' | 'twitch' | 'hls' | 'dash' | 'twitter';
+  platform: 'youtube' | 'twitch' | 'hls' | 'dash' | 'twitter' | 'kick';
   category: string;
   notes: string;
   layout: {

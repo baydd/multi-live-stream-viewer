@@ -1,18 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
-import { FaTimes, FaExpand, FaVolumeMute, FaVolumeUp } from 'react-icons/fa';
+import { FaTimes, FaExpand, FaVolumeMute, FaVolumeUp, FaCompress } from 'react-icons/fa';
 import Hls from 'hls.js';
 import { Stream } from '../types';
 
 interface StreamCardProps {
   stream: Stream;
   onRemove: () => void;
+  onToggleMute: () => void;
+  isMuted: boolean;
+  onToggleFullscreen: () => void;
+  isFullscreen: boolean;
 }
 
 const Card = styled.div`
   background-color: ${props => props.theme.cardBackground};
-  border: 1px solid ${props => props.theme.border};
-  border-radius: 8px;
+  border: 0.5px solid ${props => props.theme.border};
+  border-radius: 4px;
   overflow: hidden;
   height: 100%;
   display: flex;
@@ -45,6 +49,27 @@ const YouTubeIframe = styled.iframe`
   background: #000;
 `;
 
+const TwitchIframe = styled.iframe`
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #000;
+`;
+
+const KickIframe = styled.iframe`
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #000;
+  frameborder: "0";
+  scrolling: "no";
+  allowfullscreen: "true";
+`;
+
 const TwitterEmbedContainer = styled.div`
   position: absolute;
   inset: 0;
@@ -55,7 +80,7 @@ const TwitterEmbedContainer = styled.div`
 `;
 
 const Controls = styled.div`
-  padding: 0.25rem 0.5rem;
+  padding: 0.1rem 0.25rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -64,7 +89,7 @@ const Controls = styled.div`
 
 const ButtonGroup = styled.div`
   display: flex;
-  gap: 0.25rem;
+  gap: 0.1rem;
 `;
 
 const Button = styled.button`
@@ -72,12 +97,12 @@ const Button = styled.button`
   border: none;
   color: ${props => props.theme.text};
   cursor: pointer;
-  padding: 0.2rem 0.4rem;
+  padding: 0.1rem 0.2rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
-  border-radius: 4px;
+  font-size: 1rem;
+  border-radius: 2px;
   transition: background 0.2s;
   &:hover {
     background: ${props => props.theme.hover};
@@ -86,29 +111,88 @@ const Button = styled.button`
 `;
 
 const Title = styled.div`
-  font-size: 0.9rem;
-  margin-bottom: 0.5rem;
-  padding: 0 0.5rem;
+  font-size: 0.8rem;
+  margin-bottom: 0.25rem;
+  padding: 0 0.25rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 `;
 
 const Notes = styled.div`
-  font-size: 0.8rem;
-  padding: 0 0.5rem;
+  font-size: 0.7rem;
+  padding: 0 0.25rem;
   color: ${props => props.theme.secondary};
 `;
 
-const StreamCard = ({ stream, onRemove }: StreamCardProps): JSX.Element => {
+const HLSPlayer: React.FC<{ url: string; isMuted: boolean }> = ({ url, isMuted }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isMuted, setIsMuted] = useState(true);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    if (!videoRef.current) return;
+
+    const video = videoRef.current;
+    let hls: Hls;
+
+    if (Hls.isSupported()) {
+      hls = new Hls({
+        enableWorker: true,
+        lowLatencyMode: true,
+        backBufferLength: 90
+      });
+      hls.loadSource(url);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        video.play().catch(error => {
+          console.error('Error playing video:', error);
+        });
+      });
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = url;
+      video.addEventListener('loadedmetadata', () => {
+        video.play().catch(error => {
+          console.error('Error playing video:', error);
+        });
+      });
+    }
+
+    return () => {
+      if (hls) {
+        hls.destroy();
+      }
+    };
+  }, [url]);
+
+  return (
+    <Video
+      ref={videoRef}
+      autoPlay
+      muted={isMuted}
+      playsInline
+      controls
+    />
+  );
+};
+
+const StreamCard: React.FC<StreamCardProps> = ({ stream, onRemove, onToggleMute, isMuted, onToggleFullscreen, isFullscreen }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [playbackRate, setPlaybackRate] = useState(1);
 
   const getYouTubeEmbedUrl = (url: string) => {
     const videoId = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/)?.[1];
     return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=${isMuted ? 1 : 0}` : url;
+  };
+
+  const getTwitchEmbedUrl = (url: string) => {
+    const channelName = url.match(/twitch\.tv\/([^\/\?]+)/)?.[1];
+    if (!channelName) return url;
+    return `https://player.twitch.tv/?channel=${channelName}&parent=${window.location.hostname}&muted=${isMuted}`;
+  };
+
+  const getKickEmbedUrl = (url: string, isMuted: boolean) => {
+    const channelName = url.match(/kick\.com\/([^\/\?]+)/)?.[1];
+    if (!channelName) return url;
+    return `https://player.kick.com/${channelName}?autoplay=true&muted=${isMuted}`;
   };
 
   useEffect(() => {
@@ -118,7 +202,7 @@ const StreamCard = ({ stream, onRemove }: StreamCardProps): JSX.Element => {
     video.muted = isMuted;
     video.playbackRate = playbackRate;
 
-    if (stream.platform === 'youtube') {
+    if (stream.platform === 'youtube' || stream.platform === 'twitch' || stream.platform === 'kick') {
       return;
     }
 
@@ -156,40 +240,40 @@ const StreamCard = ({ stream, onRemove }: StreamCardProps): JSX.Element => {
     }
   }, [stream.platform, stream.url]);
 
-  const toggleMute = () => {
-    setIsMuted(!isMuted);
-  };
-
-  const toggleFullscreen = () => {
-    if (!videoRef.current) return;
-
-    if (!isFullscreen) {
-      if (videoRef.current.requestFullscreen) {
-        videoRef.current.requestFullscreen();
-      }
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      }
-    }
-    setIsFullscreen(!isFullscreen);
-  };
-
   const handlePlaybackRateChange = (rate: number) => {
     setPlaybackRate(rate);
   };
 
-  return (
-    <Card>
-      <Title>{stream.title}</Title>
-      <VideoContainer>
-        {stream.platform === 'youtube' ? (
+  const renderStream = () => {
+    switch (stream.platform) {
+      case 'youtube':
+        return (
           <YouTubeIframe
             src={getYouTubeEmbedUrl(stream.url)}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
           />
-        ) : stream.platform === 'twitter' ? (
+        );
+      case 'twitch':
+        return (
+          <TwitchIframe
+            src={getTwitchEmbedUrl(stream.url)}
+            allowFullScreen
+          />
+        );
+      case 'kick':
+        return (
+          <KickIframe
+            src={getKickEmbedUrl(stream.url, isMuted)}
+            allowFullScreen
+          />
+        );
+      case 'hls':
+        return <HLSPlayer url={stream.url} isMuted={isMuted} />;
+      case 'dash':
+        return <div>DASHPlayer not implemented</div>;
+      case 'twitter':
+        return (
           <TwitterEmbedContainer>
             <a
               className="twitter-timeline"
@@ -199,20 +283,23 @@ const StreamCard = ({ stream, onRemove }: StreamCardProps): JSX.Element => {
               Tweets by {stream.url.replace('@','')}
             </a>
           </TwitterEmbedContainer>
-        ) : (
-          <Video
-            ref={videoRef}
-            autoPlay
-            muted={isMuted}
-            playsInline
-          />
-        )}
+        );
+      default:
+        return <div>Unsupported platform</div>;
+    }
+  };
+
+  return (
+    <Card>
+      <Title>{stream.title}</Title>
+      <VideoContainer>
+        {renderStream()}
       </VideoContainer>
       <Controls>
         <ButtonGroup>
-          {stream.platform !== 'youtube' && stream.platform !== 'twitter' && (
+          {stream.platform !== 'youtube' && stream.platform !== 'twitch' && stream.platform !== 'kick' && stream.platform !== 'twitter' && (
             <>
-              <Button onClick={toggleMute} title="Ses Aç/Kapat">
+              <Button onClick={onToggleMute} title="Ses Aç/Kapat">
                 {isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
               </Button>
               <select
@@ -229,7 +316,7 @@ const StreamCard = ({ stream, onRemove }: StreamCardProps): JSX.Element => {
           )}
         </ButtonGroup>
         <ButtonGroup>
-          <Button onClick={toggleFullscreen} title="Tam Ekran">
+          <Button onClick={onToggleFullscreen} title="Tam Ekran">
             <FaExpand />
           </Button>
           <Button onClick={onRemove} title="Kapat">

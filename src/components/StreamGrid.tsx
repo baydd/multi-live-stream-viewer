@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import { Responsive, WidthProvider, Layout } from 'react-grid-layout';
 import { Stream } from '../types';
@@ -20,7 +20,7 @@ const GridContainer = styled.div`
   height: calc(100vh - 60px);
   box-sizing: border-box;
   overflow: hidden;
-  padding: 0.5rem;
+  padding: 0;
 `;
 
 const Info = styled.div`
@@ -30,6 +30,9 @@ const Info = styled.div`
 `;
 
 const StreamGrid: React.FC<StreamGridProps> = ({ streams, onRemoveStream, onUpdateStreams, channelCount }) => {
+  const [isMuted, setIsMuted] = useState<{ [key: string]: boolean }>({});
+  const [isFullscreen, setIsFullscreen] = useState<{ [key: string]: boolean }>({});
+
   const cols = Math.max(1, Math.ceil(Math.sqrt(channelCount)));
   const rows = Math.max(1, Math.ceil(channelCount / cols));
 
@@ -70,6 +73,20 @@ const StreamGrid: React.FC<StreamGridProps> = ({ streams, onRemoveStream, onUpda
     onUpdateStreams(updatedStreams);
   };
 
+  const handleToggleMute = (streamId: string) => {
+    setIsMuted(prev => ({
+      ...prev,
+      [streamId]: !prev[streamId]
+    }));
+  };
+
+  const handleToggleFullscreen = (streamId: string) => {
+    setIsFullscreen(prev => ({
+      ...prev,
+      [streamId]: !prev[streamId]
+    }));
+  };
+
   return (
     <GridContainer>
       <ResponsiveGridLayout
@@ -78,12 +95,12 @@ const StreamGrid: React.FC<StreamGridProps> = ({ streams, onRemoveStream, onUpda
         breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
         cols={{ lg: cols, md: cols, sm: cols, xs: cols, xxs: cols }}
         rowHeight={Math.floor((window.innerHeight - 60) / rows)}
-        margin={[8, 8]}
+        margin={[0, 0]}
         containerPadding={[0, 0]}
         isDraggable
         isResizable
         compactType="vertical"
-        preventCollision
+        preventCollision={false}
         onLayoutChange={handleLayoutChange}
       >
         {streams.slice(0, channelCount).map((stream: Stream) => (
@@ -91,6 +108,10 @@ const StreamGrid: React.FC<StreamGridProps> = ({ streams, onRemoveStream, onUpda
             <StreamCard
               stream={stream}
               onRemove={() => onRemoveStream(stream.id)}
+              onToggleMute={() => handleToggleMute(stream.id)}
+              isMuted={isMuted[stream.id] ?? true}
+              onToggleFullscreen={() => handleToggleFullscreen(stream.id)}
+              isFullscreen={isFullscreen[stream.id] ?? false}
             />
           </div>
         ))}

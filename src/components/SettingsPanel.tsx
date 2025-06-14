@@ -158,6 +158,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const platformOptions = [
     { value: 'youtube', label: 'YouTube' },
     { value: 'twitch', label: 'Twitch' },
+    { value: 'kick', label: 'Kick' },
     { value: 'hls', label: 'HLS' },
     { value: 'dash', label: 'DASH' },
     { value: 'twitter', label: 'Twitter' },
