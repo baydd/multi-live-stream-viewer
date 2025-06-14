@@ -79,6 +79,11 @@ const TwitterEmbedContainer = styled.div`
   height: 100%;
   background: #fff;
   overflow: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;  /* IE 10+ */
+  &::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
 `;
 
 const Controls = styled.div`
@@ -287,7 +292,7 @@ const StreamCard: React.FC<StreamCardProps> = ({
           <TwitterEmbedContainer>
             <a
               className="twitter-timeline"
-              data-theme="light"
+              data-theme="dark"
               href={`https://twitter.com/${stream.url.replace('@','')}`}
             >
               Tweets by {stream.url.replace('@','')}

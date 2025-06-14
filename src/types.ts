@@ -13,7 +13,31 @@ export interface Stream {
   };
 }
 
+export type Language = 'tr' | 'en' | 'ar' | 'es' | 'zh' | 'ru' | 'pt';
+
 export interface Settings {
-  language: 'tr' | 'en';
+  language: Language;
   theme: 'dark' | 'light';
+  channelCount: number;
+  layout: {
+    columns: number;
+    rows: number;
+  };
+  streams: Stream[];
+}
+
+export interface UserPreferences {
+  settings: Settings;
+  lastVisited: string;
+  version: string;
+}
+
+declare global {
+  interface Window {
+    twttr: {
+      widgets: {
+        load: () => void;
+      };
+    };
+  }
 } 

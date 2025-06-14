@@ -11,7 +11,7 @@ const resources = {
         streamUrl: 'Stream URL',
         streamUrlPlaceholder: 'URL or ID',
         streamTitle: 'Stream Title',
-        streamTitlePlaceholder: 'Title',
+        streamTitlePlaceholder: 'Stream Title',
         category: 'Category',
         selectCategory: 'Select a category',
         notes: 'Notes',
@@ -22,6 +22,19 @@ const resources = {
         darkTheme: 'Dark Theme',
         twitterUsernamePlaceholder: 'Twitter username (e.g. trthaber)',
         save: 'Save Settings',
+        channel_count: 'Channel count',
+        stream_platform: 'Stream platform',
+        close: 'Close',
+        platforms: {
+          youtube: 'YouTube',
+          twitch: 'Twitch',
+          twitter: 'Twitter',
+          kick: 'Kick',
+          hls: 'HLS',
+          dash: 'DASH'
+        },
+        stream_title_placeholder: 'Stream Title',
+        stream_url_placeholder: 'URL or ID',
       },
       categories: {
         sports: 'Sports',
@@ -40,7 +53,7 @@ const resources = {
         streamUrl: 'Yayın URL',
         streamUrlPlaceholder: 'URL veya ID',
         streamTitle: 'Yayın Başlığı',
-        streamTitlePlaceholder: 'Başlık',
+        streamTitlePlaceholder: 'Stream Title',
         category: 'Kategori',
         selectCategory: 'Kategori seçin',
         notes: 'Notlar',
@@ -51,6 +64,19 @@ const resources = {
         darkTheme: 'Koyu Tema',
         twitterUsernamePlaceholder: 'Twitter kullanıcı adı (ör: trthaber)',
         save: 'Ayarları Kaydet',
+        channel_count: 'Kanal sayısı',
+        stream_platform: 'Yayın platformu',
+        close: 'Kapat',
+        platforms: {
+          youtube: 'YouTube',
+          twitch: 'Twitch',
+          twitter: 'Twitter',
+          kick: 'Kick',
+          hls: 'HLS',
+          dash: 'DASH'
+        },
+        stream_title_placeholder: 'Stream Title',
+        stream_url_placeholder: 'URL or ID',
       },
       categories: {
         sports: 'Spor',
@@ -60,6 +86,161 @@ const resources = {
       },
     },
   },
+  ar: {
+    translation: {
+      settings: {
+        add_stream: 'إضافة بث',
+        remove_stream: 'إزالة البث',
+        channel_count: 'عدد القنوات',
+        title: 'الإعدادات',
+        close: 'إغلاق',
+        stream_url: 'رابط البث',
+        stream_title: 'عنوان البث',
+        stream_notes: 'ملاحظات',
+        stream_platform: 'المنصة',
+        platforms: {
+          youtube: 'يوتيوب',
+          twitch: 'تويتش',
+          twitter: 'تويتر',
+          kick: 'كيك',
+          hls: 'اتش ال اس',
+          dash: 'داش'
+        },
+        edit_mode: 'وضع التحرير',
+        mute: 'كتم الصوت',
+        unmute: 'تشغيل الصوت',
+        fullscreen: 'ملء الشاشة',
+        exit_fullscreen: 'الخروج من ملء الشاشة',
+        remove: 'إزالة',
+        undo: 'تراجع',
+        change_language: 'تغيير اللغة'
+      }
+    }
+  },
+  es: {
+    translation: {
+      settings: {
+        add_stream: 'Añadir Stream',
+        remove_stream: 'Eliminar Stream',
+        channel_count: 'Número de Canales',
+        title: 'Configuración',
+        close: 'Cerrar',
+        stream_url: 'URL del Stream',
+        stream_title: 'Título del Stream',
+        stream_notes: 'Notas',
+        stream_platform: 'Plataforma',
+        platforms: {
+          youtube: 'YouTube',
+          twitch: 'Twitch',
+          twitter: 'Twitter',
+          kick: 'Kick',
+          hls: 'HLS',
+          dash: 'DASH'
+        },
+        edit_mode: 'Modo Edición',
+        mute: 'Silenciar',
+        unmute: 'Activar Sonido',
+        fullscreen: 'Pantalla Completa',
+        exit_fullscreen: 'Salir de Pantalla Completa',
+        remove: 'Eliminar',
+        undo: 'Deshacer',
+        change_language: 'Cambiar Idioma'
+      }
+    }
+  },
+  zh: {
+    translation: {
+      settings: {
+        add_stream: '添加流',
+        remove_stream: '移除流',
+        channel_count: '频道数量',
+        title: '设置',
+        close: '关闭',
+        stream_url: '流地址',
+        stream_title: '流标题',
+        stream_notes: '备注',
+        stream_platform: '平台',
+        platforms: {
+          youtube: 'YouTube',
+          twitch: 'Twitch',
+          twitter: 'Twitter',
+          kick: 'Kick',
+          hls: 'HLS',
+          dash: 'DASH'
+        },
+        edit_mode: '编辑模式',
+        mute: '静音',
+        unmute: '取消静音',
+        fullscreen: '全屏',
+        exit_fullscreen: '退出全屏',
+        remove: '移除',
+        undo: '撤销',
+        change_language: '更改语言'
+      }
+    }
+  },
+  ru: {
+    translation: {
+      settings: {
+        add_stream: 'Добавить стрим',
+        remove_stream: 'Удалить стрим',
+        channel_count: 'Количество каналов',
+        title: 'Настройки',
+        close: 'Закрыть',
+        stream_url: 'URL стрима',
+        stream_title: 'Название стрима',
+        stream_notes: 'Заметки',
+        stream_platform: 'Платформа',
+        platforms: {
+          youtube: 'YouTube',
+          twitch: 'Twitch',
+          twitter: 'Twitter',
+          kick: 'Kick',
+          hls: 'HLS',
+          dash: 'DASH'
+        },
+        edit_mode: 'Режим редактирования',
+        mute: 'Отключить звук',
+        unmute: 'Включить звук',
+        fullscreen: 'Полный экран',
+        exit_fullscreen: 'Выйти из полноэкранного режима',
+        remove: 'Удалить',
+        undo: 'Отменить',
+        change_language: 'Изменить язык'
+      }
+    }
+  },
+  pt: {
+    translation: {
+      settings: {
+        add_stream: 'Adicionar Stream',
+        remove_stream: 'Remover Stream',
+        channel_count: 'Número de Canais',
+        title: 'Configurações',
+        close: 'Fechar',
+        stream_url: 'URL do Stream',
+        stream_title: 'Título do Stream',
+        stream_notes: 'Notas',
+        stream_platform: 'Plataforma',
+        platforms: {
+          youtube: 'YouTube',
+          twitch: 'Twitch',
+          twitter: 'Twitter',
+          kick: 'Kick',
+          hls: 'HLS',
+          dash: 'DASH'
+        },
+        edit_mode: 'Modo de Edição',
+        mute: 'Mutar',
+        unmute: 'Ativar Som',
+        fullscreen: 'Tela Cheia',
+        exit_fullscreen: 'Sair da Tela Cheia',
+        remove: 'Remover',
+        undo: 'Desfazer',
+        change_language: 'Mudar Idioma'
+      }
+    }
+  }
 };
 
 i18n

@@ -6,6 +6,7 @@ import { Stream, Settings } from './types';
 import StreamGrid from './components/StreamGrid';
 import SettingsPanel from './components/SettingsPanel';
 import { darkTheme } from './themes';
+import { getPreferences, savePreferences, saveStreams, saveSettings } from './utils/storage';
 import './i18n';
 
 const AppContainer = styled.div`
@@ -39,46 +40,28 @@ const IconButton = styled.button`
 
 const defaultChannelCount = 6;
 
+type Language = 'tr' | 'en' | 'ar' | 'es' | 'zh' | 'ru' | 'pt';
+
 const App: React.FC = () => {
   const { i18n } = useTranslation();
   const [streams, setStreams] = useState<Stream[]>([]);
   const [channelCount, setChannelCount] = useState<number>(defaultChannelCount);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [language, setLanguage] = useState<'tr' | 'en'>('tr');
+  const [language, setLanguage] = useState<Language>('tr');
   const [previousStreams, setPreviousStreams] = useState<Stream[]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
 
   useEffect(() => {
-    const savedStreams = localStorage.getItem('streams');
-    const savedChannelCount = localStorage.getItem('channelCount');
-    const savedLanguage = localStorage.getItem('language');
-    const savedSettings = localStorage.getItem('settings');
-
-    if (savedStreams) {
-      const parsedStreams = JSON.parse(savedStreams);
-      setStreams(parsedStreams);
-      setPreviousStreams(parsedStreams);
-    }
-    if (savedChannelCount) {
-      setChannelCount(Number(savedChannelCount));
-    }
-    if (savedLanguage) {
-      setLanguage(savedLanguage as 'tr' | 'en');
-    }
-    if (savedSettings) {
-      const settings = JSON.parse(savedSettings) as Settings;
-      setLanguage(settings.language);
-    }
+    const preferences = getPreferences();
+    setStreams(preferences.settings.streams);
+    setChannelCount(preferences.settings.channelCount);
+    setLanguage(preferences.settings.language as Language);
+    setPreviousStreams(preferences.settings.streams);
   }, []);
 
   useEffect(() => {
     i18n.changeLanguage(language);
-    localStorage.setItem('language', language);
-    const settings: Settings = {
-      language,
-      theme: 'dark'
-    };
-    localStorage.setItem('settings', JSON.stringify(settings));
+    saveSettings({ language });
   }, [language, i18n]);
 
   useEffect(() => {
@@ -113,18 +96,38 @@ const App: React.FC = () => {
     }
   };
 
+  const getLanguageLabel = (lang: Language) => {
+    const labels: Record<Language, string> = {
+      tr: 'TR',
+      en: 'EN',
+      ar: 'عربي',
+      es: 'ES',
+      zh: '中文',
+      ru: 'РУС',
+      pt: 'PT'
+    };
+    return labels[lang];
+  };
+
+  const cycleLanguage = () => {
+    const languages: Language[] = ['tr', 'en', 'ar', 'es', 'zh', 'ru', 'pt'];
+    const currentIndex = languages.indexOf(language);
+    const nextIndex = (currentIndex + 1) % languages.length;
+    setLanguage(languages[nextIndex]);
+  };
+
   return (
     <ThemeProvider theme={darkTheme}>
       <AppContainer>
         <Header>
-          <IconButton onClick={() => setIsEditMode(!isEditMode)} title="Düzenleme Modu / Edit Mode">
+          <IconButton onClick={() => setIsEditMode(!isEditMode)} title={i18n.t('edit_mode') as string}>
             <FaEdit />
           </IconButton>
-          <IconButton onClick={() => setLanguage(prev => prev === 'tr' ? 'en' : 'tr')} title="Dil Değiştir / Change Language">
+          <IconButton onClick={cycleLanguage} title={i18n.t('change_language') as string}>
             <FaGlobe />
-            <span style={{ fontSize: '1rem', marginLeft: 6 }}>{language === 'tr' ? 'TR' : 'EN'}</span>
+            <span style={{ fontSize: '1rem', marginLeft: 6 }}>{getLanguageLabel(language)}</span>
           </IconButton>
-          <IconButton onClick={handleUndo} title="Geri Al / Undo">
+          <IconButton onClick={handleUndo} title={i18n.t('undo') as string}>
             <FaUndo />
           </IconButton>
           <IconButton onClick={() => setIsSettingsOpen(true)}>
@@ -148,6 +151,8 @@ const App: React.FC = () => {
           setChannelCount={setChannelCount}
           streams={streams}
           onUpdateStreams={handleUpdateStreams}
+          language={language}
+          setLanguage={setLanguage}
         />
       </AppContainer>
     </ThemeProvider>

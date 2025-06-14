@@ -2,7 +2,7 @@ import React, { useState, ChangeEvent } from 'react';
 import styled from 'styled-components';
 import { useTranslation } from 'react-i18next';
 import { FaTimes } from 'react-icons/fa';
-import { Stream } from '../types';
+import { Stream, Language } from '../types';
 
 interface SettingsPanelProps {
   isOpen: boolean;
@@ -12,6 +12,8 @@ interface SettingsPanelProps {
   setChannelCount: (count: number) => void;
   streams: Stream[];
   onUpdateStreams: (streams: Stream[]) => void;
+  language: Language;
+  setLanguage: (lang: Language) => void;
 }
 
 const Panel = styled.div<{ isOpen: boolean }>`
@@ -127,6 +129,23 @@ const SmallSelect = styled(Select)`
   width: 90px;
 `;
 
+const LanguageSelector = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+`;
+
+const LanguageButton = styled.button<{ selected: boolean }>`
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  border: 1px solid ${props => props.selected ? props.theme.primary : props.theme.border};
+  background: ${props => props.selected ? props.theme.primary : props.theme.cardBackground};
+  color: ${props => props.selected ? '#fff' : props.theme.text};
+  cursor: pointer;
+  font-weight: bold;
+`;
+
 const SettingsPanel: React.FC<SettingsPanelProps> = ({
   isOpen,
   onClose,
@@ -135,10 +154,22 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
   setChannelCount,
   streams,
   onUpdateStreams,
+  language,
+  setLanguage,
 }) => {
   const { t } = useTranslation();
   const channelCounts = [4, 6, 9, 12, 16, 18, 21, 25];
   const [channelList, setChannelList] = useState<Stream[]>(() => streams);
+
+  const languages: { value: Language; label: string }[] = [
+    { value: 'tr', label: 'Türkçe' },
+    { value: 'en', label: 'English' },
+    { value: 'ar', label: 'العربية' },
+    { value: 'es', label: 'Español' },
+    { value: 'zh', label: '中文' },
+    { value: 'ru', label: 'Русский' },
+    { value: 'pt', label: 'Português' }
+  ];
 
   const handleChannelCountChange = (count: number) => {
     setChannelCount(count);
@@ -182,9 +213,24 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
       <CloseButton onClick={onClose}>
         <FaTimes />
       </CloseButton>
-      <h2>{t('settings.title')}</h2>
+      
       <div style={{ margin: '1rem 0' }}>
-        <div><b>{t('settings.channelCount')}</b></div>
+        <LanguageSelector>
+          {languages.map(lang => (
+            <LanguageButton
+              key={lang.value}
+              selected={language === lang.value}
+              onClick={() => setLanguage(lang.value)}
+              type="button"
+            >
+              {lang.label}
+            </LanguageButton>
+          ))}
+        </LanguageSelector>
+      </div>
+
+      <div style={{ margin: '1rem 0' }}>
+        <div><b>{t('settings.channel_count')}</b></div>
         <ChannelCountSelector>
           {channelCounts.map(count => (
             <ChannelButton
@@ -198,12 +244,13 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
           ))}
         </ChannelCountSelector>
       </div>
-      <div><b>{t('settings.channelList')}</b></div>
+
+      <div><b>{t('settings.stream_platform')}</b></div>
       <ChannelList>
         {channelList.slice(0, channelCount).map((ch, idx) => (
           <ChannelRow key={ch.id}>
             <SmallInput
-              placeholder={t('settings.streamTitlePlaceholder') || ''}
+              placeholder={t('settings.stream_title_placeholder') as string}
               value={ch.title}
               onChange={e => handleChannelChange(idx, 'title', e.target.value)}
             />
@@ -212,18 +259,18 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
               onChange={e => handleChannelChange(idx, 'platform', e.target.value)}
             >
               {platformOptions.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                <option key={opt.value} value={opt.value}>{t('settings.platforms.' + opt.value)}</option>
               ))}
             </SmallSelect>
             {ch.platform === 'twitter' ? (
               <Input
-                placeholder={t('settings.twitterUsernamePlaceholder') || ''}
+                placeholder="@username"
                 value={ch.url}
                 onChange={e => handleChannelChange(idx, 'url', e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
               />
             ) : (
               <Input
-                placeholder={t('settings.streamUrlPlaceholder') || ''}
+                placeholder={t('settings.stream_url_placeholder') as string}
                 value={ch.url}
                 onChange={e => handleChannelChange(idx, 'url', e.target.value)}
               />
@@ -231,7 +278,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
           </ChannelRow>
         ))}
       </ChannelList>
-      <Button onClick={onClose}>{t('settings.save')}</Button>
+      <Button onClick={onClose}>{t('settings.close')}</Button>
       <Developed 
         href="https://github.com/baydd/" 
         target="_blank" 
