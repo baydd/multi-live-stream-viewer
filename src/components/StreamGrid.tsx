@@ -13,6 +13,7 @@ interface StreamGridProps {
   onRemoveStream: (id: string) => void;
   onUpdateStreams: (streams: Stream[]) => void;
   channelCount: number;
+  isEditMode: boolean;
 }
 
 const GridContainer = styled.div`
@@ -29,7 +30,7 @@ const Info = styled.div`
   margin-top: 2rem;
 `;
 
-const StreamGrid: React.FC<StreamGridProps> = ({ streams, onRemoveStream, onUpdateStreams, channelCount }) => {
+const StreamGrid: React.FC<StreamGridProps> = ({ streams, onRemoveStream, onUpdateStreams, channelCount, isEditMode }) => {
   const [isMuted, setIsMuted] = useState<{ [key: string]: boolean }>({});
   const [isFullscreen, setIsFullscreen] = useState<{ [key: string]: boolean }>({});
 
@@ -97,14 +98,15 @@ const StreamGrid: React.FC<StreamGridProps> = ({ streams, onRemoveStream, onUpda
         rowHeight={Math.floor((window.innerHeight - 60) / rows)}
         margin={[0, 0]}
         containerPadding={[0, 0]}
-        isDraggable
-        isResizable
+        isDraggable={isEditMode}
+        isResizable={isEditMode}
         compactType="vertical"
         preventCollision={false}
         onLayoutChange={handleLayoutChange}
+        style={{ gap: isEditMode ? '0' : '-1px' }}
       >
         {streams.slice(0, channelCount).map((stream: Stream) => (
-          <div key={stream.id}>
+          <div key={stream.id} style={{ margin: isEditMode ? '0' : '-1px' }}>
             <StreamCard
               stream={stream}
               onRemove={() => onRemoveStream(stream.id)}
@@ -112,6 +114,7 @@ const StreamGrid: React.FC<StreamGridProps> = ({ streams, onRemoveStream, onUpda
               isMuted={isMuted[stream.id] ?? true}
               onToggleFullscreen={() => handleToggleFullscreen(stream.id)}
               isFullscreen={isFullscreen[stream.id] ?? false}
+              isEditMode={isEditMode}
             />
           </div>
         ))}

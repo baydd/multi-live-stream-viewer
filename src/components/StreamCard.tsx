@@ -11,16 +11,18 @@ interface StreamCardProps {
   isMuted: boolean;
   onToggleFullscreen: () => void;
   isFullscreen: boolean;
+  isEditMode: boolean;
 }
 
-const Card = styled.div`
+const Card = styled.div<{ isEditMode: boolean }>`
   background-color: ${props => props.theme.cardBackground};
-  border: 0.5px solid ${props => props.theme.border};
-  border-radius: 4px;
+  border: ${props => props.isEditMode ? `0.5px solid ${props.theme.border}` : 'none'};
+  border-radius: ${props => props.isEditMode ? '4px' : '0'};
   overflow: hidden;
   height: 100%;
   display: flex;
   flex-direction: column;
+  margin: ${props => props.isEditMode ? '0' : '-1px'};
 `;
 
 const VideoContainer = styled.div`
@@ -174,7 +176,15 @@ const HLSPlayer: React.FC<{ url: string; isMuted: boolean }> = ({ url, isMuted }
   );
 };
 
-const StreamCard: React.FC<StreamCardProps> = ({ stream, onRemove, onToggleMute, isMuted, onToggleFullscreen, isFullscreen }) => {
+const StreamCard: React.FC<StreamCardProps> = ({ 
+  stream, 
+  onRemove, 
+  onToggleMute, 
+  isMuted, 
+  onToggleFullscreen, 
+  isFullscreen,
+  isEditMode 
+}) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playbackRate, setPlaybackRate] = useState(1);
 
@@ -290,41 +300,29 @@ const StreamCard: React.FC<StreamCardProps> = ({ stream, onRemove, onToggleMute,
   };
 
   return (
-    <Card>
-      <Title>{stream.title}</Title>
+    <Card isEditMode={isEditMode}>
       <VideoContainer>
         {renderStream()}
       </VideoContainer>
-      <Controls>
-        <ButtonGroup>
-          {stream.platform !== 'youtube' && stream.platform !== 'twitch' && stream.platform !== 'kick' && stream.platform !== 'twitter' && (
-            <>
-              <Button onClick={onToggleMute} title="Ses Aç/Kapat">
+      {isEditMode && (
+        <>
+          <Controls>
+            <Title>{stream.title || stream.url}</Title>
+            <ButtonGroup>
+              <Button onClick={onToggleMute} title={isMuted ? "Sesi Aç" : "Sesi Kapat"}>
                 {isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
               </Button>
-              <select
-                value={playbackRate}
-                onChange={(e) => handlePlaybackRateChange(Number(e.target.value))}
-                style={{ fontSize: '0.9rem', padding: '0.1rem 0.2rem', borderRadius: 4, marginLeft: 2 }}
-              >
-                <option value={0.5}>0.5x</option>
-                <option value={1}>1x</option>
-                <option value={1.5}>1.5x</option>
-                <option value={2}>2x</option>
-              </select>
-            </>
-          )}
-        </ButtonGroup>
-        <ButtonGroup>
-          <Button onClick={onToggleFullscreen} title="Tam Ekran">
-            <FaExpand />
-          </Button>
-          <Button onClick={onRemove} title="Kapat">
-            <FaTimes />
-          </Button>
-        </ButtonGroup>
-      </Controls>
-      {stream.notes && <Notes>{stream.notes}</Notes>}
+              <Button onClick={onToggleFullscreen} title={isFullscreen ? "Küçült" : "Tam Ekran"}>
+                {isFullscreen ? <FaCompress /> : <FaExpand />}
+              </Button>
+              <Button onClick={onRemove} title="Kaldır">
+                <FaTimes />
+              </Button>
+            </ButtonGroup>
+          </Controls>
+          {stream.notes && <Notes>{stream.notes}</Notes>}
+        </>
+      )}
     </Card>
   );
 };

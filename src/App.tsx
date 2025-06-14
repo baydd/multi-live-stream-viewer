@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled, { ThemeProvider } from 'styled-components';
 import { useTranslation } from 'react-i18next';
-import { FaCog, FaGlobe, FaUndo } from 'react-icons/fa';
+import { FaCog, FaGlobe, FaUndo, FaEdit } from 'react-icons/fa';
 import { Stream, Settings } from './types';
 import StreamGrid from './components/StreamGrid';
 import SettingsPanel from './components/SettingsPanel';
@@ -46,6 +46,7 @@ const App: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [language, setLanguage] = useState<'tr' | 'en'>('tr');
   const [previousStreams, setPreviousStreams] = useState<Stream[]>([]);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   useEffect(() => {
     const savedStreams = localStorage.getItem('streams');
@@ -116,6 +117,9 @@ const App: React.FC = () => {
     <ThemeProvider theme={darkTheme}>
       <AppContainer>
         <Header>
+          <IconButton onClick={() => setIsEditMode(!isEditMode)} title="Düzenleme Modu / Edit Mode">
+            <FaEdit />
+          </IconButton>
           <IconButton onClick={() => setLanguage(prev => prev === 'tr' ? 'en' : 'tr')} title="Dil Değiştir / Change Language">
             <FaGlobe />
             <span style={{ fontSize: '1rem', marginLeft: 6 }}>{language === 'tr' ? 'TR' : 'EN'}</span>
@@ -133,6 +137,7 @@ const App: React.FC = () => {
           onRemoveStream={handleRemoveStream}
           onUpdateStreams={handleUpdateStreams}
           channelCount={channelCount}
+          isEditMode={isEditMode}
         />
 
         <SettingsPanel
