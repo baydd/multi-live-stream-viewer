@@ -1,7 +1,9 @@
 0,2 Beta Update 
 
 bug fix
+
 twitch added
+
 grid system fix
 
 -----------------------------------------
@@ -9,6 +11,7 @@ grid system fix
 0,3 Beta Update
 
 Kick added
+
 Bug Fix
 
 -----------------------------------------
