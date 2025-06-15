@@ -46,12 +46,6 @@ A modern, responsive dashboard for viewing multiple live streams and Twitter fee
 5. Resize any grid item from the corner — all items will auto-optimize to fit the screen
 6. Use individual stream controls to adjust playback settings
 
-## Smart TV & Mobile Support
-
-- Large, easy-to-read controls
-- Remote control navigation support
-- Touch-friendly interface
-- Responsive layout
 
 ## Twitter Integration
 
