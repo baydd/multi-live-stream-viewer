@@ -1,7 +1,7 @@
 import React, { useState, ChangeEvent } from 'react';
 import styled from 'styled-components';
 import { useTranslation } from 'react-i18next';
-import { FaTimes } from 'react-icons/fa';
+import { FaTimes, FaSave, FaUpload } from 'react-icons/fa';
 import { Stream, Language } from '../types';
 
 interface SettingsPanelProps {
@@ -29,6 +29,26 @@ const Panel = styled.div<{ isOpen: boolean }>`
   display: flex;
   flex-direction: column;
   z-index: 1000;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  /* Scrollbar stilleri */
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: ${props => props.theme.cardBackground};
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: ${props => props.theme.primary};
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: ${props => props.theme.primary}dd;
+  }
 `;
 
 const CloseButton = styled.button`
@@ -146,6 +166,31 @@ const LanguageButton = styled.button<{ selected: boolean }>`
   font-weight: bold;
 `;
 
+const SaveLoadContainer = styled.div`
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+`;
+
+const SaveLoadButton = styled(Button)`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+`;
+
+const TextArea = styled.textarea`
+  width: 100%;
+  height: 100px;
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid ${props => props.theme.border};
+  background: ${props => props.theme.cardBackground};
+  color: ${props => props.theme.text};
+  margin-top: 1rem;
+  resize: vertical;
+`;
+
 const SettingsPanel: React.FC<SettingsPanelProps> = ({
   isOpen,
   onClose,
@@ -160,6 +205,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const { t } = useTranslation();
   const channelCounts = [4, 6, 9, 12, 16, 18, 21, 25];
   const [channelList, setChannelList] = useState<Stream[]>(() => streams);
+  const [saveLoadText, setSaveLoadText] = useState('');
 
   const languages: { value: Language; label: string }[] = [
     { value: 'tr', label: 'Türkçe' },
@@ -208,6 +254,35 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     { value: 'twitter', label: 'Twitter' },
   ];
 
+  const handleSave = () => {
+    const saveData = {
+      channelCount,
+      streams: channelList,
+      language,
+      timestamp: new Date().toISOString()
+    };
+    const saveString = btoa(JSON.stringify(saveData));
+    setSaveLoadText(saveString);
+  };
+
+  const handleLoad = () => {
+    try {
+      const loadedData = JSON.parse(atob(saveLoadText));
+      if (loadedData.channelCount) {
+        setChannelCount(loadedData.channelCount);
+      }
+      if (loadedData.streams) {
+        setChannelList(loadedData.streams);
+        onUpdateStreams(loadedData.streams);
+      }
+      if (loadedData.language) {
+        setLanguage(loadedData.language);
+      }
+    } catch (error) {
+      alert(t('settings.load_error'));
+    }
+  };
+
   return (
     <Panel isOpen={isOpen}>
       <CloseButton onClick={onClose}>
@@ -228,6 +303,23 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
           ))}
         </LanguageSelector>
       </div>
+
+      <SaveLoadContainer>
+        <SaveLoadButton onClick={handleSave}>
+          <FaSave />
+          {t('settings.save')}
+        </SaveLoadButton>
+        <SaveLoadButton onClick={handleLoad}>
+          <FaUpload />
+          {t('settings.load')}
+        </SaveLoadButton>
+      </SaveLoadContainer>
+
+      <TextArea
+        value={saveLoadText}
+        onChange={(e) => setSaveLoadText(e.target.value)}
+        placeholder={t('settings.save_load_placeholder') || ''}
+      />
 
       <div style={{ margin: '1rem 0' }}>
         <div><b>{t('settings.channel_count')}</b></div>

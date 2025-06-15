@@ -22,6 +22,9 @@ const resources = {
         darkTheme: 'Dark Theme',
         twitterUsernamePlaceholder: 'Twitter username (e.g. trthaber)',
         save: 'Save Settings',
+        load: 'Load Settings',
+        save_load_placeholder: 'Paste your saved settings here',
+        load_error: 'Error loading settings. Please check the format.',
         channel_count: 'Channel count',
         stream_platform: 'Stream platform',
         close: 'Close',
@@ -64,6 +67,9 @@ const resources = {
         darkTheme: 'Koyu Tema',
         twitterUsernamePlaceholder: 'Twitter kullanıcı adı (ör: trthaber)',
         save: 'Ayarları Kaydet',
+        load: 'Ayarları Yükle',
+        save_load_placeholder: 'Kaydedilmiş ayarlarınızı buraya yapıştırın',
+        load_error: 'Ayarlar yüklenirken hata oluştu. Lütfen formatı kontrol edin.',
         channel_count: 'Kanal sayısı',
         stream_platform: 'Yayın platformu',
         close: 'Kapat',
@@ -113,7 +119,11 @@ const resources = {
         exit_fullscreen: 'الخروج من ملء الشاشة',
         remove: 'إزالة',
         undo: 'تراجع',
-        change_language: 'تغيير اللغة'
+        change_language: 'تغيير اللغة',
+        save: 'حفظ الإعدادات',
+        load: 'تحميل الإعدادات',
+        save_load_placeholder: 'الصق الإعدادات المحفوظة هنا',
+        load_error: 'خطأ في تحميل الإعدادات. يرجى التحقق من التنسيق.'
       }
     }
   },
@@ -144,7 +154,11 @@ const resources = {
         exit_fullscreen: 'Salir de Pantalla Completa',
         remove: 'Eliminar',
         undo: 'Deshacer',
-        change_language: 'Cambiar Idioma'
+        change_language: 'Cambiar Idioma',
+        save: 'Guardar Configuración',
+        load: 'Cargar Configuración',
+        save_load_placeholder: 'Pega tu configuración guardada aquí',
+        load_error: 'Error al cargar la configuración. Por favor, verifica el formato.'
       }
     }
   },
@@ -175,7 +189,11 @@ const resources = {
         exit_fullscreen: '退出全屏',
         remove: '移除',
         undo: '撤销',
-        change_language: '更改语言'
+        change_language: '更改语言',
+        save: '保存设置',
+        load: '加载设置',
+        save_load_placeholder: '在此处粘贴保存的设置',
+        load_error: '加载设置时出错。请检查格式。'
       }
     }
   },
@@ -206,7 +224,11 @@ const resources = {
         exit_fullscreen: 'Выйти из полноэкранного режима',
         remove: 'Удалить',
         undo: 'Отменить',
-        change_language: 'Изменить язык'
+        change_language: 'Изменить язык',
+        save: 'Сохранить настройки',
+        load: 'Загрузить настройки',
+        save_load_placeholder: 'Вставьте сохраненные настройки сюда',
+        load_error: 'Ошибка загрузки настроек. Пожалуйста, проверьте формат.'
       }
     }
   },
@@ -237,7 +259,11 @@ const resources = {
         exit_fullscreen: 'Sair da Tela Cheia',
         remove: 'Remover',
         undo: 'Desfazer',
-        change_language: 'Mudar Idioma'
+        change_language: 'Mudar Idioma',
+        save: 'Salvar Configurações',
+        load: 'Carregar Configurações',
+        save_load_placeholder: 'Cole suas configurações salvas aqui',
+        load_error: 'Erro ao carregar configurações. Por favor, verifique o formato.'
       }
     }
   }
