@@ -46,7 +46,6 @@ A modern, responsive dashboard for viewing multiple live streams and Twitter fee
 4. Drag and drop streams to rearrange them
 5. Resize any grid item from the corner — all items will auto-optimize to fit the screen
 6. Use individual stream controls to adjust playback settings
-7. Switch between Turkish and English using the globe button in the header
 
 ## Smart TV & Mobile Support
 

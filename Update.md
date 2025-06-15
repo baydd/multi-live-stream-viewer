@@ -1,7 +1,7 @@
 ------------------------------------------
 0,2 Beta Update 
 
-bug fix
+Bug Fix
 
 twitch added
 
@@ -23,3 +23,11 @@ New Grid Edit system added
 
 
 -----------------------------------------
+
+0,5 Beta
+
+Twitter Dark Mode added
+
+New languages added: Arabic (عربي), Spanish (ES), Chinese (中文), Russian (РУС), and Portuguese (PT)
+
+Bug Fix
