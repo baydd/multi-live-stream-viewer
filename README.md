@@ -8,10 +8,9 @@ A modern, responsive dashboard for viewing multiple live streams and Twitter fee
 - 📺 Multiple stream support with grid layout
 - 🔄 Drag and drop stream rearrangement
 - 🌓 Always dark theme for eye comfort
-- 🌐 Bilingual support (Turkish 🇹🇷 and English 🇬🇧) — switch with the globe button
-- 📱 Mobile and Smart TV compatible
+- 🌐 Bilingual support (TR/EN/ES/中文/РУС/PT/عربي) — switch with the globe button
 - 🎛️ Individual stream controls (mute, playback speed, fullscreen)
-- 💾 Automatic state persistence using localStorage
+- 💾 Save and Load System
 - 🏷️ Stream categorization and notes
 - 🐦 Twitter user timeline embed (add any public Twitter username as a grid item)
 - 🖱️ Resize grid items from the corner; when you resize one, all grid items auto-optimize to fit the screen
@@ -47,12 +46,6 @@ A modern, responsive dashboard for viewing multiple live streams and Twitter fee
 5. Resize any grid item from the corner — all items will auto-optimize to fit the screen
 6. Use individual stream controls to adjust playback settings
 
-## Smart TV & Mobile Support
-
-- Large, easy-to-read controls
-- Remote control navigation support
-- Touch-friendly interface
-- Responsive layout
 
 ## Twitter Integration
 

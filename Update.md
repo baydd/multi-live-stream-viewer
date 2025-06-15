@@ -31,3 +31,19 @@ Twitter Dark Mode added
 New languages added: Arabic (عربي), Spanish (ES), Chinese (中文), Russian (РУС), and Portuguese (PT)
 
 Bug Fix
+
+-----------------------------------------
+
+0,6 Beta 
+
+Save and Load System added
+
+Bug Fix
+
+-----------------------------------------
+
+
+
+
+
+
