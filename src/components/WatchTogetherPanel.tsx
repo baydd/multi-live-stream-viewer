@@ -233,7 +233,7 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
 
   const handleCreateRoom = async () => {
     if (!roomName.trim() || !username.trim()) {
-      setError(t('watch_together.fill_all_fields'));
+      setError(t('watch_together.fill_all_fields') as string);
       return;
     }
 
@@ -249,7 +249,7 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
       // Share current streams with the room
       await watchTogetherService.updateStreams(streams, channelCount);
     } catch (err) {
-      setError(t('watch_together.create_room_error'));
+      setError(t('watch_together.create_room_error') as string);
     } finally {
       setIsLoading(false);
     }
@@ -257,7 +257,7 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
 
   const handleJoinRoom = async () => {
     if (!roomCode.trim() || !username.trim()) {
-      setError(t('watch_together.fill_all_fields'));
+      setError(t('watch_together.fill_all_fields') as string);
       return;
     }
 
@@ -276,7 +276,7 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
         onUpdateChannelCount(room.channelCount);
       }
     } catch (err) {
-      setError(t('watch_together.join_room_error'));
+      setError(t('watch_together.join_room_error') as string);
     } finally {
       setIsLoading(false);
     }
@@ -322,7 +322,7 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
       <Section>
         <Input
           type="text"
-          placeholder={t('watch_together.username_placeholder')}
+          placeholder={t('watch_together.username_placeholder') as string}
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
@@ -332,7 +332,7 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
         <Section>
           <Input
             type="text"
-            placeholder={t('watch_together.room_code_placeholder')}
+            placeholder={t('watch_together.room_code_placeholder') as string}
             value={roomCode}
             onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
           />
@@ -348,7 +348,7 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
         <Section>
           <Input
             type="text"
-            placeholder={t('watch_together.room_name_placeholder')}
+            placeholder={t('watch_together.room_name_placeholder') as string}
             value={roomName}
             onChange={(e) => setRoomName(e.target.value)}
           />
@@ -374,7 +374,7 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
             <FaCopy 
               onClick={copyRoomCode} 
               style={{ cursor: 'pointer', fontSize: '1rem' }}
-              title={t('watch_together.copy_code')}
+              title={t('watch_together.copy_code') as string}
             />
           </RoomCode>
           <div>{t('watch_together.participants')}: {currentRoom?.participants.length}</div>
