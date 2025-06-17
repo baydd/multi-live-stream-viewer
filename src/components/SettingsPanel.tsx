@@ -1,7 +1,7 @@
 import React, { useState, ChangeEvent } from 'react';
 import styled from 'styled-components';
 import { useTranslation } from 'react-i18next';
-import { FaTimes, FaSave, FaUpload } from 'react-icons/fa';
+import { FaTimes, FaSave, FaUpload, FaDownload, FaPalette } from 'react-icons/fa';
 import { Stream, Language } from '../types';
 
 interface SettingsPanelProps {
@@ -19,176 +19,283 @@ interface SettingsPanelProps {
 const Panel = styled.div<{ isOpen: boolean }>`
   position: fixed;
   top: 0;
-  right: ${props => props.isOpen ? '0' : '-400px'};
-  width: 400px;
+  right: ${props => props.isOpen ? '0' : '-450px'};
+  width: 450px;
   height: 100vh;
-  background-color: ${props => props.theme.background};
-  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
-  transition: right 0.3s ease-in-out;
+  background: ${props => props.theme.cardBackground};
+  backdrop-filter: blur(20px);
+  box-shadow: ${props => props.theme.shadowLg};
+  transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   padding: 2rem;
   display: flex;
   flex-direction: column;
   z-index: 1000;
   overflow-y: auto;
-  overflow-x: hidden;
+  border-left: 1px solid ${props => props.theme.border};
 
-  /* Scrollbar stilleri */
   &::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
   }
 
   &::-webkit-scrollbar-track {
-    background: ${props => props.theme.cardBackground};
+    background: transparent;
   }
 
   &::-webkit-scrollbar-thumb {
     background: ${props => props.theme.primary};
-    border-radius: 4px;
+    border-radius: 3px;
   }
 
   &::-webkit-scrollbar-thumb:hover {
-    background: ${props => props.theme.primary}dd;
+    background: ${props => props.theme.primary}cc;
   }
+`;
+
+const Header = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid ${props => props.theme.border};
+`;
+
+const Title = styled.h2`
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: ${props => props.theme.text};
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 `;
 
 const CloseButton = styled.button`
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
   background: none;
   border: none;
   color: ${props => props.theme.text};
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   cursor: pointer;
-`;
-
-const Developed = styled.a`
-  margin-top: auto;
-  color: ${props => props.theme.text};
-  text-decoration: none;
-  text-align: center;
-  padding: 1rem;
-  opacity: 0.7;
-  transition: opacity 0.2s;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
 
   &:hover {
-    opacity: 1;
+    background: ${props => props.theme.hover};
+    color: ${props => props.theme.primary};
   }
+`;
+
+const Section = styled.div`
+  margin-bottom: 2rem;
+`;
+
+const SectionTitle = styled.h3`
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: ${props => props.theme.text};
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 `;
 
 const Form = styled.form`
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  margin-top: 2rem;
 `;
 
-const Input = styled.input.attrs({ type: 'text' })`
+const Input = styled.input`
   width: 100%;
-  padding: 0.5rem;
-  border-radius: 4px;
+  padding: 0.875rem 1rem;
+  border-radius: 12px;
   border: 1px solid ${props => props.theme.border};
-  background: ${props => props.theme.cardBackground};
+  background: ${props => props.theme.background};
   color: ${props => props.theme.text};
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: ${props => props.theme.primary};
+    box-shadow: 0 0 0 3px ${props => props.theme.primary}20;
+  }
+
+  &::placeholder {
+    color: ${props => props.theme.secondary};
+  }
 `;
 
 const Select = styled.select`
   width: 100%;
-  padding: 0.5rem;
-  border-radius: 4px;
+  padding: 0.875rem 1rem;
+  border-radius: 12px;
   border: 1px solid ${props => props.theme.border};
-  background: ${props => props.theme.cardBackground};
+  background: ${props => props.theme.background};
   color: ${props => props.theme.text};
-`;
-
-const Button = styled.button`
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  border: none;
-  background: ${props => props.theme.primary};
-  color: #fff;
+  font-size: 0.875rem;
   cursor: pointer;
-  font-weight: bold;
-  margin-top: 1rem;
+  transition: all 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: ${props => props.theme.primary};
+    box-shadow: 0 0 0 3px ${props => props.theme.primary}20;
+  }
 `;
 
-const ChannelCountSelector = styled.div`
+const Button = styled.button<{ variant?: 'primary' | 'secondary' }>`
+  padding: 0.875rem 1.5rem;
+  border-radius: 12px;
+  border: none;
+  background: ${props => props.variant === 'secondary' ? props.theme.hover : props.theme.primary};
+  color: ${props => props.variant === 'secondary' ? props.theme.text : '#ffffff'};
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 0.5rem;
-  flex-wrap: wrap;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: ${props => props.theme.shadow};
+    background: ${props => props.variant === 'secondary' ? props.theme.border : props.theme.primary}dd;
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
+const ChannelCountGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
   margin-bottom: 1rem;
 `;
 
 const ChannelButton = styled.button<{ selected: boolean }>`
-  padding: 0.5rem 0.75rem;
-  border-radius: 4px;
-  border: 1px solid ${props => props.selected ? props.theme.primary : props.theme.border};
-  background: ${props => props.selected ? props.theme.primary : props.theme.cardBackground};
-  color: ${props => props.selected ? '#fff' : props.theme.text};
+  padding: 0.75rem;
+  border-radius: 12px;
+  border: 2px solid ${props => props.selected ? props.theme.primary : props.theme.border};
+  background: ${props => props.selected ? props.theme.primary + '20' : props.theme.background};
+  color: ${props => props.selected ? props.theme.primary : props.theme.text};
   cursor: pointer;
-  font-weight: bold;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: ${props => props.theme.primary};
+    background: ${props => props.theme.primary}10;
+  }
 `;
 
 const ChannelList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 1rem;
 `;
 
 const ChannelRow = styled.div`
-  display: flex;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-columns: 1fr 100px 2fr;
+  gap: 0.75rem;
   align-items: center;
+  padding: 1rem;
+  background: ${props => props.theme.background};
+  border-radius: 12px;
+  border: 1px solid ${props => props.theme.border};
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: ${props => props.theme.primary};
+    box-shadow: ${props => props.theme.shadow};
+  }
 `;
 
 const SmallInput = styled(Input)`
-  width: 80px;
+  font-size: 0.8rem;
 `;
 
 const SmallSelect = styled(Select)`
-  width: 90px;
+  font-size: 0.8rem;
 `;
 
-const LanguageSelector = styled.div`
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+const LanguageGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
   margin-bottom: 1rem;
 `;
 
 const LanguageButton = styled.button<{ selected: boolean }>`
-  padding: 0.5rem 0.75rem;
-  border-radius: 4px;
-  border: 1px solid ${props => props.selected ? props.theme.primary : props.theme.border};
-  background: ${props => props.selected ? props.theme.primary : props.theme.cardBackground};
-  color: ${props => props.selected ? '#fff' : props.theme.text};
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  border: 2px solid ${props => props.selected ? props.theme.primary : props.theme.border};
+  background: ${props => props.selected ? props.theme.primary + '20' : props.theme.background};
+  color: ${props => props.selected ? props.theme.primary : props.theme.text};
   cursor: pointer;
-  font-weight: bold;
+  font-weight: 600;
+  font-size: 0.8rem;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: ${props => props.theme.primary};
+    background: ${props => props.theme.primary}10;
+  }
 `;
 
 const SaveLoadContainer = styled.div`
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 1rem;
-  margin-top: 1rem;
-`;
-
-const SaveLoadButton = styled(Button)`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex: 1;
+  margin-bottom: 1rem;
 `;
 
 const TextArea = styled.textarea`
   width: 100%;
-  height: 100px;
-  padding: 0.5rem;
-  border-radius: 4px;
+  height: 120px;
+  padding: 1rem;
+  border-radius: 12px;
   border: 1px solid ${props => props.theme.border};
-  background: ${props => props.theme.cardBackground};
+  background: ${props => props.theme.background};
   color: ${props => props.theme.text};
-  margin-top: 1rem;
+  font-size: 0.875rem;
   resize: vertical;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  transition: all 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: ${props => props.theme.primary};
+    box-shadow: 0 0 0 3px ${props => props.theme.primary}20;
+  }
+
+  &::placeholder {
+    color: ${props => props.theme.secondary};
+  }
+`;
+
+const Developed = styled.a`
+  margin-top: auto;
+  color: ${props => props.theme.secondary};
+  text-decoration: none;
+  text-align: center;
+  padding: 1.5rem;
+  font-size: 0.875rem;
+  opacity: 0.8;
+  transition: all 0.2s ease;
+  border-radius: 12px;
+
+  &:hover {
+    opacity: 1;
+    color: ${props => props.theme.primary};
+    background: ${props => props.theme.hover};
+  }
 `;
 
 const SettingsPanel: React.FC<SettingsPanelProps> = ({
@@ -285,12 +392,19 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
   return (
     <Panel isOpen={isOpen}>
-      <CloseButton onClick={onClose}>
-        <FaTimes />
-      </CloseButton>
+      <Header>
+        <Title>
+          <FaPalette />
+          {t('settings.title')}
+        </Title>
+        <CloseButton onClick={onClose}>
+          <FaTimes />
+        </CloseButton>
+      </Header>
       
-      <div style={{ margin: '1rem 0' }}>
-        <LanguageSelector>
+      <Section>
+        <SectionTitle>🌐 {t('change_language')}</SectionTitle>
+        <LanguageGrid>
           {languages.map(lang => (
             <LanguageButton
               key={lang.value}
@@ -301,29 +415,31 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
               {lang.label}
             </LanguageButton>
           ))}
-        </LanguageSelector>
-      </div>
+        </LanguageGrid>
+      </Section>
 
-      <SaveLoadContainer>
-        <SaveLoadButton onClick={handleSave}>
-          <FaSave />
-          {t('settings.save')}
-        </SaveLoadButton>
-        <SaveLoadButton onClick={handleLoad}>
-          <FaUpload />
-          {t('settings.load')}
-        </SaveLoadButton>
-      </SaveLoadContainer>
+      <Section>
+        <SectionTitle>💾 {t('settings.save')} & {t('settings.load')}</SectionTitle>
+        <SaveLoadContainer>
+          <Button onClick={handleSave} variant="secondary">
+            <FaSave />
+            {t('settings.save')}
+          </Button>
+          <Button onClick={handleLoad} variant="secondary">
+            <FaUpload />
+            {t('settings.load')}
+          </Button>
+        </SaveLoadContainer>
+        <TextArea
+          value={saveLoadText}
+          onChange={(e) => setSaveLoadText(e.target.value)}
+          placeholder={t('settings.save_load_placeholder') || ''}
+        />
+      </Section>
 
-      <TextArea
-        value={saveLoadText}
-        onChange={(e) => setSaveLoadText(e.target.value)}
-        placeholder={t('settings.save_load_placeholder') || ''}
-      />
-
-      <div style={{ margin: '1rem 0' }}>
-        <div><b>{t('settings.channel_count')}</b></div>
-        <ChannelCountSelector>
+      <Section>
+        <SectionTitle>📺 {t('settings.channel_count')}</SectionTitle>
+        <ChannelCountGrid>
           {channelCounts.map(count => (
             <ChannelButton
               key={count}
@@ -334,52 +450,56 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
               {count}
             </ChannelButton>
           ))}
-        </ChannelCountSelector>
-      </div>
+        </ChannelCountGrid>
+      </Section>
 
-      <div><b>{t('settings.stream_platform')}</b></div>
-      <ChannelList>
-        {channelList.slice(0, channelCount).map((ch, idx) => (
-          <ChannelRow key={ch.id}>
-            <SmallInput
-              placeholder={t('settings.stream_title_placeholder') as string}
-              value={ch.title}
-              onChange={e => handleChannelChange(idx, 'title', e.target.value)}
-            />
-            <SmallSelect
-              value={ch.platform}
-              onChange={e => handleChannelChange(idx, 'platform', e.target.value)}
-            >
-              {platformOptions.map(opt => (
-                <option key={opt.value} value={opt.value}>{t('settings.platforms.' + opt.value)}</option>
-              ))}
-            </SmallSelect>
-            {ch.platform === 'twitter' ? (
-              <Input
-                placeholder="@username"
-                value={ch.url}
-                onChange={e => handleChannelChange(idx, 'url', e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
+      <Section>
+        <SectionTitle>🎬 {t('settings.stream_platform')}</SectionTitle>
+        <ChannelList>
+          {channelList.slice(0, channelCount).map((ch, idx) => (
+            <ChannelRow key={ch.id}>
+              <SmallInput
+                placeholder={t('settings.stream_title_placeholder') as string}
+                value={ch.title}
+                onChange={e => handleChannelChange(idx, 'title', e.target.value)}
               />
-            ) : (
-              <Input
-                placeholder={t('settings.stream_url_placeholder') as string}
-                value={ch.url}
-                onChange={e => handleChannelChange(idx, 'url', e.target.value)}
-              />
-            )}
-          </ChannelRow>
-        ))}
-      </ChannelList>
+              <SmallSelect
+                value={ch.platform}
+                onChange={e => handleChannelChange(idx, 'platform', e.target.value)}
+              >
+                {platformOptions.map(opt => (
+                  <option key={opt.value} value={opt.value}>{t('settings.platforms.' + opt.value)}</option>
+                ))}
+              </SmallSelect>
+              {ch.platform === 'twitter' ? (
+                <SmallInput
+                  placeholder="@username"
+                  value={ch.url}
+                  onChange={e => handleChannelChange(idx, 'url', e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
+                />
+              ) : (
+                <SmallInput
+                  placeholder={t('settings.stream_url_placeholder') as string}
+                  value={ch.url}
+                  onChange={e => handleChannelChange(idx, 'url', e.target.value)}
+                />
+              )}
+            </ChannelRow>
+          ))}
+        </ChannelList>
+      </Section>
+
       <Button onClick={onClose}>{t('settings.close')}</Button>
+      
       <Developed 
         href="https://github.com/baydd/" 
         target="_blank" 
         rel="noopener noreferrer"
       >
-        Developed: baydd
+        💻 Developed by baydd
       </Developed>
     </Panel>
   );
 };
 
-export default SettingsPanel; 
+export default SettingsPanel;

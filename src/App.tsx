@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import styled, { ThemeProvider } from 'styled-components';
+import styled, { ThemeProvider, createGlobalStyle } from 'styled-components';
 import { useTranslation } from 'react-i18next';
 import { FaCog, FaGlobe, FaUndo, FaEdit, FaUsers } from 'react-icons/fa';
 import { Stream, Settings } from './types';
@@ -10,33 +10,140 @@ import { darkTheme } from './themes';
 import { getPreferences, savePreferences, saveStreams, saveSettings } from './utils/storage';
 import './i18n';
 
+const GlobalStyle = createGlobalStyle`
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow: hidden;
+    background: ${props => props.theme.background};
+    color: ${props => props.theme.text};
+  }
+
+  .react-grid-item {
+    transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    transition-property: left, top, width, height;
+  }
+
+  .react-grid-item.react-grid-placeholder {
+    background: ${props => props.theme.primary};
+    opacity: 0.3;
+    transition-duration: 100ms;
+    z-index: 2;
+    border-radius: 8px;
+    border: 2px dashed ${props => props.theme.primary};
+  }
+
+  .react-grid-item > .react-resizable-handle {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    bottom: 0;
+    right: 0;
+    cursor: se-resize;
+    background: ${props => props.theme.primary};
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .react-grid-item:hover > .react-resizable-handle {
+    opacity: 0.8;
+  }
+
+  .react-grid-item > .react-resizable-handle::after {
+    content: "⋮⋮";
+    color: white;
+    font-size: 8px;
+    line-height: 1;
+    transform: rotate(45deg);
+  }
+`;
+
 const AppContainer = styled.div`
   min-height: 100vh;
-  background-color: ${props => props.theme.background};
+  background: ${props => props.theme.background};
   color: ${props => props.theme.text};
+  position: relative;
 `;
 
 const Header = styled.header`
   display: flex;
   justify-content: flex-end;
-  padding: 1rem;
-  gap: 1rem;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  gap: 0.75rem;
+  background: ${props => props.theme.cardBackground};
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid ${props => props.theme.border};
+  box-shadow: ${props => props.theme.shadow};
+  position: relative;
+  z-index: 100;
 `;
 
-const IconButton = styled.button`
-  background: none;
-  border: none;
-  color: ${props => props.theme.text};
-  font-size: 1.5rem;
+const IconButton = styled.button<{ active?: boolean }>`
+  background: ${props => props.active ? props.theme.primary : 'transparent'};
+  border: 1px solid ${props => props.active ? props.theme.primary : props.theme.border};
+  color: ${props => props.active ? '#ffffff' : props.theme.text};
+  font-size: 1.1rem;
   cursor: pointer;
-  padding: 0.5rem;
+  padding: 0.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 12px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  min-width: 48px;
+  height: 48px;
   
   &:hover {
-    opacity: 0.8;
+    background: ${props => props.active ? props.theme.primary : props.theme.hover};
+    transform: translateY(-1px);
+    box-shadow: ${props => props.theme.shadow};
+    border-color: ${props => props.theme.primary};
   }
+
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
+const LanguageButton = styled(IconButton)`
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  min-width: auto;
+  
+  span {
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0.025em;
+  }
+`;
+
+const Logo = styled.div`
+  position: absolute;
+  left: 2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.25rem;
+  font-weight: 700;
+  background: ${props => props.theme.gradient};
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.025em;
 `;
 
 const defaultChannelCount = 6;
@@ -124,18 +231,27 @@ const App: React.FC = () => {
 
   return (
     <ThemeProvider theme={darkTheme}>
+      <GlobalStyle />
       <AppContainer>
         <Header>
-          <IconButton onClick={() => setIsEditMode(!isEditMode)} title={i18n.t('edit_mode') as string}>
+          <Logo>StreamDash</Logo>
+          <IconButton 
+            onClick={() => setIsEditMode(!isEditMode)} 
+            title={i18n.t('edit_mode') as string}
+            active={isEditMode}
+          >
             <FaEdit />
           </IconButton>
-          <IconButton onClick={() => setIsWatchTogetherOpen(true)} title={i18n.t('watch_together.title') as string}>
+          <IconButton 
+            onClick={() => setIsWatchTogetherOpen(true)} 
+            title={i18n.t('watch_together.title') as string}
+          >
             <FaUsers />
           </IconButton>
-          <IconButton onClick={cycleLanguage} title={i18n.t('change_language') as string}>
+          <LanguageButton onClick={cycleLanguage} title={i18n.t('change_language') as string}>
             <FaGlobe />
-            <span style={{ fontSize: '1rem', marginLeft: 6 }}>{getLanguageLabel(language)}</span>
-          </IconButton>
+            <span>{getLanguageLabel(language)}</span>
+          </LanguageButton>
           <IconButton onClick={handleUndo} title={i18n.t('undo') as string}>
             <FaUndo />
           </IconButton>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useTranslation } from 'react-i18next';
-import { FaTimes, FaUsers, FaCrown, FaUserShield, FaCopy, FaSync, FaSignOutAlt, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaTimes, FaUsers, FaCrown, FaUserShield, FaCopy, FaSync, FaSignOutAlt, FaEye, FaEyeSlash, FaPlus, FaUserFriends } from 'react-icons/fa';
 import { WatchTogetherRoom, WatchTogetherUser, Stream } from '../types';
 import { watchTogetherService } from '../services/watchTogetherService';
 
@@ -17,49 +17,66 @@ interface WatchTogetherPanelProps {
 const Panel = styled.div<{ isOpen: boolean }>`
   position: fixed;
   top: 0;
-  right: ${props => props.isOpen ? '0' : '-400px'};
-  width: 400px;
+  right: ${props => props.isOpen ? '0' : '-450px'};
+  width: 450px;
   height: 100vh;
-  background-color: ${props => props.theme.background};
-  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
-  transition: right 0.3s ease-in-out;
+  background: ${props => props.theme.cardBackground};
+  backdrop-filter: blur(20px);
+  box-shadow: ${props => props.theme.shadowLg};
+  transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   padding: 2rem;
   display: flex;
   flex-direction: column;
   z-index: 1000;
   overflow-y: auto;
+  border-left: 1px solid ${props => props.theme.border};
 
   &::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
   }
 
   &::-webkit-scrollbar-track {
-    background: ${props => props.theme.cardBackground};
+    background: transparent;
   }
 
   &::-webkit-scrollbar-thumb {
     background: ${props => props.theme.primary};
-    border-radius: 4px;
+    border-radius: 3px;
   }
 `;
 
-const CloseButton = styled.button`
-  position: absolute;
-  top: 1rem;
-  left: 1rem;
-  background: none;
-  border: none;
-  color: ${props => props.theme.text};
-  font-size: 1.5rem;
-  cursor: pointer;
+const Header = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid ${props => props.theme.border};
 `;
 
 const Title = styled.h2`
-  margin-bottom: 2rem;
+  font-size: 1.5rem;
+  font-weight: 700;
   color: ${props => props.theme.text};
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
+`;
+
+const CloseButton = styled.button`
+  background: none;
+  border: none;
+  color: ${props => props.theme.text};
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: ${props => props.theme.hover};
+    color: ${props => props.theme.primary};
+  }
 `;
 
 const Section = styled.div`
@@ -67,117 +84,231 @@ const Section = styled.div`
 `;
 
 const SectionTitle = styled.h3`
-  margin-bottom: 1rem;
-  color: ${props => props.theme.text};
   font-size: 1.1rem;
+  font-weight: 600;
+  color: ${props => props.theme.text};
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 `;
 
 const Input = styled.input`
   width: 100%;
-  padding: 0.75rem;
-  border-radius: 4px;
+  padding: 0.875rem 1rem;
+  border-radius: 12px;
   border: 1px solid ${props => props.theme.border};
-  background: ${props => props.theme.cardBackground};
+  background: ${props => props.theme.background};
   color: ${props => props.theme.text};
+  font-size: 0.875rem;
   margin-bottom: 1rem;
+  transition: all 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: ${props => props.theme.primary};
+    box-shadow: 0 0 0 3px ${props => props.theme.primary}20;
+  }
+
+  &::placeholder {
+    color: ${props => props.theme.secondary};
+  }
 `;
 
 const Button = styled.button<{ variant?: 'primary' | 'secondary' | 'danger' }>`
-  padding: 0.75rem 1rem;
-  border-radius: 4px;
+  padding: 0.875rem 1.5rem;
+  border-radius: 12px;
   border: none;
   background: ${props => 
-    props.variant === 'danger' ? '#dc3545' :
-    props.variant === 'secondary' ? props.theme.cardBackground :
+    props.variant === 'danger' ? props.theme.error :
+    props.variant === 'secondary' ? props.theme.hover :
     props.theme.primary
   };
-  color: ${props => props.variant === 'secondary' ? props.theme.text : '#fff'};
+  color: ${props => props.variant === 'secondary' ? props.theme.text : '#ffffff'};
   cursor: pointer;
-  font-weight: bold;
+  font-weight: 600;
+  font-size: 0.875rem;
   width: 100%;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  transition: opacity 0.2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:hover {
+    transform: translateY(-1px);
+    box-shadow: ${props => props.theme.shadow};
     opacity: 0.9;
+  }
+
+  &:active {
+    transform: translateY(0);
   }
 
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    transform: none;
   }
 `;
 
 const RoomInfo = styled.div`
-  background: ${props => props.theme.cardBackground};
-  padding: 1rem;
-  border-radius: 4px;
-  margin-bottom: 1rem;
+  background: ${props => props.theme.background};
+  padding: 1.5rem;
+  border-radius: 16px;
+  margin-bottom: 1.5rem;
+  border: 1px solid ${props => props.theme.border};
+`;
+
+const RoomName = styled.div`
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: ${props => props.theme.text};
+  margin-bottom: 0.5rem;
 `;
 
 const RoomCode = styled.div`
-  font-family: monospace;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   font-size: 1.2rem;
-  font-weight: bold;
+  font-weight: 700;
   color: ${props => props.theme.primary};
-  margin: 0.5rem 0;
+  margin: 0.75rem 0;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: ${props => props.theme.primary}10;
+  border-radius: 8px;
+  border: 1px solid ${props => props.theme.primary}30;
+`;
+
+const IconButton = styled.button`
+  background: none;
+  border: none;
+  color: ${props => props.theme.primary};
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background: ${props => props.theme.primary}20;
+  }
 `;
 
 const ParticipantsList = styled.div`
-  max-height: 200px;
+  max-height: 250px;
   overflow-y: auto;
+  
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: ${props => props.theme.primary};
+    border-radius: 2px;
+  }
 `;
 
 const Participant = styled.div<{ hasUpdate?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.5rem;
-  margin-bottom: 0.5rem;
-  background: ${props => props.hasUpdate ? props.theme.primary + '20' : props.theme.cardBackground};
-  border: ${props => props.hasUpdate ? `2px solid ${props.theme.primary}` : '1px solid ' + props.theme.border};
-  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  background: ${props => props.hasUpdate ? props.theme.primary + '15' : props.theme.background};
+  border: 2px solid ${props => props.hasUpdate ? props.theme.primary : props.theme.border};
+  border-radius: 12px;
   cursor: ${props => props.hasUpdate ? 'pointer' : 'default'};
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 
   &:hover {
-    opacity: ${props => props.hasUpdate ? 0.8 : 1};
+    border-color: ${props => props.theme.primary};
+    background: ${props => props.hasUpdate ? props.theme.primary + '20' : props.theme.hover};
   }
 `;
 
 const ParticipantInfo = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
+`;
+
+const Avatar = styled.div`
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: ${props => props.theme.gradient};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 0.875rem;
 `;
 
 const ParticipantName = styled.span`
-  font-weight: bold;
+  font-weight: 600;
+  color: ${props => props.theme.text};
 `;
 
 const Badge = styled.span<{ type: 'owner' | 'admin' }>`
   background: ${props => props.type === 'owner' ? '#ffd700' : props.theme.primary};
   color: ${props => props.type === 'owner' ? '#000' : '#fff'};
-  padding: 0.2rem 0.4rem;
-  border-radius: 3px;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
   font-size: 0.7rem;
-  font-weight: bold;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 `;
 
 const UpdateNotification = styled.div`
   background: ${props => props.theme.primary};
   color: white;
-  padding: 0.5rem;
-  border-radius: 4px;
+  padding: 1rem;
+  border-radius: 12px;
   margin-bottom: 1rem;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+`;
+
+const ModeToggle = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  background: ${props => props.theme.background};
+  padding: 0.25rem;
+  border-radius: 12px;
+  border: 1px solid ${props => props.theme.border};
+`;
+
+const ModeButton = styled.button<{ active: boolean }>`
+  padding: 0.75rem;
+  border: none;
+  background: ${props => props.active ? props.theme.primary : 'transparent'};
+  color: ${props => props.active ? '#ffffff' : props.theme.text};
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+
+  &:hover {
+    background: ${props => props.active ? props.theme.primary : props.theme.hover};
+  }
 `;
 
 const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
@@ -243,7 +374,6 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
       setCurrentUser(user);
       setMode('room');
       
-      // Share current streams with the room
       await watchTogetherService.updateStreams(streams, channelCount);
     } catch (err) {
       setError(t('watch_together.create_room_error') as string);
@@ -267,7 +397,6 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
       setCurrentUser(user);
       setMode('room');
       
-      // Load room streams
       if (room.streams.length > 0) {
         onUpdateStreams(room.streams);
         onUpdateChannelCount(room.channelCount);
@@ -298,7 +427,6 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
       onUpdateStreams(update.streams);
       onUpdateChannelCount(update.channelCount);
       
-      // Remove the update notification
       setPendingUpdates(prev => {
         const newUpdates = { ...prev };
         delete newUpdates[userId];
@@ -324,39 +452,46 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
         />
       </Section>
 
-      {mode === 'join' ? (
-        <Section>
-          <Input
-            type="text"
-            placeholder={t('watch_together.room_code_placeholder') as string}
-            value={roomCode}
-            onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-          />
-          <Button onClick={handleJoinRoom} disabled={isLoading}>
-            <FaUsers />
-            {t('watch_together.join_room')}
-          </Button>
-          <Button variant="secondary" onClick={() => setMode('create')}>
-            {t('watch_together.create_room_instead')}
-          </Button>
-        </Section>
-      ) : (
-        <Section>
-          <Input
-            type="text"
-            placeholder={t('watch_together.room_name_placeholder') as string}
-            value={roomName}
-            onChange={(e) => setRoomName(e.target.value)}
-          />
-          <Button onClick={handleCreateRoom} disabled={isLoading}>
-            <FaUsers />
-            {t('watch_together.create_room')}
-          </Button>
-          <Button variant="secondary" onClick={() => setMode('join')}>
-            {t('watch_together.join_room_instead')}
-          </Button>
-        </Section>
-      )}
+      <Section>
+        <ModeToggle>
+          <ModeButton active={mode === 'join'} onClick={() => setMode('join')}>
+            <FaUserFriends />
+            Join Room
+          </ModeButton>
+          <ModeButton active={mode === 'create'} onClick={() => setMode('create')}>
+            <FaPlus />
+            Create Room
+          </ModeButton>
+        </ModeToggle>
+
+        {mode === 'join' ? (
+          <>
+            <Input
+              type="text"
+              placeholder={t('watch_together.room_code_placeholder') as string}
+              value={roomCode}
+              onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+            />
+            <Button onClick={handleJoinRoom} disabled={isLoading}>
+              <FaUsers />
+              {t('watch_together.join_room')}
+            </Button>
+          </>
+        ) : (
+          <>
+            <Input
+              type="text"
+              placeholder={t('watch_together.room_name_placeholder') as string}
+              value={roomName}
+              onChange={(e) => setRoomName(e.target.value)}
+            />
+            <Button onClick={handleCreateRoom} disabled={isLoading}>
+              <FaUsers />
+              {t('watch_together.create_room')}
+            </Button>
+          </>
+        )}
+      </Section>
     </>
   );
 
@@ -364,42 +499,35 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
     <>
       <Section>
         <RoomInfo>
-          <div><strong>{currentRoom?.name}</strong></div>
+          <RoomName>{currentRoom?.name}</RoomName>
           <RoomCode>
-            {showRoomCode ? currentRoom?.code : '******'}
-            <FaCopy 
-              onClick={copyRoomCode} 
-              style={{ cursor: 'pointer', fontSize: '1rem' }}
-              title={t('watch_together.copy_code') as string}
-            />
-            {showRoomCode ? (
-              <FaEyeSlash 
-                onClick={() => setShowRoomCode(false)}
-                style={{ cursor: 'pointer', fontSize: '1rem', marginLeft: '0.5rem' }}
-                title={t('watch_together.hide_code') as string}
-              />
-            ) : (
-              <FaEye 
-                onClick={() => setShowRoomCode(true)}
-                style={{ cursor: 'pointer', fontSize: '1rem', marginLeft: '0.5rem' }}
-                title={t('watch_together.show_code') as string}
-              />
-            )}
+            {showRoomCode ? currentRoom?.code : '••••••'}
+            <IconButton onClick={copyRoomCode} title={t('watch_together.copy_code') as string}>
+              <FaCopy />
+            </IconButton>
+            <IconButton 
+              onClick={() => setShowRoomCode(!showRoomCode)}
+              title={showRoomCode ? t('watch_together.hide_code') as string : t('watch_together.show_code') as string}
+            >
+              {showRoomCode ? <FaEyeSlash /> : <FaEye />}
+            </IconButton>
           </RoomCode>
-          <div>{t('watch_together.participants')}: {currentRoom?.participants.length}</div>
+          <div style={{ color: '#64748b', fontSize: '0.875rem' }}>
+            {t('watch_together.participants')}: {currentRoom?.participants.length}
+          </div>
         </RoomInfo>
       </Section>
 
       {Object.keys(pendingUpdates).length > 0 && (
         <Section>
-          <SectionTitle>{t('watch_together.pending_updates')}</SectionTitle>
+          <SectionTitle>🔄 {t('watch_together.pending_updates')}</SectionTitle>
           {Object.entries(pendingUpdates).map(([userId, update]) => (
             <UpdateNotification key={userId}>
               <div>{t('watch_together.update_available_from', { username: update.username })}</div>
               <Button 
                 variant="secondary" 
                 onClick={() => handleApplyUpdate(userId)}
-                style={{ marginTop: '0.5rem' }}
+                style={{ marginTop: '0.75rem', marginBottom: 0 }}
               >
                 <FaSync />
                 {t('watch_together.apply_update')}
@@ -410,7 +538,7 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
       )}
 
       <Section>
-        <SectionTitle>{t('watch_together.participants')}</SectionTitle>
+        <SectionTitle>👥 {t('watch_together.participants')}</SectionTitle>
         <ParticipantsList>
           {currentRoom?.participants.map((participant) => (
             <Participant 
@@ -419,17 +547,24 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
               onClick={() => pendingUpdates[participant.username] && handleApplyUpdate(participant.username)}
             >
               <ParticipantInfo>
-                <ParticipantName>{participant.username}</ParticipantName>
-                {participant.isOwner && (
-                  <Badge type="owner">
-                    <FaCrown /> {t('watch_together.owner')}
-                  </Badge>
-                )}
-                {participant.isAdmin && !participant.isOwner && (
-                  <Badge type="admin">
-                    <FaUserShield /> {t('watch_together.admin')}
-                  </Badge>
-                )}
+                <Avatar>
+                  {participant.username.charAt(0).toUpperCase()}
+                </Avatar>
+                <div>
+                  <ParticipantName>{participant.username}</ParticipantName>
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
+                    {participant.isOwner && (
+                      <Badge type="owner">
+                        <FaCrown /> {t('watch_together.owner')}
+                      </Badge>
+                    )}
+                    {participant.isAdmin && !participant.isOwner && (
+                      <Badge type="admin">
+                        <FaUserShield /> {t('watch_together.admin')}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
               </ParticipantInfo>
             </Participant>
           ))}
@@ -454,17 +589,18 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
 
   return (
     <Panel isOpen={isOpen}>
-      <CloseButton onClick={onClose}>
-        <FaTimes />
-      </CloseButton>
-      
-      <Title>
-        <FaUsers />
-        {t('watch_together.title')}
-      </Title>
+      <Header>
+        <Title>
+          <FaUsers />
+          {t('watch_together.title')}
+        </Title>
+        <CloseButton onClick={onClose}>
+          <FaTimes />
+        </CloseButton>
+      </Header>
 
       {error && (
-        <UpdateNotification style={{ background: '#dc3545' }}>
+        <UpdateNotification style={{ background: '#ef4444' }}>
           {error}
         </UpdateNotification>
       )}
