@@ -13,17 +13,56 @@ class WatchTogetherService {
     onError?: (error: string) => void;
   } = {};
 
-  // Mock server URL - in production this would be your actual WebSocket server
-  private readonly SERVER_URL = 'ws://localhost:3001';
+  private readonly SERVER_URL = process.env.NODE_ENV === 'production'
+    ? process.env.REACT_APP_BACKEND_URL || ''
+    : 'http://localhost:3001';
 
   connect() {
     if (this.socket?.connected) return;
 
-    // For demo purposes, we'll simulate WebSocket functionality
-    // In production, uncomment the line below:
-    // this.socket = io(this.SERVER_URL);
-    
-    console.log('Watch Together service initialized (demo mode)');
+    this.socket = io(this.SERVER_URL);
+
+    this.socket.on('connect', () => {
+      console.log('WebSocket sunucusuna bağlandı');
+    });
+
+    this.socket.on('disconnect', () => {
+      console.log('WebSocket sunucusu bağlantısı kesildi');
+    });
+
+    this.socket.on('error', (error: string) => {
+      console.error('WebSocket hatası:', error);
+      this.callbacks.onError?.(error);
+    });
+
+    this.socket.on('roomCreated', ({ room, user }) => {
+      this.currentRoom = room;
+      this.currentUser = user;
+      this.callbacks.onRoomUpdate?.(room);
+    });
+
+    this.socket.on('roomJoined', ({ room, user }) => {
+      this.currentRoom = room;
+      this.currentUser = user;
+      this.callbacks.onRoomUpdate?.(room);
+    });
+
+    this.socket.on('roomUpdate', (room: WatchTogetherRoom) => {
+      this.currentRoom = room;
+      this.callbacks.onRoomUpdate?.(room);
+    });
+
+    this.socket.on('userJoined', (user: WatchTogetherUser) => {
+      this.callbacks.onUserJoined?.(user);
+    });
+
+    this.socket.on('userLeft', (userId: string) => {
+      this.callbacks.onUserLeft?.(userId);
+    });
+
+    this.socket.on('streamsUpdated', ({ streams, updatedBy, channelCount }) => {
+      this.callbacks.onStreamsUpdate?.(streams, updatedBy, channelCount);
+    });
   }
 
   disconnect() {
@@ -40,105 +79,76 @@ class WatchTogetherService {
   }
 
   async createRoom(roomName: string, username: string): Promise<{ room: WatchTogetherRoom; user: WatchTogetherUser }> {
-    const roomCode = this.generateRoomCode();
-    const userId = this.generateUserId();
-    
-    const user: WatchTogetherUser = {
-      id: userId,
-      username,
-      isAdmin: true,
-      isOwner: true,
-      joinedAt: new Date().toISOString(),
-      lastSeen: new Date().toISOString()
-    };
+    if (!this.socket?.connected) {
+      throw new Error('WebSocket bağlantısı yok');
+    }
 
-    const room: WatchTogetherRoom = {
-      id: this.generateRoomId(),
-      name: roomName,
-      code: roomCode,
-      createdBy: userId,
-      createdAt: new Date().toISOString(),
-      participants: [user],
-      streams: [],
-      channelCount: 6
-    };
-
-    // Store in localStorage for demo purposes
-    this.storeRoomData(room);
-    
-    this.currentRoom = room;
-    this.currentUser = user;
-
-    return { room, user };
+    return new Promise((resolve, reject) => {
+      this.socket?.emit('createRoom', { roomName, username }, (response: any) => {
+        if (response.error) {
+          reject(new Error(response.error));
+        } else {
+          this.currentRoom = response.room;
+          this.currentUser = response.user;
+          resolve(response);
+        }
+      });
+    });
   }
 
   async joinRoom(roomCode: string, username: string): Promise<{ room: WatchTogetherRoom; user: WatchTogetherUser }> {
-    // In demo mode, try to load from localStorage
-    const room = this.loadRoomData(roomCode);
-    
-    if (!room) {
-      throw new Error('Room not found');
+    if (!this.socket?.connected) {
+      throw new Error('WebSocket bağlantısı yok');
     }
 
-    const userId = this.generateUserId();
-    const user: WatchTogetherUser = {
-      id: userId,
-      username,
-      isAdmin: false,
-      isOwner: false,
-      joinedAt: new Date().toISOString(),
-      lastSeen: new Date().toISOString()
-    };
-
-    room.participants.push(user);
-    this.storeRoomData(room);
-    
-    this.currentRoom = room;
-    this.currentUser = user;
-
-    // Simulate user joined event
-    setTimeout(() => {
-      this.callbacks.onUserJoined?.(user);
-    }, 100);
-
-    return { room, user };
+    return new Promise((resolve, reject) => {
+      this.socket?.emit('joinRoom', { roomCode, username }, (response: any) => {
+        if (response.error) {
+          reject(new Error(response.error));
+        } else {
+          this.currentRoom = response.room;
+          this.currentUser = response.user;
+          resolve(response);
+        }
+      });
+    });
   }
 
   async updateStreams(streams: Stream[], channelCount: number) {
-    if (!this.currentRoom || !this.currentUser) return;
-
-    this.currentRoom.streams = streams;
-    this.currentRoom.channelCount = channelCount;
-    this.currentRoom.lastUpdatedBy = this.currentUser.id;
-    this.currentRoom.lastUpdatedAt = new Date().toISOString();
-
-    this.storeRoomData(this.currentRoom);
-
-    // Simulate streams update event
-    setTimeout(() => {
-      this.callbacks.onStreamsUpdate?.(streams, this.currentUser!.username, channelCount);
-    }, 100);
-  }
-
-  async promoteToAdmin(userId: string) {
-    if (!this.currentRoom || !this.currentUser?.isOwner) return;
-
-    const participant = this.currentRoom.participants.find(p => p.id === userId);
-    if (participant) {
-      participant.isAdmin = true;
-      this.storeRoomData(this.currentRoom);
+    console.log('updateStreams çağrıldı. currentRoom:', this.currentRoom, 'currentUser:', this.currentUser);
+    if (!this.socket?.connected || !this.currentRoom || !this.currentUser) {
+      console.log('updateStreams: Bağlantı veya oda/kullanıcı bilgisi eksik.');
+      throw new Error('WebSocket bağlantısı yok veya oda/kullanıcı bilgisi eksik');
     }
+
+    const roomCode = this.currentRoom.code;
+    console.log('updateStreams: roomCode:', roomCode);
+    if (!roomCode) {
+      console.log('updateStreams: Oda kodu bulunamadı.');
+      throw new Error('Oda kodu bulunamadı');
+    }
+
+    return new Promise((resolve, reject) => {
+      this.socket?.emit('updateStreams', {
+        roomCode,
+        streams,
+        channelCount
+      }, (response: any) => {
+        if (response.error) {
+          reject(new Error(response.error));
+        } else {
+          resolve(response);
+        }
+      });
+    });
   }
 
   async leaveRoom() {
-    if (!this.currentRoom || !this.currentUser) return;
+    if (!this.socket?.connected || !this.currentRoom) {
+      return;
+    }
 
-    this.currentRoom.participants = this.currentRoom.participants.filter(
-      p => p.id !== this.currentUser!.id
-    );
-
-    this.storeRoomData(this.currentRoom);
-    
+    this.socket.emit('leaveRoom', { roomCode: this.currentRoom.code });
     this.currentRoom = null;
     this.currentUser = null;
   }
@@ -149,34 +159,6 @@ class WatchTogetherService {
 
   getCurrentUser(): WatchTogetherUser | null {
     return this.currentUser;
-  }
-
-  private generateRoomCode(): string {
-    return Math.random().toString(36).substring(2, 8).toUpperCase();
-  }
-
-  private generateRoomId(): string {
-    return 'room_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
-  }
-
-  private generateUserId(): string {
-    return 'user_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
-  }
-
-  private storeRoomData(room: WatchTogetherRoom) {
-    const rooms = this.getAllRooms();
-    rooms[room.code] = room;
-    localStorage.setItem('watchTogetherRooms', JSON.stringify(rooms));
-  }
-
-  private loadRoomData(roomCode: string): WatchTogetherRoom | null {
-    const rooms = this.getAllRooms();
-    return rooms[roomCode] || null;
-  }
-
-  private getAllRooms(): { [code: string]: WatchTogetherRoom } {
-    const stored = localStorage.getItem('watchTogetherRooms');
-    return stored ? JSON.parse(stored) : {};
   }
 }
 

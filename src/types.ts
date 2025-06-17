@@ -32,6 +32,42 @@ export interface UserPreferences {
   version: string;
 }
 
+export interface WatchTogetherRoom {
+  id: string;
+  name: string;
+  code: string;
+  createdBy: string;
+  createdAt: string;
+  participants: WatchTogetherUser[];
+  streams: Stream[];
+  channelCount: number;
+  lastUpdatedBy?: string;
+  lastUpdatedAt?: string;
+}
+
+export interface WatchTogetherUser {
+  id: string;
+  username: string;
+  isAdmin: boolean;
+  isOwner: boolean;
+  joinedAt: string;
+  lastSeen: string;
+}
+
+export interface WatchTogetherState {
+  isEnabled: boolean;
+  currentRoom: WatchTogetherRoom | null;
+  currentUser: WatchTogetherUser | null;
+  pendingUpdates: {
+    [userId: string]: {
+      username: string;
+      streams: Stream[];
+      channelCount: number;
+      timestamp: string;
+    };
+  };
+}
+
 declare global {
   interface Window {
     twttr: {
@@ -40,4 +76,4 @@ declare global {
       };
     };
   }
-} 
+}

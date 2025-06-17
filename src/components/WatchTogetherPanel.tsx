@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useTranslation } from 'react-i18next';
-import { FaTimes, FaUsers, FaCrown, FaUserShield, FaCopy, FaSync, FaSignOutAlt } from 'react-icons/fa';
+import { FaTimes, FaUsers, FaCrown, FaUserShield, FaCopy, FaSync, FaSignOutAlt, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { WatchTogetherRoom, WatchTogetherUser, Stream } from '../types';
 import { watchTogetherService } from '../services/watchTogetherService';
 
@@ -17,12 +17,12 @@ interface WatchTogetherPanelProps {
 const Panel = styled.div<{ isOpen: boolean }>`
   position: fixed;
   top: 0;
-  left: ${props => props.isOpen ? '0' : '-400px'};
+  right: ${props => props.isOpen ? '0' : '-400px'};
   width: 400px;
   height: 100vh;
   background-color: ${props => props.theme.background};
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
-  transition: left 0.3s ease-in-out;
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+  transition: right 0.3s ease-in-out;
   padding: 2rem;
   display: flex;
   flex-direction: column;
@@ -46,7 +46,7 @@ const Panel = styled.div<{ isOpen: boolean }>`
 const CloseButton = styled.button`
   position: absolute;
   top: 1rem;
-  right: 1rem;
+  left: 1rem;
   background: none;
   border: none;
   color: ${props => props.theme.text};
@@ -198,6 +198,7 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
   const [pendingUpdates, setPendingUpdates] = useState<{[userId: string]: any}>({});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showRoomCode, setShowRoomCode] = useState(false);
 
   useEffect(() => {
     watchTogetherService.connect();
@@ -225,10 +226,6 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
       },
       onError: (error) => setError(error)
     });
-
-    return () => {
-      watchTogetherService.disconnect();
-    };
   }, [currentUser?.username]);
 
   const handleCreateRoom = async () => {
@@ -288,11 +285,10 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
     setCurrentUser(null);
     setPendingUpdates({});
     setMode('join');
+    watchTogetherService.disconnect();
   };
 
   const handleShareStreams = async () => {
-    if (!currentUser?.isAdmin) return;
-    
     await watchTogetherService.updateStreams(streams, channelCount);
   };
 
@@ -370,12 +366,25 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
         <RoomInfo>
           <div><strong>{currentRoom?.name}</strong></div>
           <RoomCode>
-            {currentRoom?.code}
+            {showRoomCode ? currentRoom?.code : '******'}
             <FaCopy 
               onClick={copyRoomCode} 
               style={{ cursor: 'pointer', fontSize: '1rem' }}
               title={t('watch_together.copy_code') as string}
             />
+            {showRoomCode ? (
+              <FaEyeSlash 
+                onClick={() => setShowRoomCode(false)}
+                style={{ cursor: 'pointer', fontSize: '1rem', marginLeft: '0.5rem' }}
+                title={t('watch_together.hide_code') as string}
+              />
+            ) : (
+              <FaEye 
+                onClick={() => setShowRoomCode(true)}
+                style={{ cursor: 'pointer', fontSize: '1rem', marginLeft: '0.5rem' }}
+                title={t('watch_together.show_code') as string}
+              />
+            )}
           </RoomCode>
           <div>{t('watch_together.participants')}: {currentRoom?.participants.length}</div>
         </RoomInfo>
@@ -427,14 +436,12 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
         </ParticipantsList>
       </Section>
 
-      {currentUser?.isAdmin && (
-        <Section>
-          <Button onClick={handleShareStreams}>
-            <FaSync />
-            {t('watch_together.share_streams')}
-          </Button>
-        </Section>
-      )}
+      <Section>
+        <Button onClick={handleShareStreams}>
+          <FaSync />
+          {t('watch_together.share_streams')}
+        </Button>
+      </Section>
 
       <Section>
         <Button variant="danger" onClick={handleLeaveRoom}>
