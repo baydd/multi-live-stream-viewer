@@ -29,7 +29,7 @@ A modern, responsive dashboard for viewing multiple live streams and Twitter fee
 1. Clone the repository
 2. Install dependencies:
    ```bash
-   npm install
+   npm run install:all
    ```
 3. Start the development server:
    ```bash
