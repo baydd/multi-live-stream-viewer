@@ -1,0 +1,5 @@
+{
+  "watch": ["server.js", "socket"],
+  "ext": "js,json",
+  "ignore": ["node_modules"]
+}
