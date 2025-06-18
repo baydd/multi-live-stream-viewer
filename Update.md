@@ -42,7 +42,30 @@ Bug Fix
 
 -----------------------------------------
 
+0,7 Beta
 
+Bug fix
+
+-----------------------------------------
+
+0,8 Beta
+
+Room system added
+
+Bug Fix
+
+-----------------------------------------
+
+0,9 Beta
+
+Design renewed
+
+Added the ability to update broadcast links via grids in edit mode.
+
+Bug Fix
+
+
+----------------------------------------------------
 
 
 
