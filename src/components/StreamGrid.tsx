@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Responsive, WidthProvider, Layout } from 'react-grid-layout';
 import { Stream } from '../types';
@@ -38,6 +38,13 @@ const StreamGrid: React.FC<StreamGridProps> = ({ streams, onRemoveStream, onUpda
   const cols = Math.max(1, Math.ceil(Math.sqrt(channelCount)));
   const rows = Math.max(1, Math.ceil(channelCount / cols));
 
+  useEffect(() => {
+    // if (isEditMode) {
+    //   const locks = streams.map(stream => stream.id).reduce((acc, id) => ({ ...acc, [id]: true }), {});
+    //   setGridLocks(locks);
+    // }
+  }, [isEditMode, streams]);
+
   if (!channelCount || !cols) {
     return <Info>Kanal ekleyin veya kanal sayısını artırın.</Info>;
   }
@@ -53,7 +60,7 @@ const StreamGrid: React.FC<StreamGridProps> = ({ streams, onRemoveStream, onUpda
       minH: 1,
       maxW: cols,
       maxH: rows,
-      static: gridLocks[stream.id] || false,
+      static: false,
     })),
   };
 
@@ -91,6 +98,7 @@ const StreamGrid: React.FC<StreamGridProps> = ({ streams, onRemoveStream, onUpda
   };
 
   const handleToggleGridLock = (streamId: string, locked: boolean) => {
+    console.log('StreamGrid handleToggleGridLock:', { streamId, locked, currentLocks: gridLocks });
     setGridLocks(prev => ({
       ...prev,
       [streamId]: locked
@@ -107,14 +115,15 @@ const StreamGrid: React.FC<StreamGridProps> = ({ streams, onRemoveStream, onUpda
         rowHeight={Math.floor((window.innerHeight - 60) / rows)}
         margin={[0, 0]}
         containerPadding={[0, 0]}
-        isDraggable={isEditMode}
-        isResizable={isEditMode}
         compactType="vertical"
         preventCollision={false}
         onLayoutChange={handleLayoutChange}
         style={{ gap: isEditMode ? '0' : '-1px' }}
-        draggableHandle=".drag-handle"
+        isDraggable={isEditMode}
+        isResizable={isEditMode}
         resizeHandles={['se']}
+        useCSSTransforms={false}
+        draggableHandle={isEditMode ? '.drag-handle' : undefined}
       >
         {streams.slice(0, channelCount).map((stream: Stream) => (
           <div key={stream.id} style={{ margin: isEditMode ? '0' : '-1px' }}>

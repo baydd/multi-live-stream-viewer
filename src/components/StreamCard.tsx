@@ -168,15 +168,19 @@ const ControlButton = styled.button<{ variant?: 'danger' }>`
 `;
 
 const InfoArea = styled.div`
-  padding: 0.5rem;
+  padding: 0.02rem 0.15rem 0.02rem 0.15rem;
   background: ${props => props.theme.cardBackground};
   border-top: 1px solid ${props => props.theme.border};
-  font-size: 0.75rem;
+  font-size: 0.52rem;
+  min-height: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 `;
 
 const Title = styled.div`
   font-weight: 600;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -185,8 +189,9 @@ const Title = styled.div`
 
 const Notes = styled.div`
   color: ${props => props.theme.secondary};
-  line-height: 1.3;
-  font-size: 0.7rem;
+  line-height: 1.1;
+  font-size: 0.52rem;
+  margin: 0;
 `;
 
 const LoadingOverlay = styled.div`
@@ -604,7 +609,7 @@ const StreamCard: React.FC<StreamCardProps> = ({
       </VideoContainer>
 
       {isEditMode && (
-        <InfoArea>
+        <InfoArea className="drag-handle">
           <Title>{stream.title || stream.url}</Title>
           {stream.notes && <Notes>{stream.notes}</Notes>}
         </InfoArea>
@@ -640,21 +645,22 @@ const StreamCard: React.FC<StreamCardProps> = ({
             <ControlButton 
               onClick={(e) => {
                 e.stopPropagation();
+                console.log('Grid Lock Toggle:', { streamId: stream.id, currentLock: isGridLocked, newLock: !isGridLocked });
+                // onToggleGridLock && onToggleGridLock(stream.id, !isGridLocked);
+              }} 
+              title={isGridLocked ? (t('unlock_grid') as string) : (t('lock_grid') as string)}
+            >
+              {isGridLocked ? <FaUnlock /> : <FaLock />}
+            </ControlButton>
+            <ControlButton 
+              onClick={(e) => {
+                e.stopPropagation();
                 onRemove();
               }} 
               title="Remove" 
               variant="danger"
             >
               <FaTimes />
-            </ControlButton>
-            <ControlButton 
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleGridLock && onToggleGridLock(stream.id, !isGridLocked);
-              }} 
-              title={isGridLocked ? (t('unlock_grid') as string) : (t('lock_grid') as string)}
-            >
-              {isGridLocked ? <FaUnlock /> : <FaLock />}
             </ControlButton>
           </ButtonGroup>
         </Controls>
