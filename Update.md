@@ -38,7 +38,6 @@ Bug Fix
 
 Save and Load System added
 
-Bug Fix
 
 -----------------------------------------
 
@@ -52,7 +51,6 @@ Bug fix
 
 Room system added
 
-Bug Fix
 
 -----------------------------------------
 
@@ -63,7 +61,6 @@ Design renewed
 Added the ability to update broadcast links via grids in edit mode.
 
 Bug Fix
-
 
 ----------------------------------------------------
 
