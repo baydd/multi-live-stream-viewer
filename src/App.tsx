@@ -101,6 +101,20 @@ const Title = styled.h1`
   margin: 0;
 `;
 
+const DevBy = styled.a`
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #3b82f6;
+  text-decoration: none;
+  transition: color 0.2s;
+  cursor: pointer;
+  margin-right: 1.5rem;
+  &:hover {
+    color: #2563eb;
+    text-decoration: underline;
+  }
+`;
+
 const ButtonGroup = styled.div`
   display: flex;
   gap: 0.5rem;
@@ -172,7 +186,7 @@ const App: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isWatchTogetherOpen, setIsWatchTogetherOpen] = useState(false);
   const [language, setLanguage] = useState<Language>('tr');
-  const [previousStreams, setPreviousStreams] = useState<Stream[]>([]);
+  const [previousStreams, setPreviousStreams] = useState<Stream[][]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
 
@@ -181,7 +195,7 @@ const App: React.FC = () => {
     setStreams(preferences.settings.streams);
     setChannelCount(preferences.settings.channelCount);
     setLanguage(preferences.settings.language as Language);
-    setPreviousStreams(preferences.settings.streams);
+    setPreviousStreams([]);
   }, []);
 
   useEffect(() => {
@@ -198,19 +212,19 @@ const App: React.FC = () => {
   }, [channelCount]);
 
   const handleAddStream = (stream: Stream) => {
-    setPreviousStreams(streams);
+    setPreviousStreams(prev => [...prev, streams]);
     const newStreams = [...streams, stream];
     setStreams(newStreams);
   };
 
   const handleRemoveStream = (id: string) => {
-    setPreviousStreams(streams);
+    setPreviousStreams(prev => [...prev, streams]);
     const newStreams = streams.filter(stream => stream.id !== id);
     setStreams(newStreams);
   };
 
   const handleUpdateStreams = (newStreams: Stream[]) => {
-    setPreviousStreams(streams);
+    setPreviousStreams(prev => [...prev, streams]);
     setStreams(newStreams);
     saveStreams(newStreams);
   };
@@ -220,10 +234,13 @@ const App: React.FC = () => {
   };
 
   const handleUndo = () => {
-    if (previousStreams.length > 0) {
-      setStreams(previousStreams);
-      localStorage.setItem('streams', JSON.stringify(previousStreams));
-    }
+    setPreviousStreams(prev => {
+      if (prev.length === 0) return prev;
+      const last = prev[prev.length - 1];
+      setStreams(last);
+      localStorage.setItem('streams', JSON.stringify(last));
+      return prev.slice(0, -1);
+    });
   };
 
   const getLanguageLabel = (lang: Language) => {
@@ -259,7 +276,9 @@ const App: React.FC = () => {
       <GlobalStyle />
       <AppContainer>
         <Header>
-          <Title>Developed by: baydd</Title>
+          <DevBy href="https://github.com/baydd" target="_blank" rel="noopener noreferrer">
+            Developed by: baydd
+          </DevBy>
           <ButtonGroup>
             <IconButton 
               onClick={() => setIsEditMode(!isEditMode)} 
@@ -278,9 +297,6 @@ const App: React.FC = () => {
               <FaGlobe />
               <span>{getLanguageLabel(language)}</span>
             </LanguageButton>
-            <IconButton onClick={handleUndo} title={i18n.t('undo') as string}>
-              <FaUndo />
-            </IconButton>
             <IconButton onClick={toggleTheme} title={isDarkMode ? "Light Mode" : "Dark Mode"}>
               {isDarkMode ? <FaSun /> : <FaMoon />}
             </IconButton>

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
-import { FaTimes, FaExpand, FaVolumeMute, FaVolumeUp, FaCompress, FaPlay, FaPause } from 'react-icons/fa';
+import { FaTimes, FaExpand, FaVolumeMute, FaVolumeUp, FaCompress, FaPlay, FaPause, FaEdit, FaLock, FaUnlock } from 'react-icons/fa';
+import { useTranslation } from 'react-i18next';
 import Hls from 'hls.js';
 import { Stream } from '../types';
 
@@ -12,7 +13,33 @@ interface StreamCardProps {
   onToggleFullscreen: () => void;
   isFullscreen: boolean;
   isEditMode: boolean;
+  onUpdateStream?: (updatedStream: Stream) => void;
+  onToggleGridLock?: (streamId: string, locked: boolean) => void;
+  isGridLocked?: boolean;
 }
+
+const DragHandle = styled.div`
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  width: 20px;
+  height: 20px;
+  background: ${props => props.theme.primary};
+  border-radius: 4px;
+  cursor: move;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.7rem;
+  z-index: 5;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 1;
+  }
+`;
 
 const Card = styled.div<{ isEditMode: boolean }>`
   background: ${props => props.theme.cardBackground};
@@ -94,18 +121,23 @@ const TwitterEmbedContainer = styled.div`
 `;
 
 const Controls = styled.div`
-  padding: 0.75rem 1rem;
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  gap: 0.25rem;
   background: ${props => props.theme.cardBackground};
   backdrop-filter: blur(10px);
-  border-top: 1px solid ${props => props.theme.border};
+  border: 1px solid ${props => props.theme.border};
+  border-radius: 8px;
+  padding: 0.25rem;
+  z-index: 10;
+  box-shadow: ${props => props.theme.shadow};
 `;
 
 const ButtonGroup = styled.div`
   display: flex;
-  gap: 0.5rem;
+  gap: 0.25rem;
 `;
 
 const ControlButton = styled.button<{ variant?: 'danger' }>`
@@ -113,15 +145,15 @@ const ControlButton = styled.button<{ variant?: 'danger' }>`
   border: 1px solid ${props => props.variant === 'danger' ? props.theme.error : props.theme.border};
   color: ${props => props.variant === 'danger' ? '#ffffff' : props.theme.text};
   cursor: pointer;
-  padding: 0.5rem;
+  padding: 0.25rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.875rem;
-  border-radius: 8px;
+  font-size: 0.75rem;
+  border-radius: 4px;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  min-width: 36px;
-  height: 36px;
+  min-width: 28px;
+  height: 28px;
 
   &:hover {
     background: ${props => props.variant === 'danger' ? props.theme.error + 'dd' : props.theme.primary};
@@ -135,11 +167,16 @@ const ControlButton = styled.button<{ variant?: 'danger' }>`
   }
 `;
 
+const InfoArea = styled.div`
+  padding: 0.5rem;
+  background: ${props => props.theme.cardBackground};
+  border-top: 1px solid ${props => props.theme.border};
+  font-size: 0.75rem;
+`;
+
 const Title = styled.div`
-  font-size: 0.875rem;
   font-weight: 600;
   margin-bottom: 0.25rem;
-  padding: 0 0.5rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -147,10 +184,9 @@ const Title = styled.div`
 `;
 
 const Notes = styled.div`
-  font-size: 0.75rem;
-  padding: 0 0.5rem;
   color: ${props => props.theme.secondary};
-  line-height: 1.4;
+  line-height: 1.3;
+  font-size: 0.7rem;
 `;
 
 const LoadingOverlay = styled.div`
@@ -246,6 +282,118 @@ const HLSPlayer: React.FC<{ url: string; isMuted: boolean }> = ({ url, isMuted }
   );
 };
 
+const Modal = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+`;
+
+const ModalContent = styled.div`
+  background: ${props => props.theme.cardBackground};
+  border: 1px solid ${props => props.theme.border};
+  border-radius: 8px;
+  padding: 1.25rem;
+  max-width: 380px;
+  width: 90%;
+  box-shadow: ${props => props.theme.shadowLg};
+`;
+
+const ModalTitle = styled.h3`
+  margin: 0 0 0.75rem 0;
+  color: ${props => props.theme.text};
+  font-size: 1rem;
+  font-weight: 600;
+`;
+
+const FormGroup = styled.div`
+  margin-bottom: 0.75rem;
+`;
+
+const Label = styled.label`
+  display: block;
+  margin-bottom: 0.25rem;
+  color: ${props => props.theme.text};
+  font-weight: 500;
+  font-size: 0.75rem;
+`;
+
+const Input = styled.input`
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid ${props => props.theme.border};
+  border-radius: 4px;
+  background: ${props => props.theme.background};
+  color: ${props => props.theme.text};
+  font-size: 0.75rem;
+  transition: all 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: ${props => props.theme.primary};
+    box-shadow: 0 0 0 2px ${props => props.theme.primary}20;
+  }
+`;
+
+const Select = styled.select`
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid ${props => props.theme.border};
+  border-radius: 4px;
+  background: ${props => props.theme.background};
+  color: ${props => props.theme.text};
+  font-size: 0.75rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: ${props => props.theme.primary};
+    box-shadow: 0 0 0 2px ${props => props.theme.primary}20;
+  }
+
+  option {
+    background: ${props => props.theme.background};
+    color: ${props => props.theme.text};
+  }
+`;
+
+const ModalButtonGroup = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+`;
+
+const Button = styled.button<{ variant?: 'primary' | 'secondary' }>`
+  padding: 0.4rem 0.8rem;
+  border: 1px solid ${props => props.variant === 'primary' ? props.theme.primary : props.theme.border};
+  border-radius: 4px;
+  background: ${props => props.variant === 'primary' ? props.theme.primary : 'transparent'};
+  color: ${props => props.variant === 'primary' ? '#ffffff' : props.theme.text};
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: ${props => props.variant === 'primary' ? props.theme.primary + 'dd' : props.theme.hover};
+    transform: translateY(-1px);
+    box-shadow: ${props => props.theme.shadow};
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
 const StreamCard: React.FC<StreamCardProps> = ({ 
   stream, 
   onRemove, 
@@ -253,13 +401,65 @@ const StreamCard: React.FC<StreamCardProps> = ({
   isMuted, 
   onToggleFullscreen, 
   isFullscreen,
-  isEditMode 
+  isEditMode,
+  onUpdateStream,
+  onToggleGridLock,
+  isGridLocked
 }) => {
+  const { t } = useTranslation();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [playbackRate, setPlaybackRate] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    url: stream.url,
+    title: stream.title,
+    notes: stream.notes,
+    platform: stream.platform
+  });
+  const [youtubeEmbedError, setYoutubeEmbedError] = useState(false);
+
+  // Update edit form when stream changes
+  useEffect(() => {
+    setEditForm({
+      url: stream.url,
+      title: stream.title,
+      notes: stream.notes,
+      platform: stream.platform
+    });
+  }, [stream]);
+
+  const handleEditClick = () => {
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditSubmit = () => {
+    if (onUpdateStream) {
+      const updatedStream = {
+        ...stream,
+        url: editForm.url,
+        title: editForm.title,
+        notes: editForm.notes,
+        platform: editForm.platform as 'youtube' | 'twitch' | 'hls' | 'dash' | 'twitter' | 'kick'
+      };
+      onUpdateStream(updatedStream);
+    }
+    setIsEditModalOpen(false);
+  };
+
+  const handleEditCancel = () => {
+    setEditForm({
+      url: stream.url,
+      title: stream.title,
+      notes: stream.notes,
+      platform: stream.platform
+    });
+    setIsEditModalOpen(false);
+  };
 
   const getYouTubeEmbedUrl = (url: string) => {
+    // Her türlü YouTube linkini embed formatına çevir
     const videoId = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/)?.[1];
     return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=${isMuted ? 1 : 0}` : url;
   };
@@ -324,12 +524,24 @@ const StreamCard: React.FC<StreamCardProps> = ({
   const renderStream = () => {
     switch (stream.platform) {
       case 'youtube':
+        if (youtubeEmbedError) {
+          // Fallback: YouTube'da izle butonu
+          const videoId = stream.url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/)?.[1];
+          const watchUrl = videoId ? `https://www.youtube.com/watch?v=${videoId}` : stream.url;
+          return (
+            <div style={{color:'#fff',padding:'1rem',textAlign:'center'}}>
+              <div style={{marginBottom:'0.5rem'}}>Bu video gömülü oynatılamıyor.</div>
+              <a href={watchUrl} target="_blank" rel="noopener noreferrer" style={{color:'#3b82f6',fontWeight:600}}>YouTube'da izle</a>
+            </div>
+          );
+        }
         return (
           <YouTubeIframe
             src={getYouTubeEmbedUrl(stream.url)}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
             onLoad={() => setIsLoading(false)}
+            onError={() => setYoutubeEmbedError(true)}
           />
         );
       case 'twitch':
@@ -373,31 +585,132 @@ const StreamCard: React.FC<StreamCardProps> = ({
     }
   };
 
+  // Fullscreen handler
+  const handleFullscreen = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const el = containerRef.current;
+    if (!el) return;
+    if (!document.fullscreenElement) {
+      el.requestFullscreen?.();
+    } else {
+      document.exitFullscreen?.();
+    }
+  };
+
   return (
     <Card isEditMode={isEditMode}>
-      <VideoContainer>
+      <VideoContainer ref={containerRef}>
         {renderStream()}
       </VideoContainer>
+
       {isEditMode && (
-        <>
-          <Controls>
-            <div>
-              <Title>{stream.title || stream.url}</Title>
-              {stream.notes && <Notes>{stream.notes}</Notes>}
-            </div>
-            <ButtonGroup>
-              <ControlButton onClick={onToggleMute} title={isMuted ? "Unmute" : "Mute"}>
-                {isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
-              </ControlButton>
-              <ControlButton onClick={onToggleFullscreen} title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}>
-                {isFullscreen ? <FaCompress /> : <FaExpand />}
-              </ControlButton>
-              <ControlButton onClick={onRemove} title="Remove" variant="danger">
-                <FaTimes />
-              </ControlButton>
-            </ButtonGroup>
-          </Controls>
-        </>
+        <InfoArea>
+          <Title>{stream.title || stream.url}</Title>
+          {stream.notes && <Notes>{stream.notes}</Notes>}
+        </InfoArea>
+      )}
+
+      {isEditMode && (
+        <Controls onClick={(e) => e.stopPropagation()}>
+          <ButtonGroup>
+            <ControlButton 
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEditClick();
+              }} 
+              title={t('edit_source') as string}
+            >
+              <FaEdit />
+            </ControlButton>
+            <ControlButton 
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleMute();
+              }} 
+              title={isMuted ? "Unmute" : "Mute"}
+            >
+              {isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
+            </ControlButton>
+            <ControlButton 
+              onClick={handleFullscreen}
+              title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+            >
+              {isFullscreen ? <FaCompress /> : <FaExpand />}
+            </ControlButton>
+            <ControlButton 
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove();
+              }} 
+              title="Remove" 
+              variant="danger"
+            >
+              <FaTimes />
+            </ControlButton>
+            <ControlButton 
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleGridLock && onToggleGridLock(stream.id, !isGridLocked);
+              }} 
+              title={isGridLocked ? (t('unlock_grid') as string) : (t('lock_grid') as string)}
+            >
+              {isGridLocked ? <FaUnlock /> : <FaLock />}
+            </ControlButton>
+          </ButtonGroup>
+        </Controls>
+      )}
+
+      {isEditModalOpen && (
+        <Modal onClick={handleEditCancel}>
+          <ModalContent onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
+            <ModalTitle>{t('edit_stream')}</ModalTitle>
+            <FormGroup>
+              <Label>{t('url')}</Label>
+              <Input
+                type="text"
+                value={editForm.url}
+                onChange={(e) => setEditForm(prev => ({ ...prev, url: e.target.value }))}
+                onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+                placeholder={t('enter_stream_url') as string}
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label>{t('platform')}</Label>
+              <Select
+                value={editForm.platform}
+                onChange={(e) => setEditForm(prev => ({ ...prev, platform: e.target.value as 'youtube' | 'twitch' | 'hls' | 'dash' | 'twitter' | 'kick' }))}
+                onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+              >
+                <option value="youtube">{t('settings.platforms.youtube')}</option>
+                <option value="twitch">{t('settings.platforms.twitch')}</option>
+                <option value="kick">{t('settings.platforms.kick')}</option>
+                <option value="hls">{t('settings.platforms.hls')}</option>
+                <option value="twitter">{t('settings.platforms.twitter')}</option>
+              </Select>
+            </FormGroup>
+            <ModalButtonGroup>
+              <Button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEditCancel();
+                }}
+              >
+                {t('cancel')}
+              </Button>
+              <Button 
+                variant="primary" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEditSubmit();
+                }}
+              >
+                {t('save_changes')}
+              </Button>
+            </ModalButtonGroup>
+          </ModalContent>
+        </Modal>
       )}
     </Card>
   );

@@ -33,6 +33,7 @@ const Info = styled.div`
 const StreamGrid: React.FC<StreamGridProps> = ({ streams, onRemoveStream, onUpdateStreams, channelCount, isEditMode }) => {
   const [isMuted, setIsMuted] = useState<{ [key: string]: boolean }>({});
   const [isFullscreen, setIsFullscreen] = useState<{ [key: string]: boolean }>({});
+  const [gridLocks, setGridLocks] = useState<{ [key: string]: boolean }>({});
 
   const cols = Math.max(1, Math.ceil(Math.sqrt(channelCount)));
   const rows = Math.max(1, Math.ceil(channelCount / cols));
@@ -52,13 +53,14 @@ const StreamGrid: React.FC<StreamGridProps> = ({ streams, onRemoveStream, onUpda
       minH: 1,
       maxW: cols,
       maxH: rows,
+      static: gridLocks[stream.id] || false,
     })),
   };
 
   const handleLayoutChange = (layout: Layout[]) => {
     const updatedStreams = streams.map((stream: Stream) => {
       const newLayout = layout.find((l: Layout) => l.i === stream.id);
-      if (newLayout) {
+      if (newLayout && !gridLocks[stream.id]) {
         return {
           ...stream,
           layout: {
@@ -88,6 +90,13 @@ const StreamGrid: React.FC<StreamGridProps> = ({ streams, onRemoveStream, onUpda
     }));
   };
 
+  const handleToggleGridLock = (streamId: string, locked: boolean) => {
+    setGridLocks(prev => ({
+      ...prev,
+      [streamId]: locked
+    }));
+  };
+
   return (
     <GridContainer>
       <ResponsiveGridLayout
@@ -104,6 +113,8 @@ const StreamGrid: React.FC<StreamGridProps> = ({ streams, onRemoveStream, onUpda
         preventCollision={false}
         onLayoutChange={handleLayoutChange}
         style={{ gap: isEditMode ? '0' : '-1px' }}
+        draggableHandle=".drag-handle"
+        resizeHandles={['se']}
       >
         {streams.slice(0, channelCount).map((stream: Stream) => (
           <div key={stream.id} style={{ margin: isEditMode ? '0' : '-1px' }}>
@@ -115,6 +126,14 @@ const StreamGrid: React.FC<StreamGridProps> = ({ streams, onRemoveStream, onUpda
               onToggleFullscreen={() => handleToggleFullscreen(stream.id)}
               isFullscreen={isFullscreen[stream.id] ?? false}
               isEditMode={isEditMode}
+              onUpdateStream={(updatedStream) => {
+                const updatedStreams = streams.map(s => 
+                  s.id === updatedStream.id ? updatedStream : s
+                );
+                onUpdateStreams(updatedStreams);
+              }}
+              onToggleGridLock={handleToggleGridLock}
+              isGridLocked={gridLocks[stream.id] || false}
             />
           </div>
         ))}
