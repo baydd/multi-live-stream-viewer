@@ -49,13 +49,24 @@ const StreamGrid: React.FC<StreamGridProps> = ({ streams, onRemoveStream, onUpda
     return <Info>Kanal ekleyin veya kanal sayısını artırın.</Info>;
   }
 
-  const layouts = {
-    lg: streams.slice(0, channelCount).map((stream: Stream, idx: number) => ({
-      i: stream.id,
+  // Recalculate layout positions when channelCount or streams.length changes
+  const orderedStreams = streams.slice(0, channelCount).map((stream, idx) => ({
+    ...stream,
+    layout: {
       x: idx % cols,
       y: Math.floor(idx / cols),
       w: 1,
       h: 1,
+    },
+  }));
+
+  const layouts = {
+    lg: orderedStreams.map((stream) => ({
+      i: stream.id,
+      x: stream.layout.x,
+      y: stream.layout.y,
+      w: stream.layout.w,
+      h: stream.layout.h,
       minW: 1,
       minH: 1,
       maxW: cols,
@@ -108,6 +119,7 @@ const StreamGrid: React.FC<StreamGridProps> = ({ streams, onRemoveStream, onUpda
   return (
     <GridContainer>
       <ResponsiveGridLayout
+        key={channelCount + '-' + streams.length}
         className="layout"
         layouts={layouts}
         breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
@@ -125,7 +137,7 @@ const StreamGrid: React.FC<StreamGridProps> = ({ streams, onRemoveStream, onUpda
         useCSSTransforms={false}
         draggableHandle={isEditMode ? '.drag-handle' : undefined}
       >
-        {streams.slice(0, channelCount).map((stream: Stream) => (
+        {orderedStreams.map((stream: Stream) => (
           <div key={stream.id} style={{ margin: isEditMode ? '0' : '-1px' }}>
             <StreamCard
               stream={stream}
