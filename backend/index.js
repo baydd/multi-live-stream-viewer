@@ -6,7 +6,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "*", // Geliştirme ortamında tüm origin'lere izin verin. Üretimde bunu kısıtlayın.
+    origin: "*",
     methods: ["GET", "POST"]
   }
 });
@@ -14,7 +14,7 @@ const io = socketIo(server, {
 const PORT = process.env.PORT || 3001;
 
 // Watch Together odalarını ve katılımcılarını depolamak için basit bir bellek içi depolama
-const rooms = {}; // { roomCode: { name, participants: [{ id, username, isAdmin, isOwner }], streams: [], channelCount } }
+const rooms = {}; // { roomCode: { name, participants: [{ id, username, isAdmin, isOwner, canShare }], streams: [], channelCount } }
 
 io.on('connection', (socket) => {
   console.log('Yeni bir istemci bağlandı:', socket.id);
@@ -29,6 +29,7 @@ io.on('connection', (socket) => {
       username,
       isAdmin: true,
       isOwner: true,
+      canShare: true,
       joinedAt: new Date().toISOString(),
       lastSeen: new Date().toISOString()
     };
@@ -67,6 +68,7 @@ io.on('connection', (socket) => {
       username,
       isAdmin: false,
       isOwner: false,
+      canShare: false, // Yeni katılan kullanıcılar varsayılan olarak paylaşım yapamaz
       joinedAt: new Date().toISOString(),
       lastSeen: new Date().toISOString()
     };
@@ -93,6 +95,12 @@ io.on('connection', (socket) => {
       return;
     }
 
+    // Paylaşım izni kontrolü
+    if (!user.canShare) {
+      callback({ error: 'Paylaşım izniniz yok. Yöneticiden izin isteyiniz.' });
+      return;
+    }
+
     room.streams = streams;
     room.channelCount = channelCount;
     room.lastUpdatedBy = user.id;
@@ -104,6 +112,126 @@ io.on('connection', (socket) => {
     io.to(roomCode).emit('roomUpdate', room);
   });
 
+  // Yönetici izin verme sistemi
+  socket.on('toggleSharePermission', ({ roomCode, targetUserId }, callback) => {
+    const room = rooms[roomCode];
+    if (!room) {
+      callback({ error: 'Oda bulunamadı.' });
+      return;
+    }
+
+    const admin = room.participants.find(p => p.id === socket.id);
+    if (!admin || (!admin.isAdmin && !admin.isOwner)) {
+      callback({ error: 'Bu işlem için yönetici yetkisi gerekli.' });
+      return;
+    }
+
+    const targetUser = room.participants.find(p => p.id === targetUserId);
+    if (!targetUser) {
+      callback({ error: 'Kullanıcı bulunamadı.' });
+      return;
+    }
+
+    // Sahip ve yöneticilerin izni değiştirilemez
+    if (targetUser.isOwner || targetUser.isAdmin) {
+      callback({ error: 'Yönetici ve sahip yetkilerini değiştiremezsiniz.' });
+      return;
+    }
+
+    targetUser.canShare = !targetUser.canShare;
+    
+    console.log(`${admin.username} kullanıcısı ${targetUser.username} için paylaşım iznini ${targetUser.canShare ? 'verdi' : 'aldı'}`);
+    callback({ success: true, canShare: targetUser.canShare });
+    io.to(roomCode).emit('permissionChanged', { 
+      targetUserId, 
+      canShare: targetUser.canShare, 
+      changedBy: admin.username 
+    });
+    io.to(roomCode).emit('roomUpdate', room);
+  });
+
+  // Yönetici yapma sistemi
+  socket.on('toggleAdminStatus', ({ roomCode, targetUserId }, callback) => {
+    const room = rooms[roomCode];
+    if (!room) {
+      callback({ error: 'Oda bulunamadı.' });
+      return;
+    }
+
+    const owner = room.participants.find(p => p.id === socket.id);
+    if (!owner || !owner.isOwner) {
+      callback({ error: 'Bu işlem için sahip yetkisi gerekli.' });
+      return;
+    }
+
+    const targetUser = room.participants.find(p => p.id === targetUserId);
+    if (!targetUser) {
+      callback({ error: 'Kullanıcı bulunamadı.' });
+      return;
+    }
+
+    if (targetUser.isOwner) {
+      callback({ error: 'Sahip yetkilerini değiştiremezsiniz.' });
+      return;
+    }
+
+    targetUser.isAdmin = !targetUser.isAdmin;
+    if (targetUser.isAdmin) {
+      targetUser.canShare = true; // Yöneticiler otomatik olarak paylaşım yapabilir
+    }
+    
+    console.log(`${owner.username} kullanıcısı ${targetUser.username} için yönetici yetkisini ${targetUser.isAdmin ? 'verdi' : 'aldı'}`);
+    callback({ success: true, isAdmin: targetUser.isAdmin });
+    io.to(roomCode).emit('adminStatusChanged', { 
+      targetUserId, 
+      isAdmin: targetUser.isAdmin, 
+      changedBy: owner.username 
+    });
+    io.to(roomCode).emit('roomUpdate', room);
+  });
+
+  // Paylaşım izni isteme sistemi
+  socket.on('requestSharePermission', ({ roomCode }, callback) => {
+    const room = rooms[roomCode];
+    if (!room) {
+      callback({ error: 'Oda bulunamadı.' });
+      return;
+    }
+
+    const user = room.participants.find(p => p.id === socket.id);
+    if (!user) {
+      callback({ error: 'Oda katılımcısı değil.' });
+      return;
+    }
+
+    // Zaten paylaşım izni varsa tekrar isteyemez
+    if (user.canShare) {
+      callback({ error: 'Zaten paylaşım izniniz var.' });
+      return;
+    }
+
+    // Yönetici ve sahipler izin isteyemez
+    if (user.isAdmin || user.isOwner) {
+      callback({ error: 'Yönetici ve sahipler izin isteyemez.' });
+      return;
+    }
+
+    // Odadaki tüm yönetici ve sahiplere bildirim gönder
+    const admins = room.participants.filter(p => p.isAdmin || p.isOwner);
+    
+    console.log(`${user.username} kullanıcısı paylaşım izni istedi`);
+    callback({ success: true, message: 'Paylaşım izni talebi gönderildi.' });
+    
+    // Yönetici ve sahiplere bildirim gönder
+    admins.forEach(admin => {
+      io.to(admin.id).emit('permissionRequested', {
+        requestingUserId: user.id,
+        requestingUsername: user.username,
+        roomCode
+      });
+    });
+  });
+
   socket.on('leaveRoom', ({ roomCode }) => {
     const room = rooms[roomCode];
     if (!room) return;
@@ -112,7 +240,7 @@ io.on('connection', (socket) => {
     socket.leave(roomCode);
 
     if (room.participants.length === 0) {
-      delete rooms[roomCode]; // Oda boşalırsa sil
+      delete rooms[roomCode];
       console.log(`Oda ${roomCode} silindi (boş).`);
     } else {
       console.log(`Kullanıcı ${socket.id} odadan ayrıldı: ${roomCode}`);
@@ -123,13 +251,12 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log('Bir istemci bağlantısı kesildi:', socket.id);
-    // Bağlantısı kesilen kullanıcıyı tüm odalardan çıkar
     for (const roomCode in rooms) {
       const room = rooms[roomCode];
       const initialParticipantCount = room.participants.length;
       room.participants = room.participants.filter(p => p.id !== socket.id);
 
-      if (room.participants.length < initialParticipantCount) { // Kullanıcı bu odadaydı
+      if (room.participants.length < initialParticipantCount) {
         if (room.participants.length === 0) {
           delete rooms[roomCode];
           console.log(`Oda ${roomCode} silindi (boş).`);
@@ -146,11 +273,10 @@ server.listen(PORT, () => {
   console.log(`WebSocket sunucusu http://localhost:${PORT} adresinde çalışıyor`);
 });
 
-// Yardımcı fonksiyonlar
 function generateRoomCode() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
 
 function generateRoomId() {
   return 'room_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
-} 
+}

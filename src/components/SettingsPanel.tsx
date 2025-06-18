@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent } from 'react';
+import React, { useState, ChangeEvent, useEffect } from 'react';
 import styled from 'styled-components';
 import { useTranslation } from 'react-i18next';
 import { FaTimes, FaSave, FaUpload, FaDownload, FaPalette } from 'react-icons/fa';
@@ -323,6 +323,10 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     { value: 'ru', label: 'Русский' },
     { value: 'pt', label: 'Português' }
   ];
+
+  useEffect(() => {
+    setChannelList(streams);
+  }, [streams]);
 
   const handleChannelCountChange = (count: number) => {
     setChannelCount(count);

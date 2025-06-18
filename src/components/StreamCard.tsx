@@ -325,66 +325,48 @@ const StreamCard: React.FC<StreamCardProps> = ({
     switch (stream.platform) {
       case 'youtube':
         return (
-          <>
-            <PlatformBadge platform="youtube">YouTube</PlatformBadge>
-            <YouTubeIframe
-              src={getYouTubeEmbedUrl(stream.url)}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              onLoad={() => setIsLoading(false)}
-            />
-          </>
+          <YouTubeIframe
+            src={getYouTubeEmbedUrl(stream.url)}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            onLoad={() => setIsLoading(false)}
+          />
         );
       case 'twitch':
         return (
-          <>
-            <PlatformBadge platform="twitch">Twitch</PlatformBadge>
-            <TwitchIframe
-              src={getTwitchEmbedUrl(stream.url)}
-              allowFullScreen
-              onLoad={() => setIsLoading(false)}
-            />
-          </>
+          <TwitchIframe
+            src={getTwitchEmbedUrl(stream.url)}
+            allowFullScreen
+            onLoad={() => setIsLoading(false)}
+          />
         );
       case 'kick':
         return (
-          <>
-            <PlatformBadge platform="kick">Kick</PlatformBadge>
-            <KickIframe
-              src={getKickEmbedUrl(stream.url, isMuted)}
-              allowFullScreen
-              onLoad={() => setIsLoading(false)}
-            />
-          </>
+          <KickIframe
+            src={getKickEmbedUrl(stream.url, isMuted)}
+            allowFullScreen
+            onLoad={() => setIsLoading(false)}
+          />
         );
       case 'hls':
         return (
-          <>
-            <PlatformBadge platform="hls">HLS</PlatformBadge>
-            <HLSPlayer url={stream.url} isMuted={isMuted} />
-          </>
+          <HLSPlayer url={stream.url} isMuted={isMuted} />
         );
       case 'dash':
         return (
-          <>
-            <PlatformBadge platform="dash">DASH</PlatformBadge>
-            <div>DASH Player not implemented</div>
-          </>
+          <div>DASH Player not implemented</div>
         );
       case 'twitter':
         return (
-          <>
-            <PlatformBadge platform="twitter">Twitter</PlatformBadge>
-            <TwitterEmbedContainer>
-              <a
-                className="twitter-timeline"
-                data-theme="dark"
-                href={`https://twitter.com/${stream.url.replace('@','')}`}
-              >
-                Tweets by {stream.url.replace('@','')}
-              </a>
-            </TwitterEmbedContainer>
-          </>
+          <TwitterEmbedContainer>
+            <a
+              className="twitter-timeline"
+              data-theme="dark"
+              href={`https://twitter.com/${stream.url.replace('@','')}`}
+            >
+              Tweets by {stream.url.replace('@','')}
+            </a>
+          </TwitterEmbedContainer>
         );
       default:
         return <div>Unsupported platform</div>;

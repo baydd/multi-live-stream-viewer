@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import styled, { ThemeProvider, createGlobalStyle } from 'styled-components';
 import { useTranslation } from 'react-i18next';
-import { FaCog, FaGlobe, FaUndo, FaEdit, FaUsers } from 'react-icons/fa';
+import { FaCog, FaGlobe, FaUndo, FaEdit, FaUsers, FaSun, FaMoon } from 'react-icons/fa';
 import { Stream, Settings } from './types';
 import StreamGrid from './components/StreamGrid';
 import SettingsPanel from './components/SettingsPanel';
 import WatchTogetherPanel from './components/WatchTogetherPanel';
-import { darkTheme } from './themes';
+import { darkTheme, lightTheme } from './themes';
 import { getPreferences, savePreferences, saveStreams, saveSettings } from './utils/storage';
 import './i18n';
 
@@ -80,16 +80,31 @@ const AppContainer = styled.div`
 
 const Header = styled.header`
   display: flex;
-  justify-content: flex-end;
   align-items: center;
-  padding: 1.5rem 2rem;
-  gap: 0.75rem;
+  justify-content: space-between;
+  padding: 1rem 2rem;
   background: ${props => props.theme.cardBackground};
   backdrop-filter: blur(10px);
   border-bottom: 1px solid ${props => props.theme.border};
   box-shadow: ${props => props.theme.shadow};
   position: relative;
   z-index: 100;
+`;
+
+const Title = styled.h1`
+  font-size: 1.5rem;
+  font-weight: 700;
+  background: ${props => props.theme.gradient};
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+`;
+
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
 `;
 
 const IconButton = styled.button<{ active?: boolean }>`
@@ -159,6 +174,7 @@ const App: React.FC = () => {
   const [language, setLanguage] = useState<Language>('tr');
   const [previousStreams, setPreviousStreams] = useState<Stream[]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(true);
 
   useEffect(() => {
     const preferences = getPreferences();
@@ -196,6 +212,7 @@ const App: React.FC = () => {
   const handleUpdateStreams = (newStreams: Stream[]) => {
     setPreviousStreams(streams);
     setStreams(newStreams);
+    saveStreams(newStreams);
   };
 
   const handleUpdateChannelCount = (count: number) => {
@@ -229,35 +246,48 @@ const App: React.FC = () => {
     setLanguage(languages[nextIndex]);
   };
 
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode);
+  };
+
+  const toggleSettings = () => {
+    setIsSettingsOpen(!isSettingsOpen);
+  };
+
   return (
-    <ThemeProvider theme={darkTheme}>
+    <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
       <GlobalStyle />
       <AppContainer>
         <Header>
-          <Logo>StreamDash</Logo>
-          <IconButton 
-            onClick={() => setIsEditMode(!isEditMode)} 
-            title={i18n.t('edit_mode') as string}
-            active={isEditMode}
-          >
-            <FaEdit />
-          </IconButton>
-          <IconButton 
-            onClick={() => setIsWatchTogetherOpen(true)} 
-            title={i18n.t('watch_together.title') as string}
-          >
-            <FaUsers />
-          </IconButton>
-          <LanguageButton onClick={cycleLanguage} title={i18n.t('change_language') as string}>
-            <FaGlobe />
-            <span>{getLanguageLabel(language)}</span>
-          </LanguageButton>
-          <IconButton onClick={handleUndo} title={i18n.t('undo') as string}>
-            <FaUndo />
-          </IconButton>
-          <IconButton onClick={() => setIsSettingsOpen(true)}>
-            <FaCog />
-          </IconButton>
+          <Title>Developed by: baydd</Title>
+          <ButtonGroup>
+            <IconButton 
+              onClick={() => setIsEditMode(!isEditMode)} 
+              title={i18n.t('edit_mode') as string}
+              active={isEditMode}
+            >
+              <FaEdit />
+            </IconButton>
+            <IconButton 
+              onClick={() => setIsWatchTogetherOpen(true)} 
+              title={i18n.t('watch_together.title') as string}
+            >
+              <FaUsers />
+            </IconButton>
+            <LanguageButton onClick={cycleLanguage} title={i18n.t('change_language') as string}>
+              <FaGlobe />
+              <span>{getLanguageLabel(language)}</span>
+            </LanguageButton>
+            <IconButton onClick={handleUndo} title={i18n.t('undo') as string}>
+              <FaUndo />
+            </IconButton>
+            <IconButton onClick={toggleTheme} title={isDarkMode ? "Light Mode" : "Dark Mode"}>
+              {isDarkMode ? <FaSun /> : <FaMoon />}
+            </IconButton>
+            <IconButton onClick={toggleSettings} title="Settings">
+              <FaCog />
+            </IconButton>
+          </ButtonGroup>
         </Header>
 
         <StreamGrid

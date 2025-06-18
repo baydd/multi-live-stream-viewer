@@ -10,6 +10,9 @@ class WatchTogetherService {
     onUserJoined?: (user: WatchTogetherUser) => void;
     onUserLeft?: (userId: string) => void;
     onStreamsUpdate?: (streams: Stream[], updatedBy: string, channelCount: number) => void;
+    onPermissionChanged?: (targetUserId: string, canShare: boolean, changedBy: string) => void;
+    onAdminStatusChanged?: (targetUserId: string, isAdmin: boolean, changedBy: string) => void;
+    onPermissionRequested?: (requestingUserId: string, requestingUsername: string) => void;
     onError?: (error: string) => void;
   } = {};
 
@@ -63,6 +66,18 @@ class WatchTogetherService {
     this.socket.on('streamsUpdated', ({ streams, updatedBy, channelCount }) => {
       this.callbacks.onStreamsUpdate?.(streams, updatedBy, channelCount);
     });
+
+    this.socket.on('permissionChanged', ({ targetUserId, canShare, changedBy }) => {
+      this.callbacks.onPermissionChanged?.(targetUserId, canShare, changedBy);
+    });
+
+    this.socket.on('adminStatusChanged', ({ targetUserId, isAdmin, changedBy }) => {
+      this.callbacks.onAdminStatusChanged?.(targetUserId, isAdmin, changedBy);
+    });
+
+    this.socket.on('permissionRequested', ({ requestingUserId, requestingUsername }) => {
+      this.callbacks.onPermissionRequested?.(requestingUserId, requestingUsername);
+    });
   }
 
   disconnect() {
@@ -115,16 +130,12 @@ class WatchTogetherService {
   }
 
   async updateStreams(streams: Stream[], channelCount: number) {
-    console.log('updateStreams çağrıldı. currentRoom:', this.currentRoom, 'currentUser:', this.currentUser);
     if (!this.socket?.connected || !this.currentRoom || !this.currentUser) {
-      console.log('updateStreams: Bağlantı veya oda/kullanıcı bilgisi eksik.');
       throw new Error('WebSocket bağlantısı yok veya oda/kullanıcı bilgisi eksik');
     }
 
     const roomCode = this.currentRoom.code;
-    console.log('updateStreams: roomCode:', roomCode);
     if (!roomCode) {
-      console.log('updateStreams: Oda kodu bulunamadı.');
       throw new Error('Oda kodu bulunamadı');
     }
 
@@ -133,6 +144,77 @@ class WatchTogetherService {
         roomCode,
         streams,
         channelCount
+      }, (response: any) => {
+        if (response.error) {
+          reject(new Error(response.error));
+        } else {
+          resolve(response);
+        }
+      });
+    });
+  }
+
+  async toggleSharePermission(targetUserId: string) {
+    if (!this.socket?.connected || !this.currentRoom) {
+      throw new Error('WebSocket bağlantısı yok veya oda bilgisi eksik');
+    }
+
+    const roomCode = this.currentRoom.code;
+    if (!roomCode) {
+      throw new Error('Oda kodu bulunamadı');
+    }
+
+    return new Promise((resolve, reject) => {
+      this.socket?.emit('toggleSharePermission', {
+        roomCode,
+        targetUserId
+      }, (response: any) => {
+        if (response.error) {
+          reject(new Error(response.error));
+        } else {
+          resolve(response);
+        }
+      });
+    });
+  }
+
+  async toggleAdminStatus(targetUserId: string) {
+    if (!this.socket?.connected || !this.currentRoom) {
+      throw new Error('WebSocket bağlantısı yok veya oda bilgisi eksik');
+    }
+
+    const roomCode = this.currentRoom.code;
+    if (!roomCode) {
+      throw new Error('Oda kodu bulunamadı');
+    }
+
+    return new Promise((resolve, reject) => {
+      this.socket?.emit('toggleAdminStatus', {
+        roomCode,
+        targetUserId
+      }, (response: any) => {
+        if (response.error) {
+          reject(new Error(response.error));
+        } else {
+          resolve(response);
+        }
+      });
+    });
+  }
+
+  async requestSharePermission() {
+    if (!this.socket?.connected || !this.currentRoom) {
+      throw new Error('WebSocket bağlantısı yok veya oda bilgisi eksik');
+    }
+
+    const roomCode = this.currentRoom.code;
+    if (!roomCode) {
+      throw new Error('Oda kodu bulunamadı');
+    }
+
+    return new Promise((resolve, reject) => {
+      this.socket?.emit('requestSharePermission', {
+        roomCode
       }, (response: any) => {
         if (response.error) {
           reject(new Error(response.error));

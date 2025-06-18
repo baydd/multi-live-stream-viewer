@@ -50,6 +50,7 @@ export interface WatchTogetherUser {
   username: string;
   isAdmin: boolean;
   isOwner: boolean;
+  canShare: boolean; // Yeni eklenen paylaşım izni
   joinedAt: string;
   lastSeen: string;
 }
