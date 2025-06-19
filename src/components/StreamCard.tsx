@@ -85,6 +85,7 @@ const YouTubeIframe = styled.iframe`
   height: 100%;
   border: none;
   background: #000;
+  object-fit: cover;
 `;
 
 const TwitchIframe = styled.iframe`
@@ -94,6 +95,7 @@ const TwitchIframe = styled.iframe`
   height: 100%;
   border: none;
   background: #000;
+  object-fit: cover;
 `;
 
 const KickIframe = styled.iframe`
@@ -103,6 +105,7 @@ const KickIframe = styled.iframe`
   height: 100%;
   border: none;
   background: #000;
+  object-fit: cover;
 `;
 
 const TwitterEmbedContainer = styled.div`

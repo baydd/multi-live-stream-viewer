@@ -17,11 +17,13 @@ interface StreamGridProps {
 }
 
 const GridContainer = styled.div`
-  width: 100%;
+  width: 100vw;
   height: calc(100vh - 60px);
-  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
   overflow: hidden;
-  padding: 0;
 `;
 
 const Info = styled.div`
@@ -35,8 +37,52 @@ const StreamGrid: React.FC<StreamGridProps> = ({ streams, onRemoveStream, onUpda
   const [isFullscreen, setIsFullscreen] = useState<{ [key: string]: boolean }>({});
   const [gridLocks, setGridLocks] = useState<{ [key: string]: boolean }>({});
 
-  const cols = Math.max(1, Math.ceil(Math.sqrt(channelCount)));
-  const rows = Math.max(1, Math.ceil(channelCount / cols));
+  // Window size state
+  const [windowSize, setWindowSize] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Akıllı grid oranı hesaplama
+  const gridWidth = windowSize.width;
+  const gridHeight = windowSize.height - 60;
+  const screenAspect = gridWidth / gridHeight;
+  const boxAspect = 16 / 9;
+  let bestCols = 1;
+  let bestRows = channelCount;
+  let minDiff = Infinity;
+
+  for (let cols = 1; cols <= channelCount; cols++) {
+    const rows = Math.ceil(channelCount / cols);
+    const gridAspect = (cols * boxAspect) / rows;
+    const diff = Math.abs(gridAspect - screenAspect);
+    if (diff < minDiff) {
+      minDiff = diff;
+      bestCols = cols;
+      bestRows = rows;
+    }
+  }
+
+  const cols = bestCols;
+  const rows = bestRows;
+
+  const gridAspect = (cols * boxAspect) / rows;
+  let width, height;
+  if (gridWidth / gridHeight > gridAspect) {
+    height = gridHeight;
+    width = height * gridAspect;
+  } else {
+    width = gridWidth;
+    height = width / gridAspect;
+  }
 
   useEffect(() => {
     // if (isEditMode) {
@@ -118,46 +164,63 @@ const StreamGrid: React.FC<StreamGridProps> = ({ streams, onRemoveStream, onUpda
 
   return (
     <GridContainer>
-      <ResponsiveGridLayout
-        key={channelCount + '-' + streams.length}
-        className="layout"
-        layouts={layouts}
-        breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-        cols={{ lg: cols, md: cols, sm: cols, xs: cols, xxs: cols }}
-        rowHeight={Math.floor((window.innerHeight - 60) / rows)}
-        margin={[0, 0]}
-        containerPadding={[0, 0]}
-        compactType="vertical"
-        preventCollision={false}
-        onLayoutChange={handleLayoutChange}
-        style={{ gap: isEditMode ? '0' : '-1px' }}
-        isDraggable={isEditMode}
-        isResizable={isEditMode}
-        resizeHandles={['se']}
-        draggableHandle={isEditMode ? '.drag-handle' : undefined}
-      >
-        {orderedStreams.map((stream: Stream) => (
-          <div key={stream.id} style={{ margin: isEditMode ? '0' : '-1px' }}>
-            <StreamCard
-              stream={stream}
-              onRemove={() => onRemoveStream(stream.id)}
-              onToggleMute={() => handleToggleMute(stream.id)}
-              isMuted={isMuted[stream.id] ?? true}
-              onToggleFullscreen={() => handleToggleFullscreen(stream.id)}
-              isFullscreen={isFullscreen[stream.id] ?? false}
-              isEditMode={isEditMode}
-              onUpdateStream={(updatedStream) => {
-                const updatedStreams = streams.map(s => 
-                  s.id === updatedStream.id ? updatedStream : s
-                );
-                onUpdateStreams(updatedStreams);
+      <div style={{ width, height }}>
+        <ResponsiveGridLayout
+          key={channelCount + '-' + streams.length}
+          className="layout"
+          layouts={layouts}
+          breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+          cols={{ lg: cols, md: cols, sm: cols, xs: cols, xxs: cols }}
+          rowHeight={height / rows}
+          margin={[0, 0]}
+          containerPadding={[0, 0]}
+          compactType="vertical"
+          preventCollision={false}
+          onLayoutChange={handleLayoutChange}
+          style={{ gap: isEditMode ? '0' : '-1px', width: '100%', height: '100%' }}
+          isDraggable={isEditMode}
+          isResizable={isEditMode}
+          resizeHandles={['se']}
+          draggableHandle={isEditMode ? '.drag-handle' : undefined}
+          isBounded={true}
+          useCSSTransforms={false}
+        >
+          {orderedStreams.map((stream: Stream) => (
+            <div
+              key={stream.id}
+              style={{
+                margin: isEditMode ? '0' : '-1px',
+                aspectRatio: '16/9',
+                width: '100%',
+                height: '100%',
+                minWidth: 0,
+                minHeight: 0,
+                background: '#000',
+                display: 'flex',
+                flexDirection: 'column',
               }}
-              onToggleGridLock={handleToggleGridLock}
-              isGridLocked={gridLocks[stream.id] || false}
-            />
-          </div>
-        ))}
-      </ResponsiveGridLayout>
+            >
+              <StreamCard
+                stream={stream}
+                onRemove={() => onRemoveStream(stream.id)}
+                onToggleMute={() => handleToggleMute(stream.id)}
+                isMuted={isMuted[stream.id] ?? true}
+                onToggleFullscreen={() => handleToggleFullscreen(stream.id)}
+                isFullscreen={isFullscreen[stream.id] ?? false}
+                isEditMode={isEditMode}
+                onUpdateStream={(updatedStream) => {
+                  const updatedStreams = streams.map(s => 
+                    s.id === updatedStream.id ? updatedStream : s
+                  );
+                  onUpdateStreams(updatedStreams);
+                }}
+                onToggleGridLock={handleToggleGridLock}
+                isGridLocked={gridLocks[stream.id] || false}
+              />
+            </div>
+          ))}
+        </ResponsiveGridLayout>
+      </div>
     </GridContainer>
   );
 };
