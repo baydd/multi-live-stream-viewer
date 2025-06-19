@@ -134,7 +134,6 @@ const StreamGrid: React.FC<StreamGridProps> = ({ streams, onRemoveStream, onUpda
         isDraggable={isEditMode}
         isResizable={isEditMode}
         resizeHandles={['se']}
-        useCSSTransforms={false}
         draggableHandle={isEditMode ? '.drag-handle' : undefined}
       >
         {orderedStreams.map((stream: Stream) => (

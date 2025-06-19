@@ -288,33 +288,40 @@ const HLSPlayer: React.FC<{ url: string; isMuted: boolean }> = ({ url, isMuted }
 };
 
 const Modal = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
-  backdrop-filter: blur(4px);
+  z-index: 100;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(2px);
+  pointer-events: all;
 `;
 
 const ModalContent = styled.div`
   background: ${props => props.theme.cardBackground};
   border: 1px solid ${props => props.theme.border};
   border-radius: 8px;
-  padding: 1.25rem;
-  max-width: 380px;
-  width: 90%;
+  padding: 0.75rem;
+  width: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  box-sizing: border-box;
   box-shadow: ${props => props.theme.shadowLg};
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  font-size: 0.85rem;
 `;
 
 const ModalTitle = styled.h3`
-  margin: 0 0 0.75rem 0;
+  margin: 0 0 0.5rem 0;
   color: ${props => props.theme.text};
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
 `;
 
@@ -324,7 +331,7 @@ const FormGroup = styled.div`
 
 const Label = styled.label`
   display: block;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.15rem;
   color: ${props => props.theme.text};
   font-weight: 500;
   font-size: 0.75rem;
@@ -332,12 +339,12 @@ const Label = styled.label`
 
 const Input = styled.input`
   width: 100%;
-  padding: 0.5rem;
+  padding: 0.35rem 0.5rem;
   border: 1px solid ${props => props.theme.border};
   border-radius: 4px;
   background: ${props => props.theme.background};
   color: ${props => props.theme.text};
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   transition: all 0.2s ease;
 
   &:focus {
@@ -349,12 +356,12 @@ const Input = styled.input`
 
 const Select = styled.select`
   width: 100%;
-  padding: 0.5rem;
+  padding: 0.35rem 0.5rem;
   border: 1px solid ${props => props.theme.border};
   border-radius: 4px;
   background: ${props => props.theme.background};
   color: ${props => props.theme.text};
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   transition: all 0.2s ease;
   cursor: pointer;
 
@@ -367,6 +374,7 @@ const Select = styled.select`
   option {
     background: ${props => props.theme.background};
     color: ${props => props.theme.text};
+    font-size: 0.8rem;
   }
 `;
 
