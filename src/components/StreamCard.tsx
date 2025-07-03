@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
-import { FaTimes, FaExpand, FaVolumeMute, FaVolumeUp, FaCompress, FaPlay, FaPause, FaEdit, FaLock, FaUnlock } from 'react-icons/fa';
+import { FaTimes, FaExpand, FaVolumeMute, FaVolumeUp, FaCompress, FaPlay, FaPause, FaEdit, FaLock, FaUnlock, FaCheck } from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
 import Hls from 'hls.js';
 import { Stream } from '../types';
@@ -13,50 +13,94 @@ interface StreamCardProps {
   onToggleFullscreen: () => void;
   isFullscreen: boolean;
   isEditMode: boolean;
+  isSelected?: boolean;
+  onSelect?: (selected: boolean) => void;
   onUpdateStream?: (updatedStream: Stream) => void;
   onToggleGridLock?: (streamId: string, locked: boolean) => void;
   isGridLocked?: boolean;
 }
 
+const Card = styled.div<{ isEditMode: boolean; isSelected: boolean }>`
+  background: ${props => props.theme.cardBackground};
+  border: ${props => {
+    if (props.isSelected) return `3px solid ${props.theme.primary}`;
+    if (props.isEditMode) return `2px solid ${props.theme.border}`;
+    return 'none';
+  }};
+  border-radius: ${props => props.isEditMode ? '12px' : '0'};
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  margin: ${props => props.isEditMode ? '2px' : '-1px'};
+  box-shadow: ${props => {
+    if (props.isSelected) return `0 0 20px ${props.theme.primary}40`;
+    if (props.isEditMode) return props.theme.shadow;
+    return 'none';
+  }};
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  cursor: ${props => props.isEditMode ? 'pointer' : 'default'};
+
+  &:hover {
+    box-shadow: ${props => {
+      if (props.isSelected) return `0 0 25px ${props.theme.primary}60`;
+      if (props.isEditMode) return props.theme.shadowLg;
+      return 'none';
+    }};
+    transform: ${props => props.isEditMode ? 'translateY(-2px)' : 'none'};
+  }
+`;
+
+const SelectionOverlay = styled.div<{ visible: boolean }>`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: ${props => props.theme.primary}20;
+  display: ${props => props.visible ? 'flex' : 'none'};
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  pointer-events: none;
+  
+  &::after {
+    content: "✓";
+    color: ${props => props.theme.primary};
+    font-size: 3rem;
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  }
+`;
+
 const DragHandle = styled.div`
   position: absolute;
-  top: 0.5rem;
-  left: 0.5rem;
-  width: 20px;
-  height: 20px;
+  top: 8px;
+  left: 8px;
+  width: 24px;
+  height: 24px;
   background: ${props => props.theme.primary};
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: move;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 0.7rem;
-  z-index: 5;
-  opacity: 0.8;
-  transition: opacity 0.2s ease;
+  font-size: 0.8rem;
+  z-index: 10;
+  opacity: 0.9;
+  transition: all 0.2s ease;
 
   &:hover {
     opacity: 1;
+    transform: scale(1.1);
   }
-`;
 
-const Card = styled.div<{ isEditMode: boolean }>`
-  background: ${props => props.theme.cardBackground};
-  border: ${props => props.isEditMode ? `2px solid ${props.theme.border}` : 'none'};
-  border-radius: ${props => props.isEditMode ? '16px' : '0'};
-  overflow: hidden;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  margin: ${props => props.isEditMode ? '4px' : '-1px'};
-  box-shadow: ${props => props.isEditMode ? props.theme.shadow : 'none'};
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-
-  &:hover {
-    box-shadow: ${props => props.isEditMode ? props.theme.shadowLg : 'none'};
-    transform: ${props => props.isEditMode ? 'translateY(-2px)' : 'none'};
+  &::after {
+    content: "⋮⋮";
+    transform: rotate(90deg);
+    font-weight: bold;
   }
 `;
 
@@ -85,7 +129,6 @@ const YouTubeIframe = styled.iframe`
   height: 100%;
   border: none;
   background: #000;
-  object-fit: cover;
 `;
 
 const TwitchIframe = styled.iframe`
@@ -95,7 +138,6 @@ const TwitchIframe = styled.iframe`
   height: 100%;
   border: none;
   background: #000;
-  object-fit: cover;
 `;
 
 const KickIframe = styled.iframe`
@@ -105,7 +147,6 @@ const KickIframe = styled.iframe`
   height: 100%;
   border: none;
   background: #000;
-  object-fit: cover;
 `;
 
 const TwitterEmbedContainer = styled.div`
@@ -123,46 +164,68 @@ const TwitterEmbedContainer = styled.div`
   }
 `;
 
-const Controls = styled.div`
+const Controls = styled.div<{ visible: boolean }>`
   position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  display: flex;
-  gap: 0.25rem;
-  background: ${props => props.theme.cardBackground};
+  top: 8px;
+  right: 8px;
+  display: ${props => props.visible ? 'flex' : 'none'};
+  gap: 4px;
+  background: ${props => props.theme.cardBackground}ee;
   backdrop-filter: blur(10px);
   border: 1px solid ${props => props.theme.border};
   border-radius: 8px;
-  padding: 0.25rem;
+  padding: 4px;
   z-index: 10;
   box-shadow: ${props => props.theme.shadow};
+  opacity: 0;
+  transition: opacity 0.2s ease;
+
+  ${Card}:hover & {
+    opacity: 1;
+  }
 `;
 
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: 0.25rem;
-`;
-
-const ControlButton = styled.button<{ variant?: 'danger' }>`
-  background: ${props => props.variant === 'danger' ? props.theme.error : props.theme.hover};
-  border: 1px solid ${props => props.variant === 'danger' ? props.theme.error : props.theme.border};
-  color: ${props => props.variant === 'danger' ? '#ffffff' : props.theme.text};
+const ControlButton = styled.button<{ variant?: 'danger' | 'success' | 'primary' }>`
+  background: ${props => {
+    switch (props.variant) {
+      case 'danger': return props.theme.error;
+      case 'success': return props.theme.success;
+      case 'primary': return props.theme.primary;
+      default: return props.theme.hover;
+    }
+  }};
+  border: 1px solid ${props => {
+    switch (props.variant) {
+      case 'danger': return props.theme.error;
+      case 'success': return props.theme.success;
+      case 'primary': return props.theme.primary;
+      default: return props.theme.border;
+    }
+  }};
+  color: ${props => props.variant ? '#ffffff' : props.theme.text};
   cursor: pointer;
-  padding: 0.25rem;
+  padding: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.75rem;
-  border-radius: 4px;
+  border-radius: 6px;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   min-width: 28px;
   height: 28px;
 
   &:hover {
-    background: ${props => props.variant === 'danger' ? props.theme.error + 'dd' : props.theme.primary};
-    color: #ffffff;
     transform: translateY(-1px);
     box-shadow: ${props => props.theme.shadow};
+    background: ${props => {
+      switch (props.variant) {
+        case 'danger': return props.theme.error + 'dd';
+        case 'success': return props.theme.success + 'dd';
+        case 'primary': return props.theme.primary + 'dd';
+        default: return props.theme.primary;
+      }
+    }};
+    color: #ffffff;
   }
 
   &:active {
@@ -170,20 +233,21 @@ const ControlButton = styled.button<{ variant?: 'danger' }>`
   }
 `;
 
-const InfoArea = styled.div`
-  padding: 0.02rem 0.15rem 0.02rem 0.15rem;
+const InfoArea = styled.div<{ visible: boolean }>`
+  padding: ${props => props.visible ? '8px 12px' : '4px 8px'};
   background: ${props => props.theme.cardBackground};
   border-top: 1px solid ${props => props.theme.border};
-  font-size: 0.52rem;
-  min-height: 12px;
+  font-size: ${props => props.visible ? '0.75rem' : '0.6rem'};
+  min-height: ${props => props.visible ? '40px' : '20px'};
   display: flex;
   flex-direction: column;
   justify-content: center;
+  transition: all 0.2s ease;
 `;
 
 const Title = styled.div`
   font-weight: 600;
-  margin-bottom: 0;
+  margin-bottom: 2px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -192,9 +256,11 @@ const Title = styled.div`
 
 const Notes = styled.div`
   color: ${props => props.theme.secondary};
-  line-height: 1.1;
-  font-size: 0.52rem;
-  margin: 0;
+  line-height: 1.2;
+  font-size: 0.65rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 const LoadingOverlay = styled.div`
@@ -207,12 +273,27 @@ const LoadingOverlay = styled.div`
   color: ${props => props.theme.text};
   font-size: 0.875rem;
   z-index: 10;
+  
+  &::after {
+    content: "";
+    width: 20px;
+    height: 20px;
+    border: 2px solid ${props => props.theme.border};
+    border-top: 2px solid ${props => props.theme.primary};
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
 `;
 
 const PlatformBadge = styled.div<{ platform: string }>`
   position: absolute;
-  top: 0.75rem;
-  left: 0.75rem;
+  bottom: 8px;
+  left: 8px;
   background: ${props => {
     switch (props.platform) {
       case 'youtube': return '#ff0000';
@@ -223,41 +304,108 @@ const PlatformBadge = styled.div<{ platform: string }>`
     }
   }};
   color: white;
-  padding: 0.25rem 0.5rem;
+  padding: 4px 8px;
   border-radius: 6px;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   z-index: 5;
   opacity: 0.9;
+  transition: opacity 0.2s ease;
+
+  ${Card}:hover & {
+    opacity: 1;
+  }
 `;
 
-const HLSPlayer: React.FC<{ url: string; isMuted: boolean }> = ({ url, isMuted }) => {
+const ErrorOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  background: ${props => props.theme.error}20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: ${props => props.theme.error};
+  font-size: 0.875rem;
+  text-align: center;
+  padding: 1rem;
+  z-index: 10;
+  
+  h4 {
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+  }
+  
+  p {
+    margin-bottom: 1rem;
+    opacity: 0.8;
+  }
+  
+  button {
+    background: ${props => props.theme.error};
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    
+    &:hover {
+      background: ${props => props.theme.error}dd;
+    }
+  }
+`;
+
+const HLSPlayer: React.FC<{ url: string; isMuted: boolean; onError: (error: string) => void }> = ({ 
+  url, 
+  isMuted, 
+  onError 
+}) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const hlsRef = useRef<Hls | null>(null);
 
   useEffect(() => {
     if (!videoRef.current) return;
 
     const video = videoRef.current;
-    let hls: Hls;
-
     setIsLoading(true);
 
+    const cleanup = () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+    };
+
     if (Hls.isSupported()) {
-      hls = new Hls({
+      const hls = new Hls({
         enableWorker: true,
         lowLatencyMode: true,
-        backBufferLength: 90
+        backBufferLength: 90,
+        maxBufferLength: 30,
+        maxMaxBufferLength: 60,
       });
+      
+      hlsRef.current = hls;
       hls.loadSource(url);
       hls.attachMedia(video);
+      
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         setIsLoading(false);
         video.play().catch(error => {
           console.error('Error playing video:', error);
+          onError('Failed to play video');
         });
+      });
+      
+      hls.on(Hls.Events.ERROR, (event, data) => {
+        console.error('HLS error:', data);
+        if (data.fatal) {
+          onError(`HLS Error: ${data.details}`);
+        }
       });
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
       video.src = url;
@@ -265,20 +413,23 @@ const HLSPlayer: React.FC<{ url: string; isMuted: boolean }> = ({ url, isMuted }
         setIsLoading(false);
         video.play().catch(error => {
           console.error('Error playing video:', error);
+          onError('Failed to play video');
         });
       });
+      
+      video.addEventListener('error', () => {
+        onError('Video playback error');
+      });
+    } else {
+      onError('HLS not supported in this browser');
     }
 
-    return () => {
-      if (hls) {
-        hls.destroy();
-      }
-    };
-  }, [url]);
+    return cleanup;
+  }, [url, onError]);
 
   return (
     <>
-      {isLoading && <LoadingOverlay>Loading stream...</LoadingOverlay>}
+      {isLoading && <LoadingOverlay />}
       <Video
         ref={videoRef}
         autoPlay
@@ -290,126 +441,6 @@ const HLSPlayer: React.FC<{ url: string; isMuted: boolean }> = ({ url, isMuted }
   );
 };
 
-const Modal = styled.div`
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  background: rgba(0,0,0,0.6);
-  backdrop-filter: blur(2px);
-  pointer-events: all;
-`;
-
-const ModalContent = styled.div`
-  background: ${props => props.theme.cardBackground};
-  border: 1px solid ${props => props.theme.border};
-  border-radius: 8px;
-  padding: 0.75rem;
-  width: 100%;
-  max-width: 100%;
-  max-height: 100%;
-  box-sizing: border-box;
-  box-shadow: ${props => props.theme.shadowLg};
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  font-size: 0.85rem;
-`;
-
-const ModalTitle = styled.h3`
-  margin: 0 0 0.5rem 0;
-  color: ${props => props.theme.text};
-  font-size: 0.95rem;
-  font-weight: 600;
-`;
-
-const FormGroup = styled.div`
-  margin-bottom: 0.75rem;
-`;
-
-const Label = styled.label`
-  display: block;
-  margin-bottom: 0.15rem;
-  color: ${props => props.theme.text};
-  font-weight: 500;
-  font-size: 0.75rem;
-`;
-
-const Input = styled.input`
-  width: 100%;
-  padding: 0.35rem 0.5rem;
-  border: 1px solid ${props => props.theme.border};
-  border-radius: 4px;
-  background: ${props => props.theme.background};
-  color: ${props => props.theme.text};
-  font-size: 0.8rem;
-  transition: all 0.2s ease;
-
-  &:focus {
-    outline: none;
-    border-color: ${props => props.theme.primary};
-    box-shadow: 0 0 0 2px ${props => props.theme.primary}20;
-  }
-`;
-
-const Select = styled.select`
-  width: 100%;
-  padding: 0.35rem 0.5rem;
-  border: 1px solid ${props => props.theme.border};
-  border-radius: 4px;
-  background: ${props => props.theme.background};
-  color: ${props => props.theme.text};
-  font-size: 0.8rem;
-  transition: all 0.2s ease;
-  cursor: pointer;
-
-  &:focus {
-    outline: none;
-    border-color: ${props => props.theme.primary};
-    box-shadow: 0 0 0 2px ${props => props.theme.primary}20;
-  }
-
-  option {
-    background: ${props => props.theme.background};
-    color: ${props => props.theme.text};
-    font-size: 0.8rem;
-  }
-`;
-
-const ModalButtonGroup = styled.div`
-  display: flex;
-  gap: 0.5rem;
-  justify-content: flex-end;
-  margin-top: 1rem;
-`;
-
-const Button = styled.button<{ variant?: 'primary' | 'secondary' }>`
-  padding: 0.4rem 0.8rem;
-  border: 1px solid ${props => props.variant === 'primary' ? props.theme.primary : props.theme.border};
-  border-radius: 4px;
-  background: ${props => props.variant === 'primary' ? props.theme.primary : 'transparent'};
-  color: ${props => props.variant === 'primary' ? '#ffffff' : props.theme.text};
-  font-size: 0.75rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: ${props => props.variant === 'primary' ? props.theme.primary + 'dd' : props.theme.hover};
-    transform: translateY(-1px);
-    box-shadow: ${props => props.theme.shadow};
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-`;
-
 const StreamCard: React.FC<StreamCardProps> = ({ 
   stream, 
   onRemove, 
@@ -418,137 +449,77 @@ const StreamCard: React.FC<StreamCardProps> = ({
   onToggleFullscreen, 
   isFullscreen,
   isEditMode,
+  isSelected = false,
+  onSelect,
   onUpdateStream,
   onToggleGridLock,
   isGridLocked
 }) => {
   const { t } = useTranslation();
-  const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [playbackRate, setPlaybackRate] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState({
-    url: stream.url,
-    title: stream.title,
-    notes: stream.notes,
-    platform: stream.platform
-  });
+  const [error, setError] = useState<string>('');
   const [youtubeEmbedError, setYoutubeEmbedError] = useState(false);
 
-  // Update edit form when stream changes
-  useEffect(() => {
-    setEditForm({
-      url: stream.url,
-      title: stream.title,
-      notes: stream.notes,
-      platform: stream.platform
-    });
-  }, [stream]);
-
-  const handleEditClick = () => {
-    setIsEditModalOpen(true);
-  };
-
-  const handleEditSubmit = () => {
-    if (onUpdateStream) {
-      const updatedStream = {
-        ...stream,
-        url: editForm.url,
-        title: editForm.title,
-        notes: editForm.notes,
-        platform: editForm.platform as 'youtube' | 'twitch' | 'hls' | 'dash' | 'twitter' | 'kick'
-      };
-      onUpdateStream(updatedStream);
+  const handleCardClick = useCallback((e: React.MouseEvent) => {
+    if (isEditMode && onSelect) {
+      e.stopPropagation();
+      onSelect(!isSelected);
     }
-    setIsEditModalOpen(false);
-  };
+  }, [isEditMode, isSelected, onSelect]);
 
-  const handleEditCancel = () => {
-    setEditForm({
-      url: stream.url,
-      title: stream.title,
-      notes: stream.notes,
-      platform: stream.platform
-    });
-    setIsEditModalOpen(false);
-  };
+  const handleError = useCallback((errorMessage: string) => {
+    setError(errorMessage);
+    setIsLoading(false);
+  }, []);
 
-  const getYouTubeEmbedUrl = (url: string) => {
-    // Her türlü YouTube linkini embed formatına çevir
+  const handleRetry = useCallback(() => {
+    setError('');
+    setIsLoading(true);
+    setYoutubeEmbedError(false);
+  }, []);
+
+  const getYouTubeEmbedUrl = useCallback((url: string) => {
     const videoId = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/)?.[1];
-    return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=${isMuted ? 1 : 0}` : url;
-  };
+    return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=${isMuted ? 1 : 0}&rel=0&modestbranding=1` : url;
+  }, [isMuted]);
 
-  const getTwitchEmbedUrl = (url: string) => {
+  const getTwitchEmbedUrl = useCallback((url: string) => {
     const channelName = url.match(/twitch\.tv\/([^\/\?]+)/)?.[1];
     if (!channelName) return url;
     return `https://player.twitch.tv/?channel=${channelName}&parent=${window.location.hostname}&muted=${isMuted}`;
-  };
+  }, [isMuted]);
 
-  const getKickEmbedUrl = (url: string, isMuted: boolean) => {
+  const getKickEmbedUrl = useCallback((url: string) => {
     const channelName = url.match(/kick\.com\/([^\/\?]+)/)?.[1];
     if (!channelName) return url;
     return `https://player.kick.com/${channelName}?autoplay=true&muted=${isMuted}`;
-  };
+  }, [isMuted]);
 
-  useEffect(() => {
-    if (!videoRef.current) return;
-
-    const video = videoRef.current;
-    video.muted = isMuted;
-    video.playbackRate = playbackRate;
-
-    if (stream.platform === 'youtube' || stream.platform === 'twitch' || stream.platform === 'kick') {
-      return;
+  const renderStream = useCallback(() => {
+    if (error) {
+      return (
+        <ErrorOverlay>
+          <h4>Stream Error</h4>
+          <p>{error}</p>
+          <button onClick={handleRetry}>Retry</button>
+        </ErrorOverlay>
+      );
     }
 
-    if (stream.url.includes('.m3u8')) {
-      if (Hls.isSupported()) {
-        const hls = new Hls();
-        hls.loadSource(stream.url);
-        hls.attachMedia(video);
-      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = stream.url;
-      }
-    } else {
-      video.src = stream.url;
-    }
-
-    return () => {
-      if (video.src) {
-        video.pause();
-        video.src = '';
-      }
-    };
-  }, [stream.url, isMuted, playbackRate, stream.platform]);
-
-  useEffect(() => {
-    if (stream.platform === 'twitter') {
-      if ((window as any).twttr && (window as any).twttr.widgets) {
-        (window as any).twttr.widgets.load();
-      } else if (!document.getElementById('twitter-wjs')) {
-        const script = document.createElement('script');
-        script.id = 'twitter-wjs';
-        script.src = 'https://platform.twitter.com/widgets.js';
-        script.async = true;
-        document.body.appendChild(script);
-      }
-    }
-  }, [stream.platform, stream.url]);
-
-  const renderStream = () => {
     switch (stream.platform) {
       case 'youtube':
         if (youtubeEmbedError) {
-          // Fallback: YouTube'da izle butonu
           const videoId = stream.url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/)?.[1];
           const watchUrl = videoId ? `https://www.youtube.com/watch?v=${videoId}` : stream.url;
           return (
-            <div style={{color:'#fff',padding:'1rem',textAlign:'center'}}>
-              <div style={{marginBottom:'0.5rem'}}>Bu video gömülü oynatılamıyor.</div>
-              <a href={watchUrl} target="_blank" rel="noopener noreferrer" style={{color:'#3b82f6',fontWeight:600}}>YouTube'da izle</a>
-            </div>
+            <ErrorOverlay>
+              <h4>Embed Restricted</h4>
+              <p>This video cannot be embedded.</p>
+              <button onClick={() => window.open(watchUrl, '_blank')}>
+                Watch on YouTube
+              </button>
+            </ErrorOverlay>
           );
         }
         return (
@@ -566,23 +537,32 @@ const StreamCard: React.FC<StreamCardProps> = ({
             src={getTwitchEmbedUrl(stream.url)}
             allowFullScreen
             onLoad={() => setIsLoading(false)}
+            onError={() => handleError('Failed to load Twitch stream')}
           />
         );
       case 'kick':
         return (
           <KickIframe
-            src={getKickEmbedUrl(stream.url, isMuted)}
+            src={getKickEmbedUrl(stream.url)}
             allowFullScreen
             onLoad={() => setIsLoading(false)}
+            onError={() => handleError('Failed to load Kick stream')}
           />
         );
       case 'hls':
         return (
-          <HLSPlayer url={stream.url} isMuted={isMuted} />
+          <HLSPlayer 
+            url={stream.url} 
+            isMuted={isMuted} 
+            onError={handleError}
+          />
         );
       case 'dash':
         return (
-          <div>DASH Player not implemented</div>
+          <ErrorOverlay>
+            <h4>DASH Player</h4>
+            <p>DASH streaming not yet implemented</p>
+          </ErrorOverlay>
         );
       case 'twitter':
         return (
@@ -597,12 +577,16 @@ const StreamCard: React.FC<StreamCardProps> = ({
           </TwitterEmbedContainer>
         );
       default:
-        return <div>Unsupported platform</div>;
+        return (
+          <ErrorOverlay>
+            <h4>Unsupported Platform</h4>
+            <p>Platform "{stream.platform}" is not supported</p>
+          </ErrorOverlay>
+        );
     }
-  };
+  }, [stream, isMuted, error, youtubeEmbedError, getYouTubeEmbedUrl, getTwitchEmbedUrl, getKickEmbedUrl, handleError, handleRetry]);
 
-  // Fullscreen handler
-  const handleFullscreen = (e: React.MouseEvent) => {
+  const handleFullscreen = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     const el = containerRef.current;
     if (!el) return;
@@ -611,124 +595,93 @@ const StreamCard: React.FC<StreamCardProps> = ({
     } else {
       document.exitFullscreen?.();
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (stream.platform === 'twitter') {
+      const loadTwitterWidget = () => {
+        if ((window as any).twttr && (window as any).twttr.widgets) {
+          (window as any).twttr.widgets.load();
+        } else if (!document.getElementById('twitter-wjs')) {
+          const script = document.createElement('script');
+          script.id = 'twitter-wjs';
+          script.src = 'https://platform.twitter.com/widgets.js';
+          script.async = true;
+          document.body.appendChild(script);
+        }
+      };
+      
+      const timeoutId = setTimeout(loadTwitterWidget, 100);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [stream.platform, stream.url]);
 
   return (
-    <Card isEditMode={isEditMode}>
-      <VideoContainer ref={containerRef}>
+    <Card 
+      isEditMode={isEditMode} 
+      isSelected={isSelected}
+      onClick={handleCardClick}
+      ref={containerRef}
+    >
+      <SelectionOverlay visible={isSelected} />
+      
+      {isEditMode && (
+        <DragHandle className="drag-handle" />
+      )}
+
+      <VideoContainer>
+        {isLoading && !error && <LoadingOverlay />}
         {renderStream()}
+        <PlatformBadge platform={stream.platform}>
+          {stream.platform}
+        </PlatformBadge>
       </VideoContainer>
 
-      {isEditMode && (
-        <InfoArea className="drag-handle">
-          <Title>{stream.title || stream.url}</Title>
-          {stream.notes && <Notes>{stream.notes}</Notes>}
-        </InfoArea>
-      )}
+      <InfoArea visible={isEditMode}>
+        <Title>{stream.title || stream.url}</Title>
+        {stream.notes && <Notes>{stream.notes}</Notes>}
+      </InfoArea>
 
-      {isEditMode && (
-        <Controls onClick={(e) => e.stopPropagation()}>
-          <ButtonGroup>
-            <ControlButton 
-              onClick={(e) => {
-                e.stopPropagation();
-                handleEditClick();
-              }} 
-              title={t('edit_source') as string}
-            >
-              <FaEdit />
-            </ControlButton>
-            <ControlButton 
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleMute();
-              }} 
-              title={isMuted ? "Unmute" : "Mute"}
-            >
-              {isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
-            </ControlButton>
-            <ControlButton 
-              onClick={handleFullscreen}
-              title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
-            >
-              {isFullscreen ? <FaCompress /> : <FaExpand />}
-            </ControlButton>
-            <ControlButton 
-              onClick={(e) => {
-                e.stopPropagation();
-                console.log('Grid Lock Toggle:', { streamId: stream.id, currentLock: isGridLocked, newLock: !isGridLocked });
-                // onToggleGridLock && onToggleGridLock(stream.id, !isGridLocked);
-              }} 
-              title={isGridLocked ? (t('unlock_grid') as string) : (t('lock_grid') as string)}
-            >
-              {isGridLocked ? <FaUnlock /> : <FaLock />}
-            </ControlButton>
-            <ControlButton 
-              onClick={(e) => {
-                e.stopPropagation();
-                onRemove();
-              }} 
-              title="Remove" 
-              variant="danger"
-            >
-              <FaTimes />
-            </ControlButton>
-          </ButtonGroup>
-        </Controls>
-      )}
-
-      {isEditModalOpen && (
-        <Modal onClick={handleEditCancel}>
-          <ModalContent onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
-            <ModalTitle>{t('edit_stream')}</ModalTitle>
-            <FormGroup>
-              <Label>{t('url')}</Label>
-              <Input
-                type="text"
-                value={editForm.url}
-                onChange={(e) => setEditForm(prev => ({ ...prev, url: e.target.value }))}
-                onClick={(e) => e.stopPropagation()}
-                onMouseDown={(e) => e.stopPropagation()}
-                placeholder={t('enter_stream_url') as string}
-              />
-            </FormGroup>
-            <FormGroup>
-              <Label>{t('platform')}</Label>
-              <Select
-                value={editForm.platform}
-                onChange={(e) => setEditForm(prev => ({ ...prev, platform: e.target.value as 'youtube' | 'twitch' | 'hls' | 'dash' | 'twitter' | 'kick' }))}
-                onClick={(e) => e.stopPropagation()}
-                onMouseDown={(e) => e.stopPropagation()}
-              >
-                <option value="youtube">{t('settings.platforms.youtube')}</option>
-                <option value="twitch">{t('settings.platforms.twitch')}</option>
-                <option value="kick">{t('settings.platforms.kick')}</option>
-                <option value="hls">{t('settings.platforms.hls')}</option>
-                <option value="twitter">{t('settings.platforms.twitter')}</option>
-              </Select>
-            </FormGroup>
-            <ModalButtonGroup>
-              <Button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleEditCancel();
-                }}
-              >
-                {t('cancel')}
-              </Button>
-              <Button 
-                variant="primary" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleEditSubmit();
-                }}
-              >
-                {t('save_changes')}
-              </Button>
-            </ModalButtonGroup>
-          </ModalContent>
-        </Modal>
-      )}
+      <Controls visible={isEditMode}>
+        <ControlButton 
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleMute();
+          }} 
+          title={isMuted ? "Unmute" : "Mute"}
+        >
+          {isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
+        </ControlButton>
+        
+        <ControlButton 
+          onClick={handleFullscreen}
+          title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+        >
+          {isFullscreen ? <FaCompress /> : <FaExpand />}
+        </ControlButton>
+        
+        <ControlButton 
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleGridLock && onToggleGridLock(stream.id, !isGridLocked);
+          }} 
+          title={isGridLocked ? "Unlock Grid" : "Lock Grid"}
+          variant={isGridLocked ? 'success' : 'primary'}
+        >
+          {isGridLocked ? <FaUnlock /> : <FaLock />}
+        </ControlButton>
+        
+        <ControlButton 
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }} 
+          title="Remove" 
+          variant="danger"
+        >
+          <FaTimes />
+        </ControlButton>
+      </Controls>
     </Card>
   );
 };

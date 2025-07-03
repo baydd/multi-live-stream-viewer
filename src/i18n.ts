@@ -39,6 +39,12 @@ const resources = {
         stream_title_placeholder: 'Stream Title',
         stream_url_placeholder: 'URL or ID',
       },
+      grid_controls: {
+        mute_all: 'Mute All Streams',
+        unmute_all: 'Unmute All Streams',
+        reset_layout: 'Reset Grid Layout',
+        toggle_compact: 'Toggle Compact Mode',
+      },
       watch_together: {
         title: 'Watch Together',
         username_placeholder: 'Enter your username',
@@ -166,6 +172,12 @@ const resources = {
         },
         stream_title_placeholder: 'Stream Title',
         stream_url_placeholder: 'URL or ID',
+      },
+      grid_controls: {
+        mute_all: 'Tümünü Sustur',
+        unmute_all: 'Tümünün Sesini Aç',
+        reset_layout: 'Düzeni Sıfırla',
+        toggle_compact: 'Kompakt Modu Değiştir',
       },
       watch_together: {
         title: 'Birlikte İzle',
@@ -295,6 +307,12 @@ const resources = {
         stream_title_placeholder: 'عنوان البث',
         stream_url_placeholder: 'URL أو ID',
       },
+      grid_controls: {
+        mute_all: 'كتم الكل',
+        unmute_all: 'إلغاء كتم الكل',
+        reset_layout: 'إعادة تعيين التخطيط',
+        toggle_compact: 'تبديل الوضع المضغوط',
+      },
       watch_together: {
         title: 'مشاهدة معاً',
         username_placeholder: 'أدخل اسم المستخدم',
@@ -423,6 +441,12 @@ const resources = {
         stream_title_placeholder: 'Título del Stream',
         stream_url_placeholder: 'URL o ID',
       },
+      grid_controls: {
+        mute_all: 'Silenciar Todo',
+        unmute_all: 'Activar Audio de Todo',
+        reset_layout: 'Restablecer Diseño',
+        toggle_compact: 'Alternar Modo Compacto',
+      },
       watch_together: {
         title: 'Ver Juntos',
         username_placeholder: 'Ingresa tu nombre de usuario',
@@ -502,6 +526,12 @@ const resources = {
         },
         stream_title_placeholder: '流标题',
         stream_url_placeholder: 'URL或ID',
+      },
+      grid_controls: {
+        mute_all: '全部静音',
+        unmute_all: '全部取消静音',
+        reset_layout: '重置布局',
+        toggle_compact: '切换紧凑模式',
       },
       watch_together: {
         title: '一起观看',
@@ -583,6 +613,12 @@ const resources = {
         stream_title_placeholder: 'Название стрима',
         stream_url_placeholder: 'URL или ID',
       },
+      grid_controls: {
+        mute_all: 'Отключить звук у всех',
+        unmute_all: 'Включить звук у всех',
+        reset_layout: 'Сбросить макет',
+        toggle_compact: 'Переключить компактный режим',
+      },
       watch_together: {
         title: 'Смотреть Вместе',
         username_placeholder: 'Введите ваше имя пользователя',
@@ -662,6 +698,12 @@ const resources = {
         },
         stream_title_placeholder: 'Título do Stream',
         stream_url_placeholder: 'URL ou ID',
+      },
+      grid_controls: {
+        mute_all: 'Silenciar Todos',
+        unmute_all: 'Ativar Som de Todos',
+        reset_layout: 'Redefinir Layout',
+        toggle_compact: 'Alternar Modo Compacto',
       },
       watch_together: {
         title: 'Assistir Juntos',
