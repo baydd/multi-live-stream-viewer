@@ -10,7 +10,8 @@ import {
   FaMoon, 
   FaBookmark,
   FaChartLine,
-  FaKeyboard
+  FaKeyboard,
+  FaLink
 } from 'react-icons/fa';
 import { Stream, Settings } from './types';
 import StreamGrid from './components/StreamGrid';
@@ -452,6 +453,17 @@ const App: React.FC = () => {
             Developed by: baydd
           </DevBy>
           <ButtonGroup>
+            <IconButton
+              as="a"
+              href="https://github.com/baydd/multi-live-stream-viewer/"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="HLS Link Extension (GitHub)"
+              style={{ textDecoration: 'none' }}
+            >
+              <FaLink style={{ marginRight: 6 }} />
+              Extension
+            </IconButton>
             <IconButton 
               onClick={() => setIsEditMode(!isEditMode)} 
               title="Edit Mode (Ctrl+E)"
