@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styled, { ThemeProvider, createGlobalStyle } from 'styled-components';
 import { useTranslation } from 'react-i18next';
-import { useHotkeys } from 'react-hotkeys-hook';
 import { 
   FaCog, 
   FaGlobe, 
@@ -303,43 +302,75 @@ const App: React.FC = () => {
     return () => clearTimeout(timeoutId);
   }, [channelCount]);
 
-  // Keyboard shortcuts
-  useHotkeys('ctrl+e', (e) => {
-    e.preventDefault();
-    setIsEditMode(!isEditMode);
-  }, [isEditMode]);
+  // Ctrl+V paste handler for adding streams
+  useEffect(() => {
+    const handlePaste = async (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === 'v') {
+        try {
+          const clipboardText = await navigator.clipboard.readText();
+          
+          // Check if it's a valid URL
+          if (clipboardText && (clipboardText.startsWith('http') || clipboardText.includes('.'))) {
+            // Find first empty slot or add new one
+            let targetIndex = streams.findIndex(stream => !stream.url || stream.url.trim() === '');
+            
+            if (targetIndex === -1) {
+              // No empty slot found, add new stream if under channel count
+              if (streams.length < channelCount) {
+                targetIndex = streams.length;
+              } else {
+                // Increase channel count and add new stream
+                setChannelCount(prev => prev + 1);
+                targetIndex = streams.length;
+              }
+            }
 
-  useHotkeys('ctrl+s', (e) => {
-    e.preventDefault();
-    setIsSettingsOpen(!isSettingsOpen);
-  }, [isSettingsOpen]);
+            // Auto-detect platform
+            let platform: Stream['platform'] = 'hls';
+            if (clipboardText.includes('youtube.com') || clipboardText.includes('youtu.be')) {
+              platform = 'youtube';
+            } else if (clipboardText.includes('twitch.tv')) {
+              platform = 'twitch';
+            } else if (clipboardText.includes('kick.com')) {
+              platform = 'kick';
+            } else if (clipboardText.includes('twitter.com') || clipboardText.includes('x.com')) {
+              platform = 'twitter';
+            }
 
-  useHotkeys('ctrl+p', (e) => {
-    e.preventDefault();
-    setIsPresetsOpen(!isPresetsOpen);
-  }, [isPresetsOpen]);
+            const newStream: Stream = {
+              id: Date.now().toString(),
+              url: clipboardText,
+              title: `Stream ${targetIndex + 1}`,
+              platform,
+              category: '',
+              notes: '',
+              layout: {
+                x: targetIndex % 3,
+                y: Math.floor(targetIndex / 3),
+                w: 1,
+                h: 1,
+              }
+            };
 
-  useHotkeys('ctrl+t', (e) => {
-    e.preventDefault();
-    toggleTheme();
-  }, [isDarkMode]);
+            if (targetIndex < streams.length) {
+              // Replace existing empty stream
+              const updatedStreams = [...streams];
+              updatedStreams[targetIndex] = newStream;
+              setStreams(updatedStreams);
+            } else {
+              // Add new stream
+              setStreams(prev => [...prev, newStream]);
+            }
+          }
+        } catch (error) {
+          console.error('Failed to read clipboard:', error);
+        }
+      }
+    };
 
-  useHotkeys('ctrl+m', (e) => {
-    e.preventDefault();
-    setShowPerformanceMonitor(!showPerformanceMonitor);
-  }, [showPerformanceMonitor]);
-
-  useHotkeys('ctrl+/', (e) => {
-    e.preventDefault();
-    setIsShortcutsOpen(!isShortcutsOpen);
-  }, [isShortcutsOpen]);
-
-  useHotkeys('escape', () => {
-    setIsSettingsOpen(false);
-    setIsWatchTogetherOpen(false);
-    setIsPresetsOpen(false);
-    setIsShortcutsOpen(false);
-  }, []);
+    document.addEventListener('keydown', handlePaste);
+    return () => document.removeEventListener('keydown', handlePaste);
+  }, [streams, channelCount]);
 
   const handleAddStream = useCallback((stream: Stream) => {
     setPreviousStreams(prev => [...prev, streams]);
@@ -521,6 +552,10 @@ const App: React.FC = () => {
           <ShortcutItem>
             <span>Performance Monitor</span>
             <ShortcutKey>Ctrl + M</ShortcutKey>
+          </ShortcutItem>
+          <ShortcutItem>
+            <span>Paste Stream URL</span>
+            <ShortcutKey>Ctrl + V</ShortcutKey>
           </ShortcutItem>
           <ShortcutItem>
             <span>Select All (Edit Mode)</span>

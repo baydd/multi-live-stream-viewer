@@ -22,55 +22,21 @@ interface StreamCardProps {
 
 const Card = styled.div<{ isEditMode: boolean; isSelected: boolean }>`
   background: ${props => props.theme.cardBackground};
-  border: ${props => {
-    if (props.isSelected) return `3px solid ${props.theme.primary}`;
-    if (props.isEditMode) return `2px solid ${props.theme.border}`;
-    return 'none';
-  }};
+  border: ${props => props.isEditMode ? `2px solid ${props.theme.border}` : 'none'};
   border-radius: ${props => props.isEditMode ? '12px' : '0'};
   overflow: hidden;
   height: 100%;
   display: flex;
   flex-direction: column;
   margin: ${props => props.isEditMode ? '2px' : '-1px'};
-  box-shadow: ${props => {
-    if (props.isSelected) return `0 0 20px ${props.theme.primary}40`;
-    if (props.isEditMode) return props.theme.shadow;
-    return 'none';
-  }};
+  box-shadow: ${props => props.isEditMode ? props.theme.shadow : 'none'};
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   cursor: ${props => props.isEditMode ? 'pointer' : 'default'};
 
   &:hover {
-    box-shadow: ${props => {
-      if (props.isSelected) return `0 0 25px ${props.theme.primary}60`;
-      if (props.isEditMode) return props.theme.shadowLg;
-      return 'none';
-    }};
+    box-shadow: ${props => props.isEditMode ? props.theme.shadowLg : 'none'};
     transform: ${props => props.isEditMode ? 'translateY(-2px)' : 'none'};
-  }
-`;
-
-const SelectionOverlay = styled.div<{ visible: boolean }>`
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: ${props => props.theme.primary}20;
-  display: ${props => props.visible ? 'flex' : 'none'};
-  align-items: center;
-  justify-content: center;
-  z-index: 5;
-  pointer-events: none;
-  
-  &::after {
-    content: "✓";
-    color: ${props => props.theme.primary};
-    font-size: 3rem;
-    font-weight: bold;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
   }
 `;
 
@@ -292,35 +258,6 @@ const LoadingOverlay = styled.div`
   }
 `;
 
-const PlatformBadge = styled.div<{ platform: string }>`
-  position: absolute;
-  bottom: 8px;
-  left: 8px;
-  background: ${props => {
-    switch (props.platform) {
-      case 'youtube': return '#ff0000';
-      case 'twitch': return '#9146ff';
-      case 'kick': return '#53fc18';
-      case 'twitter': return '#1da1f2';
-      default: return props.theme.primary;
-    }
-  }};
-  color: white;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 0.65rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  z-index: 5;
-  opacity: 0.9;
-  transition: opacity 0.2s ease;
-
-  ${Card}:hover & {
-    opacity: 1;
-  }
-`;
-
 const ErrorOverlay = styled.div`
   position: absolute;
   inset: 0;
@@ -357,6 +294,126 @@ const ErrorOverlay = styled.div`
     &:hover {
       background: ${props => props.theme.error}dd;
     }
+  }
+`;
+
+const Modal = styled.div`
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(2px);
+  pointer-events: all;
+`;
+
+const ModalContent = styled.div`
+  background: ${props => props.theme.cardBackground};
+  border: 1px solid ${props => props.theme.border};
+  border-radius: 8px;
+  padding: 0.75rem;
+  width: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  box-sizing: border-box;
+  box-shadow: ${props => props.theme.shadowLg};
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  font-size: 0.85rem;
+`;
+
+const ModalTitle = styled.h3`
+  margin: 0 0 0.5rem 0;
+  color: ${props => props.theme.text};
+  font-size: 0.95rem;
+  font-weight: 600;
+`;
+
+const FormGroup = styled.div`
+  margin-bottom: 0.75rem;
+`;
+
+const Label = styled.label`
+  display: block;
+  margin-bottom: 0.15rem;
+  color: ${props => props.theme.text};
+  font-weight: 500;
+  font-size: 0.75rem;
+`;
+
+const Input = styled.input`
+  width: 100%;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid ${props => props.theme.border};
+  border-radius: 4px;
+  background: ${props => props.theme.background};
+  color: ${props => props.theme.text};
+  font-size: 0.8rem;
+  transition: all 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: ${props => props.theme.primary};
+    box-shadow: 0 0 0 2px ${props => props.theme.primary}20;
+  }
+`;
+
+const Select = styled.select`
+  width: 100%;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid ${props => props.theme.border};
+  border-radius: 4px;
+  background: ${props => props.theme.background};
+  color: ${props => props.theme.text};
+  font-size: 0.8rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: ${props => props.theme.primary};
+    box-shadow: 0 0 0 2px ${props => props.theme.primary}20;
+  }
+
+  option {
+    background: ${props => props.theme.background};
+    color: ${props => props.theme.text};
+    font-size: 0.8rem;
+  }
+`;
+
+const ModalButtonGroup = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+`;
+
+const Button = styled.button<{ variant?: 'primary' | 'secondary' }>`
+  padding: 0.4rem 0.8rem;
+  border: 1px solid ${props => props.variant === 'primary' ? props.theme.primary : props.theme.border};
+  border-radius: 4px;
+  background: ${props => props.variant === 'primary' ? props.theme.primary : 'transparent'};
+  color: ${props => props.variant === 'primary' ? '#ffffff' : props.theme.text};
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: ${props => props.variant === 'primary' ? props.theme.primary + 'dd' : props.theme.hover};
+    transform: translateY(-1px);
+    box-shadow: ${props => props.theme.shadow};
+  }
+
+  &:active {
+    transform: translateY(0);
   }
 `;
 
@@ -462,6 +519,23 @@ const StreamCard: React.FC<StreamCardProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [youtubeEmbedError, setYoutubeEmbedError] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    url: stream.url,
+    title: stream.title,
+    notes: stream.notes,
+    platform: stream.platform
+  });
+
+  // Update edit form when stream changes
+  useEffect(() => {
+    setEditForm({
+      url: stream.url,
+      title: stream.title,
+      notes: stream.notes,
+      platform: stream.platform
+    });
+  }, [stream]);
 
   const handleCardClick = useCallback((e: React.MouseEvent) => {
     if (isEditMode && onSelect) {
@@ -480,6 +554,34 @@ const StreamCard: React.FC<StreamCardProps> = ({
     setIsLoading(true);
     setYoutubeEmbedError(false);
   }, []);
+
+  const handleEditClick = () => {
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditSubmit = () => {
+    if (onUpdateStream) {
+      const updatedStream = {
+        ...stream,
+        url: editForm.url,
+        title: editForm.title,
+        notes: editForm.notes,
+        platform: editForm.platform as 'youtube' | 'twitch' | 'hls' | 'dash' | 'twitter' | 'kick'
+      };
+      onUpdateStream(updatedStream);
+    }
+    setIsEditModalOpen(false);
+  };
+
+  const handleEditCancel = () => {
+    setEditForm({
+      url: stream.url,
+      title: stream.title,
+      notes: stream.notes,
+      platform: stream.platform
+    });
+    setIsEditModalOpen(false);
+  };
 
   const getYouTubeEmbedUrl = useCallback((url: string) => {
     const videoId = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/)?.[1];
@@ -625,8 +727,6 @@ const StreamCard: React.FC<StreamCardProps> = ({
       onClick={handleCardClick}
       ref={containerRef}
     >
-      <SelectionOverlay visible={isSelected} />
-      
       {isEditMode && (
         <DragHandle className="drag-handle" />
       )}
@@ -634,9 +734,6 @@ const StreamCard: React.FC<StreamCardProps> = ({
       <VideoContainer>
         {isLoading && !error && <LoadingOverlay />}
         {renderStream()}
-        <PlatformBadge platform={stream.platform}>
-          {stream.platform}
-        </PlatformBadge>
       </VideoContainer>
 
       {/* Info area sadece edit modunda görünür */}
@@ -646,6 +743,16 @@ const StreamCard: React.FC<StreamCardProps> = ({
       </InfoArea>
 
       <Controls visible={isEditMode}>
+        <ControlButton 
+          onClick={(e) => {
+            e.stopPropagation();
+            handleEditClick();
+          }} 
+          title={t('edit_source') as string}
+        >
+          <FaEdit />
+        </ControlButton>
+        
         <ControlButton 
           onClick={(e) => {
             e.stopPropagation();
@@ -685,6 +792,81 @@ const StreamCard: React.FC<StreamCardProps> = ({
           <FaTimes />
         </ControlButton>
       </Controls>
+
+      {isEditModalOpen && (
+        <Modal onClick={handleEditCancel}>
+          <ModalContent onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
+            <ModalTitle>{t('edit_stream')}</ModalTitle>
+            <FormGroup>
+              <Label>{t('url')}</Label>
+              <Input
+                type="text"
+                value={editForm.url}
+                onChange={(e) => setEditForm(prev => ({ ...prev, url: e.target.value }))}
+                onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+                placeholder={t('enter_stream_url') as string}
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label>{t('title')}</Label>
+              <Input
+                type="text"
+                value={editForm.title}
+                onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))}
+                onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+                placeholder={t('enter_stream_title') as string}
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label>{t('platform')}</Label>
+              <Select
+                value={editForm.platform}
+                onChange={(e) => setEditForm(prev => ({ ...prev, platform: e.target.value as 'youtube' | 'twitch' | 'hls' | 'dash' | 'twitter' | 'kick' }))}
+                onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+              >
+                <option value="youtube">{t('settings.platforms.youtube')}</option>
+                <option value="twitch">{t('settings.platforms.twitch')}</option>
+                <option value="kick">{t('settings.platforms.kick')}</option>
+                <option value="hls">{t('settings.platforms.hls')}</option>
+                <option value="twitter">{t('settings.platforms.twitter')}</option>
+              </Select>
+            </FormGroup>
+            <FormGroup>
+              <Label>{t('notes')}</Label>
+              <Input
+                type="text"
+                value={editForm.notes}
+                onChange={(e) => setEditForm(prev => ({ ...prev, notes: e.target.value }))}
+                onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+                placeholder={t('enter_stream_notes') as string}
+              />
+            </FormGroup>
+            <ModalButtonGroup>
+              <Button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEditCancel();
+                }}
+              >
+                {t('cancel')}
+              </Button>
+              <Button 
+                variant="primary" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEditSubmit();
+                }}
+              >
+                {t('save_changes')}
+              </Button>
+            </ModalButtonGroup>
+          </ModalContent>
+        </Modal>
+      )}
     </Card>
   );
 };
