@@ -22,45 +22,44 @@ interface StreamCardProps {
 
 const Card = styled.div<{ isEditMode: boolean; isSelected: boolean }>`
   background: ${props => props.theme.cardBackground};
-  border: ${props => props.isEditMode ? `2px solid ${props.theme.border}` : 'none'};
-  border-radius: ${props => props.isEditMode ? '12px' : '0'};
+  border: ${props => props.isEditMode ? `1px solid ${props.isSelected ? props.theme.primary : props.theme.border}` : 'none'};
+  border-radius: ${props => props.isEditMode ? '8px' : '0'};
   overflow: hidden;
   height: 100%;
   display: flex;
   flex-direction: column;
-  margin: ${props => props.isEditMode ? '2px' : '-1px'};
-  box-shadow: ${props => props.isEditMode ? props.theme.shadow : 'none'};
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin: ${props => props.isEditMode ? '1px' : '0'};
+  box-shadow: ${props => props.isEditMode && props.isSelected ? props.theme.shadowLg : 'none'};
+  transition: all 0.2s ease;
   position: relative;
   cursor: ${props => props.isEditMode ? 'pointer' : 'default'};
 
   &:hover {
-    box-shadow: ${props => props.isEditMode ? props.theme.shadowLg : 'none'};
-    transform: ${props => props.isEditMode ? 'translateY(-2px)' : 'none'};
+    box-shadow: ${props => props.isEditMode ? props.theme.shadow : 'none'};
   }
 `;
 
 const DragHandle = styled.div`
   position: absolute;
-  top: 8px;
-  left: 8px;
-  width: 24px;
-  height: 24px;
-  background: ${props => props.theme.primary};
-  border-radius: 6px;
+  top: 6px;
+  left: 6px;
+  width: 20px;
+  height: 20px;
+  background: ${props => props.theme.primary}dd;
+  border-radius: 4px;
   cursor: move;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   z-index: 10;
-  opacity: 0.9;
+  opacity: 0.8;
   transition: all 0.2s ease;
 
   &:hover {
     opacity: 1;
-    transform: scale(1.1);
+    background: ${props => props.theme.primary};
   }
 
   &::after {
@@ -132,15 +131,15 @@ const TwitterEmbedContainer = styled.div`
 
 const Controls = styled.div<{ visible: boolean }>`
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 6px;
+  right: 6px;
   display: ${props => props.visible ? 'flex' : 'none'};
-  gap: 4px;
-  background: ${props => props.theme.cardBackground}ee;
-  backdrop-filter: blur(10px);
-  border: 1px solid ${props => props.theme.border};
-  border-radius: 8px;
-  padding: 4px;
+  gap: 3px;
+  background: ${props => props.theme.cardBackground}f0;
+  backdrop-filter: blur(8px);
+  border: 1px solid ${props => props.theme.border}80;
+  border-radius: 6px;
+  padding: 3px;
   z-index: 10;
   box-shadow: ${props => props.theme.shadow};
   opacity: 0;
@@ -160,28 +159,21 @@ const ControlButton = styled.button<{ variant?: 'danger' | 'success' | 'primary'
       default: return props.theme.hover;
     }
   }};
-  border: 1px solid ${props => {
-    switch (props.variant) {
-      case 'danger': return props.theme.error;
-      case 'success': return props.theme.success;
-      case 'primary': return props.theme.primary;
-      default: return props.theme.border;
-    }
-  }};
+  border: none;
   color: ${props => props.variant ? '#ffffff' : props.theme.text};
   cursor: pointer;
-  padding: 6px;
+  padding: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
-  border-radius: 6px;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  min-width: 28px;
-  height: 28px;
+  font-size: 0.7rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  min-width: 24px;
+  height: 24px;
 
   &:hover {
-    transform: translateY(-1px);
+    transform: scale(1.05);
     box-shadow: ${props => props.theme.shadow};
     background: ${props => {
       switch (props.variant) {
@@ -193,19 +185,15 @@ const ControlButton = styled.button<{ variant?: 'danger' | 'success' | 'primary'
     }};
     color: #ffffff;
   }
-
-  &:active {
-    transform: translateY(0);
-  }
 `;
 
 const InfoArea = styled.div<{ visible: boolean }>`
-  padding: ${props => props.visible ? '8px 12px' : '0'};
-  background: ${props => props.visible ? props.theme.cardBackground : 'transparent'};
-  border-top: ${props => props.visible ? `1px solid ${props.theme.border}` : 'none'};
-  font-size: ${props => props.visible ? '0.75rem' : '0'};
-  min-height: ${props => props.visible ? '40px' : '0'};
-  max-height: ${props => props.visible ? '40px' : '0'};
+  padding: ${props => props.visible ? '6px 8px' : '0'};
+  background: ${props => props.visible ? props.theme.cardBackground + 'f8' : 'transparent'};
+  border-top: ${props => props.visible ? `1px solid ${props.theme.border}60` : 'none'};
+  font-size: ${props => props.visible ? '0.7rem' : '0'};
+  min-height: ${props => props.visible ? '32px' : '0'};
+  max-height: ${props => props.visible ? '32px' : '0'};
   display: ${props => props.visible ? 'flex' : 'none'};
   flex-direction: column;
   justify-content: center;
@@ -214,85 +202,64 @@ const InfoArea = styled.div<{ visible: boolean }>`
 `;
 
 const Title = styled.div`
-  font-weight: 600;
-  margin-bottom: 2px;
+  font-weight: 500;
+  margin-bottom: 1px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   color: ${props => props.theme.text};
+  line-height: 1.2;
 `;
 
 const Notes = styled.div`
   color: ${props => props.theme.secondary};
-  line-height: 1.2;
+  line-height: 1.1;
   font-size: 0.65rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-`;
-
-const LoadingOverlay = styled.div`
-  position: absolute;
-  inset: 0;
-  background: ${props => props.theme.background};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: ${props => props.theme.text};
-  font-size: 0.875rem;
-  z-index: 10;
-  
-  &::after {
-    content: "";
-    width: 20px;
-    height: 20px;
-    border: 2px solid ${props => props.theme.border};
-    border-top: 2px solid ${props => props.theme.primary};
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
-  
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
+  opacity: 0.8;
 `;
 
 const ErrorOverlay = styled.div`
   position: absolute;
   inset: 0;
-  background: ${props => props.theme.error}20;
+  background: ${props => props.theme.error}15;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   color: ${props => props.theme.error};
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   text-align: center;
   padding: 1rem;
   z-index: 10;
   
   h4 {
-    margin-bottom: 0.5rem;
-    font-size: 1rem;
+    margin-bottom: 0.4rem;
+    font-size: 0.9rem;
+    font-weight: 600;
   }
   
   p {
-    margin-bottom: 1rem;
-    opacity: 0.8;
+    margin-bottom: 0.8rem;
+    opacity: 0.9;
+    line-height: 1.3;
   }
   
   button {
     background: ${props => props.theme.error};
     color: white;
     border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
     cursor: pointer;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
+    transition: all 0.2s ease;
     
     &:hover {
       background: ${props => props.theme.error}dd;
+      transform: translateY(-1px);
     }
   }
 `;
@@ -306,7 +273,7 @@ const Modal = styled.div`
   align-items: center;
   justify-content: center;
   z-index: 100;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0,0,0,0.5);
   backdrop-filter: blur(2px);
   pointer-events: all;
 `;
@@ -417,86 +384,114 @@ const Button = styled.button<{ variant?: 'primary' | 'secondary' }>`
   }
 `;
 
-const HLSPlayer: React.FC<{ url: string; isMuted: boolean; onError: (error: string) => void }> = ({ 
-  url, 
-  isMuted, 
-  onError 
-}) => {
+const HLSPlayer: React.FC<{ url: string; isMuted: boolean; onError: (error: string) => void }> = ({ url, isMuted, onError }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const hlsRef = useRef<Hls | null>(null);
+  const [showPlayButton, setShowPlayButton] = useState(false);
+  const [error, setError] = useState<string>('');
 
   useEffect(() => {
-    if (!videoRef.current) return;
-
+    setError('');
+    setShowPlayButton(false);
     const video = videoRef.current;
-    setIsLoading(true);
-
-    const cleanup = () => {
+    if (!video) return;
+    // Native HLS desteği (Safari, bazı mobil tarayıcılar)
+    if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = url;
+      video.onloadedmetadata = () => {
+        video.play().catch(() => setShowPlayButton(true));
+      };
+      video.onerror = () => {
+        setError('Video playback error');
+        onError('Video playback error');
+      };
+      return;
+    }
+    // HLS.js ile oynatma
+    if (Hls.isSupported()) {
+      const hls = new Hls();
+      hlsRef.current = hls;
+      hls.loadSource(url);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        video.play().catch(() => setShowPlayButton(true));
+      });
+      hls.on(Hls.Events.ERROR, (event, data) => {
+        if (data && data.fatal) {
+          setError('HLS playback error');
+          onError('HLS playback error');
+        }
+      });
+    } else {
+      setError('HLS is not supported in this browser.');
+      onError('HLS is not supported in this browser.');
+    }
+    return () => {
       if (hlsRef.current) {
         hlsRef.current.destroy();
         hlsRef.current = null;
       }
     };
-
-    if (Hls.isSupported()) {
-      const hls = new Hls({
-        enableWorker: true,
-        lowLatencyMode: true,
-        backBufferLength: 90,
-        maxBufferLength: 30,
-        maxMaxBufferLength: 60,
-      });
-      
-      hlsRef.current = hls;
-      hls.loadSource(url);
-      hls.attachMedia(video);
-      
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        setIsLoading(false);
-        video.play().catch(error => {
-          console.error('Error playing video:', error);
-          onError('Failed to play video');
-        });
-      });
-      
-      hls.on(Hls.Events.ERROR, (event, data) => {
-        console.error('HLS error:', data);
-        if (data.fatal) {
-          onError(`HLS Error: ${data.details}`);
-        }
-      });
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = url;
-      video.addEventListener('loadedmetadata', () => {
-        setIsLoading(false);
-        video.play().catch(error => {
-          console.error('Error playing video:', error);
-          onError('Failed to play video');
-        });
-      });
-      
-      video.addEventListener('error', () => {
-        onError('Video playback error');
-      });
-    } else {
-      onError('HLS not supported in this browser');
-    }
-
-    return cleanup;
   }, [url, onError]);
 
+  const handlePlayClick = () => {
+    if (videoRef.current) {
+      videoRef.current.play().then(() => setShowPlayButton(false)).catch(() => setShowPlayButton(true));
+    }
+  };
+
+  if (error) {
+    return (
+      <div style={{color: 'white', background: '#222', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+        <div>
+          <div style={{marginBottom: 8}}>Hata: {error}</div>
+          <button onClick={() => window.location.reload()}>Yeniden Dene</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <>
-      {isLoading && <LoadingOverlay />}
-      <Video
+    <div style={{width: '100%', height: '100%', position: 'relative'}}>
+      <video
         ref={videoRef}
+        style={{width: '100%', height: '100%', background: '#000'}}
         autoPlay
         muted={isMuted}
-        playsInline
         controls
+        playsInline
       />
-    </>
+      {showPlayButton && (
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'rgba(0,0,0,0.5)',
+          zIndex: 10
+        }}>
+          <button
+            onClick={handlePlayClick}
+            style={{
+              fontSize: '2.5rem',
+              padding: '1.2rem 2.5rem',
+              borderRadius: '2rem',
+              border: 'none',
+              background: '#3b82f6',
+              color: 'white',
+              cursor: 'pointer',
+              boxShadow: '0 2px 12px rgba(0,0,0,0.3)'
+            }}
+          >
+            ▶️ Play
+          </button>
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -607,6 +602,15 @@ const StreamCard: React.FC<StreamCardProps> = ({
           <h4>Stream Error</h4>
           <p>{error}</p>
           <button onClick={handleRetry}>Retry</button>
+        </ErrorOverlay>
+      );
+    }
+
+    if (!stream.url || stream.url.trim() === '') {
+      return (
+        <ErrorOverlay>
+          <h4>No Stream URL</h4>
+          <p>Please add a stream URL in edit mode</p>
         </ErrorOverlay>
       );
     }
@@ -732,13 +736,12 @@ const StreamCard: React.FC<StreamCardProps> = ({
       )}
 
       <VideoContainer>
-        {isLoading && !error && <LoadingOverlay />}
         {renderStream()}
       </VideoContainer>
 
       {/* Info area sadece edit modunda görünür */}
       <InfoArea visible={isEditMode}>
-        <Title>{stream.title || stream.url}</Title>
+        <Title>{stream.title || stream.url || 'Empty Stream'}</Title>
         {stream.notes && <Notes>{stream.notes}</Notes>}
       </InfoArea>
 

@@ -87,3 +87,7 @@ Built with:
 📄 License
 This project is licensed under the MIT License.
 
+## Features
+
+- Quickly add a stream by pressing **Ctrl+V** to paste a stream URL directly into the dashboard.
+

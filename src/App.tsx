@@ -42,25 +42,25 @@ const GlobalStyle = createGlobalStyle`
   }
 
   .react-grid-item {
-    transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
     transition-property: left, top, width, height;
   }
 
   .react-grid-item.react-grid-placeholder {
-    background: ${props => props.theme.primary};
-    opacity: 0.3;
+    background: ${props => props.theme.primary}30;
+    opacity: 0.4;
     transition-duration: 100ms;
     z-index: 2;
-    border-radius: 8px;
-    border: 2px dashed ${props => props.theme.primary};
+    border-radius: 6px;
+    border: 1px dashed ${props => props.theme.primary};
   }
 
   .react-grid-item > .react-resizable-handle {
     position: absolute;
-    width: 24px;
-    height: 24px;
-    bottom: 0;
-    right: 0;
+    width: 20px;
+    height: 20px;
+    bottom: 2px;
+    right: 2px;
     cursor: se-resize;
     background: ${props => props.theme.primary};
     border-radius: 50%;
@@ -72,20 +72,21 @@ const GlobalStyle = createGlobalStyle`
   }
 
   .react-grid-item:hover > .react-resizable-handle {
-    opacity: 0.8;
+    opacity: 0.7;
   }
 
   .react-grid-item > .react-resizable-handle::after {
     content: "⋮⋮";
     color: white;
-    font-size: 8px;
+    font-size: 6px;
     line-height: 1;
     transform: rotate(45deg);
+    font-weight: bold;
   }
 
   /* Custom scrollbar */
   ::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
   }
 
   ::-webkit-scrollbar-track {
@@ -94,7 +95,7 @@ const GlobalStyle = createGlobalStyle`
 
   ::-webkit-scrollbar-thumb {
     background: ${props => props.theme.scrollbar.thumb};
-    border-radius: 4px;
+    border-radius: 3px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
@@ -113,9 +114,9 @@ const Header = styled.header`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 2rem;
+  padding: 0.75rem 1.5rem;
   background: ${props => props.theme.cardBackground};
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
   border-bottom: 1px solid ${props => props.theme.border};
   box-shadow: ${props => props.theme.shadow};
   position: relative;
@@ -124,32 +125,35 @@ const Header = styled.header`
 `;
 
 const Title = styled.h1`
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 1.25rem;
+  font-weight: 600;
   background: ${props => props.theme.gradient};
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   margin: 0;
+  letter-spacing: -0.025em;
 `;
 
 const DevBy = styled.a`
-  font-size: 0.95rem;
+  font-size: 0.875rem;
   font-weight: 500;
-  color: #3b82f6;
+  color: ${props => props.theme.secondary};
   text-decoration: none;
   transition: color 0.2s;
   cursor: pointer;
-  margin-right: 1.5rem;
+  margin-right: 1rem;
+  opacity: 0.8;
+  
   &:hover {
-    color: #2563eb;
-    text-decoration: underline;
+    color: ${props => props.theme.primary};
+    opacity: 1;
   }
 `;
 
 const ButtonGroup = styled.div`
   display: flex;
-  gap: 0.5rem;
+  gap: 0.375rem;
   align-items: center;
 `;
 
@@ -168,17 +172,17 @@ const IconButton = styled.button<{ active?: boolean; variant?: 'primary' | 'seco
     if (props.active || props.variant === 'success') return '#ffffff';
     return props.theme.text;
   }};
-  font-size: 1.1rem;
+  font-size: 0.875rem;
   cursor: pointer;
-  padding: 0.75rem;
+  padding: 0.625rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 8px;
+  transition: all 0.2s ease;
   position: relative;
-  min-width: 48px;
-  height: 48px;
+  min-width: 40px;
+  height: 40px;
   
   &:hover {
     background: ${props => {
@@ -198,12 +202,12 @@ const IconButton = styled.button<{ active?: boolean; variant?: 'primary' | 'seco
 `;
 
 const LanguageButton = styled(IconButton)`
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
+  gap: 0.375rem;
+  padding: 0.625rem 0.75rem;
   min-width: auto;
   
   span {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     font-weight: 600;
     letter-spacing: 0.025em;
   }
@@ -217,12 +221,12 @@ const KeyboardShortcuts = styled.div<{ visible: boolean }>`
   background: ${props => props.theme.cardBackground};
   backdrop-filter: blur(20px);
   border: 1px solid ${props => props.theme.border};
-  border-radius: 16px;
-  padding: 2rem;
+  border-radius: 12px;
+  padding: 1.5rem;
   box-shadow: ${props => props.theme.shadowLg};
   display: ${props => props.visible ? 'block' : 'none'};
   z-index: 1000;
-  max-width: 500px;
+  max-width: 450px;
   width: 90%;
 `;
 
@@ -230,7 +234,7 @@ const ShortcutItem = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 0;
+  padding: 0.625rem 0;
   border-bottom: 1px solid ${props => props.theme.border};
   
   &:last-child {
@@ -244,8 +248,9 @@ const ShortcutKey = styled.kbd`
   border-radius: 4px;
   padding: 0.25rem 0.5rem;
   font-family: monospace;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: ${props => props.theme.primary};
+  font-weight: 500;
 `;
 
 const defaultChannelCount = 6;
@@ -480,12 +485,6 @@ const App: React.FC = () => {
             <IconButton onClick={toggleTheme} title={`${isDarkMode ? "Light" : "Dark"} Mode (Ctrl+T)`}>
               {isDarkMode ? <FaSun /> : <FaMoon />}
             </IconButton>
-            <IconButton 
-              onClick={() => setIsShortcutsOpen(true)} 
-              title="Keyboard Shortcuts (Ctrl+/)"
-            >
-              <FaKeyboard />
-            </IconButton>
             <IconButton onClick={toggleSettings} title="Settings (Ctrl+S)">
               <FaCog />
             </IconButton>
@@ -532,7 +531,7 @@ const App: React.FC = () => {
         <PerformanceMonitor visible={showPerformanceMonitor} />
 
         <KeyboardShortcuts visible={isShortcutsOpen}>
-          <h3 style={{ marginBottom: '1rem', color: 'inherit' }}>Keyboard Shortcuts</h3>
+          <h3 style={{ marginBottom: '1rem', color: 'inherit', fontSize: '1.1rem', fontWeight: '600' }}>Keyboard Shortcuts</h3>
           <ShortcutItem>
             <span>Toggle Edit Mode</span>
             <ShortcutKey>Ctrl + E</ShortcutKey>
@@ -581,8 +580,10 @@ const App: React.FC = () => {
                 border: '1px solid currentColor',
                 color: 'inherit',
                 padding: '0.5rem 1rem',
-                borderRadius: '8px',
-                cursor: 'pointer'
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                transition: 'all 0.2s ease'
               }}
             >
               Close

@@ -34,6 +34,7 @@ const GridWrapper = styled.div<{ isEditMode: boolean }>`
   position: relative;
   padding: ${props => props.isEditMode ? '8px' : '0'};
   box-sizing: border-box;
+  overflow: hidden;
 `;
 
 const Info = styled.div`
@@ -177,91 +178,117 @@ const StreamGrid: React.FC<StreamGridProps> = ({
     setSelectedStreams(new Set());
   }, []);
 
-  // Optimized grid calculation with proper bounds
+  // Optimized grid calculation with proper responsive behavior
   const gridConfig = useMemo(() => {
-    const gridWidth = windowSize.width - (isEditMode ? 16 : 0);
-    const gridHeight = windowSize.height - 60 - (isEditMode ? 16 : 0);
-    const screenAspect = gridWidth / gridHeight;
-    const boxAspect = 16 / 9;
+    const padding = isEditMode ? 16 : 0;
+    const gridWidth = Math.max(windowSize.width - padding, 320);
+    const gridHeight = Math.max(windowSize.height - 60 - padding, 240);
     
-    let bestCols = 1;
-    let bestRows = channelCount;
-    let minDiff = Infinity;
+    // Calculate optimal grid layout based on screen size and channel count
+    let cols = 1;
+    let rows = channelCount;
+    
+    if (channelCount <= 1) {
+      cols = 1;
+      rows = 1;
+    } else if (channelCount <= 4) {
+      cols = Math.min(2, channelCount);
+      rows = Math.ceil(channelCount / cols);
+    } else if (channelCount <= 9) {
+      cols = Math.min(3, Math.ceil(Math.sqrt(channelCount)));
+      rows = Math.ceil(channelCount / cols);
+    } else if (channelCount <= 16) {
+      cols = Math.min(4, Math.ceil(Math.sqrt(channelCount)));
+      rows = Math.ceil(channelCount / cols);
+    } else {
+      cols = Math.min(5, Math.ceil(Math.sqrt(channelCount)));
+      rows = Math.ceil(channelCount / cols);
+    }
 
-    // Find optimal grid layout
-    for (let cols = 1; cols <= Math.min(channelCount, 6); cols++) {
-      const rows = Math.ceil(channelCount / cols);
-      const gridAspect = (cols * boxAspect) / rows;
-      const diff = Math.abs(gridAspect - screenAspect);
+    // Responsive breakpoints
+    if (gridWidth < 768) {
+      // Mobile: Force single column or max 2 columns
+      cols = Math.min(cols, gridWidth < 480 ? 1 : 2);
+      rows = Math.ceil(channelCount / cols);
+    } else if (gridWidth < 1024) {
+      // Tablet: Max 3 columns
+      cols = Math.min(cols, 3);
+      rows = Math.ceil(channelCount / cols);
+    }
+
+    // Calculate cell dimensions
+    const cellWidth = Math.floor(gridWidth / cols);
+    const cellHeight = Math.floor(gridHeight / rows);
+    
+    // Ensure minimum cell size
+    const minCellWidth = 200;
+    const minCellHeight = 150;
+    
+    if (cellWidth < minCellWidth || cellHeight < minCellHeight) {
+      // Recalculate with minimum constraints
+      const maxColsByWidth = Math.floor(gridWidth / minCellWidth);
+      const maxRowsByHeight = Math.floor(gridHeight / minCellHeight);
       
-      if (diff < minDiff) {
-        minDiff = diff;
-        bestCols = cols;
-        bestRows = rows;
+      cols = Math.min(cols, maxColsByWidth);
+      rows = Math.min(rows, maxRowsByHeight);
+      
+      // Ensure we can fit all channels
+      if (cols * rows < channelCount) {
+        if (maxColsByWidth * maxRowsByHeight >= channelCount) {
+          // Redistribute
+          cols = Math.min(maxColsByWidth, Math.ceil(Math.sqrt(channelCount)));
+          rows = Math.ceil(channelCount / cols);
+        } else {
+          // Use maximum possible
+          cols = maxColsByWidth;
+          rows = maxRowsByHeight;
+        }
       }
     }
 
-    const cols = bestCols;
-    const rows = bestRows;
-    const gridAspect = (cols * boxAspect) / rows;
-    
-    let width, height;
-    if (gridWidth / gridHeight > gridAspect) {
-      height = gridHeight;
-      width = height * gridAspect;
-    } else {
-      width = gridWidth;
-      height = width / gridAspect;
-    }
-
-    // Ensure grid doesn't exceed viewport with safety margins
-    const maxWidth = gridWidth * 0.95;
-    const maxHeight = gridHeight * 0.95;
-    
-    if (width > maxWidth) {
-      width = maxWidth;
-      height = width / gridAspect;
-    }
-    
-    if (height > maxHeight) {
-      height = maxHeight;
-      width = height * gridAspect;
-    }
+    const finalCellWidth = Math.floor(gridWidth / cols);
+    const finalCellHeight = Math.floor(gridHeight / rows);
 
     return {
-      cols,
-      rows,
-      width: Math.max(width, 400),
-      height: Math.max(height, 300),
-      rowHeight: Math.max(height / rows, 150)
+      cols: Math.max(1, cols),
+      rows: Math.max(1, rows),
+      width: gridWidth,
+      height: gridHeight,
+      cellWidth: Math.max(minCellWidth, finalCellWidth),
+      cellHeight: Math.max(minCellHeight, finalCellHeight),
+      rowHeight: Math.max(minCellHeight, finalCellHeight)
     };
   }, [windowSize, channelCount, isEditMode]);
 
-  // Generate ordered streams with proper layout
+  // Generate ordered streams with proper layout and bounds checking
   const orderedStreams = useMemo(() => {
     return streams.slice(0, channelCount).map((stream, idx) => {
       const col = idx % gridConfig.cols;
       const row = Math.floor(idx / gridConfig.cols);
       
+      // Ensure the stream fits within grid bounds
+      const maxRow = Math.max(0, gridConfig.rows - 1);
+      const boundedRow = Math.min(row, maxRow);
+      
       return {
         ...stream,
         layout: {
           x: col,
-          y: row,
+          y: boundedRow,
           w: 1,
           h: 1,
         },
       };
     });
-  }, [streams, channelCount, gridConfig.cols]);
+  }, [streams, channelCount, gridConfig]);
 
-  // Generate layouts for react-grid-layout with bounds checking
+  // Generate layouts for react-grid-layout with strict bounds checking
   const layouts = useMemo(() => ({
     lg: orderedStreams.map((stream) => ({
       i: stream.id,
-      x: Math.min(stream.layout.x, gridConfig.cols - 1),
+      x: Math.max(0, Math.min(stream.layout.x, gridConfig.cols - 1)),
       y: Math.max(0, stream.layout.y),
-      w: Math.min(stream.layout.w, gridConfig.cols),
+      w: Math.max(1, Math.min(stream.layout.w, gridConfig.cols)),
       h: Math.max(1, stream.layout.h),
       minW: 1,
       minH: 1,
@@ -269,19 +296,70 @@ const StreamGrid: React.FC<StreamGridProps> = ({
       maxH: gridConfig.rows,
       static: gridLocks[stream.id] || false,
     })),
+    md: orderedStreams.map((stream) => ({
+      i: stream.id,
+      x: Math.max(0, Math.min(stream.layout.x, Math.max(1, gridConfig.cols - 1))),
+      y: Math.max(0, stream.layout.y),
+      w: Math.max(1, Math.min(stream.layout.w, Math.max(1, gridConfig.cols - 1))),
+      h: Math.max(1, stream.layout.h),
+      minW: 1,
+      minH: 1,
+      maxW: Math.max(1, gridConfig.cols - 1),
+      maxH: gridConfig.rows,
+      static: gridLocks[stream.id] || false,
+    })),
+    sm: orderedStreams.map((stream) => ({
+      i: stream.id,
+      x: Math.max(0, Math.min(stream.layout.x, 1)),
+      y: Math.max(0, stream.layout.y),
+      w: 1,
+      h: Math.max(1, stream.layout.h),
+      minW: 1,
+      minH: 1,
+      maxW: 2,
+      maxH: gridConfig.rows,
+      static: gridLocks[stream.id] || false,
+    })),
+    xs: orderedStreams.map((stream) => ({
+      i: stream.id,
+      x: 0,
+      y: Math.max(0, stream.layout.y),
+      w: 1,
+      h: Math.max(1, stream.layout.h),
+      minW: 1,
+      minH: 1,
+      maxW: 1,
+      maxH: gridConfig.rows,
+      static: gridLocks[stream.id] || false,
+    })),
+    xxs: orderedStreams.map((stream) => ({
+      i: stream.id,
+      x: 0,
+      y: Math.max(0, stream.layout.y),
+      w: 1,
+      h: Math.max(1, stream.layout.h),
+      minW: 1,
+      minH: 1,
+      maxW: 1,
+      maxH: gridConfig.rows,
+      static: gridLocks[stream.id] || false,
+    }))
   }), [orderedStreams, gridConfig, gridLocks]);
 
-  const handleLayoutChange = useCallback((layout: Layout[]) => {
+  const handleLayoutChange = useCallback((layout: Layout[], layouts: { [key: string]: Layout[] }) => {
     if (!isEditMode) return;
     
     const updatedStreams = streams.map((stream: Stream) => {
       const newLayout = layout.find((l: Layout) => l.i === stream.id);
       if (newLayout && !gridLocks[stream.id]) {
         // Strict bounds checking to prevent grid items from going off-screen
-        const boundedX = Math.max(0, Math.min(newLayout.x, gridConfig.cols - newLayout.w));
-        const boundedY = Math.max(0, newLayout.y);
+        const maxX = Math.max(0, gridConfig.cols - newLayout.w);
+        const maxY = Math.max(0, gridConfig.rows - newLayout.h);
+        
+        const boundedX = Math.max(0, Math.min(newLayout.x, maxX));
+        const boundedY = Math.max(0, Math.min(newLayout.y, maxY));
         const boundedW = Math.max(1, Math.min(newLayout.w, gridConfig.cols - boundedX));
-        const boundedH = Math.max(1, newLayout.h);
+        const boundedH = Math.max(1, Math.min(newLayout.h, gridConfig.rows - boundedY));
         
         return {
           ...stream,
@@ -401,24 +479,28 @@ const StreamGrid: React.FC<StreamGridProps> = ({
 
       <GridWrapper isEditMode={isEditMode}>
         <div style={{ 
-          width: gridConfig.width, 
-          height: gridConfig.height,
+          width: '100%', 
+          height: '100%',
+          maxWidth: gridConfig.width,
+          maxHeight: gridConfig.height,
           margin: '0 auto',
-          position: 'relative'
+          position: 'relative',
+          overflow: 'hidden'
         }}>
           <ResponsiveGridLayout
-            key={`${channelCount}-${streams.length}-${gridConfig.cols}`}
+            key={`${channelCount}-${streams.length}-${gridConfig.cols}-${windowSize.width}-${windowSize.height}`}
             className="layout"
             layouts={layouts}
             breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
             cols={{ 
               lg: gridConfig.cols, 
-              md: gridConfig.cols, 
-              sm: Math.max(1, gridConfig.cols - 1), 
-              xs: Math.max(1, gridConfig.cols - 2), 
+              md: Math.max(1, gridConfig.cols - 1), 
+              sm: Math.min(2, gridConfig.cols), 
+              xs: 1, 
               xxs: 1 
             }}
             rowHeight={gridConfig.rowHeight}
+            width={gridConfig.width}
             margin={isEditMode ? [4, 4] : [0, 0]}
             containerPadding={[0, 0]}
             compactType="vertical"
@@ -431,7 +513,13 @@ const StreamGrid: React.FC<StreamGridProps> = ({
             isBounded={true}
             useCSSTransforms={true}
             transformScale={1}
-            style={{ width: '100%', height: '100%' }}
+            autoSize={false}
+            verticalCompact={true}
+            style={{ 
+              width: '100%', 
+              height: '100%',
+              overflow: 'hidden'
+            }}
           >
             {orderedStreams.map((stream: Stream) => (
               <div
@@ -442,6 +530,9 @@ const StreamGrid: React.FC<StreamGridProps> = ({
                   overflow: 'hidden',
                   border: selectedStreams.has(stream.id) ? `2px solid ${isEditMode ? '#3b82f6' : 'transparent'}` : 'none',
                   transition: 'all 0.2s ease',
+                  position: 'relative',
+                  width: '100%',
+                  height: '100%'
                 }}
               >
                 <StreamCard

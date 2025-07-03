@@ -294,41 +294,41 @@ const StreamPresets: React.FC<StreamPresetsProps> = ({
   return (
     <PresetsContainer visible={visible}>
       <Header>
-        <h2>Stream Presets</h2>
+        <h2>{t('presets.title')}</h2>
         <CloseButton onClick={onClose}>×</CloseButton>
       </Header>
       
       <Content>
         <CreatePresetForm>
-          <h3 style={{ marginTop: 0, color: 'inherit' }}>Create New Preset</h3>
+          <h3 style={{ marginTop: 0, color: 'inherit' }}>{t('presets.create_new')}</h3>
           <FormGroup>
-            <Label>Preset Name</Label>
+            <Label>{t('presets.preset_name')}</Label>
             <Input
               value={newPresetName}
               onChange={(e) => setNewPresetName(e.target.value)}
-              placeholder="Enter preset name"
+              placeholder={t('presets.preset_name') as string}
             />
           </FormGroup>
           <FormGroup>
-            <Label>Description</Label>
+            <Label>{t('presets.description')}</Label>
             <TextArea
               value={newPresetDescription}
               onChange={(e) => setNewPresetDescription(e.target.value)}
-              placeholder="Enter preset description"
+              placeholder={t('presets.description') as string}
             />
           </FormGroup>
           <div style={{ display: 'flex', gap: '12px' }}>
             <Button onClick={handleCreatePreset}>
               <FaSave />
-              Save Current Setup
+              {t('presets.save_current')}
             </Button>
             <Button variant="secondary" onClick={handleExportPresets}>
               <FaDownload />
-              Export All
+              {t('presets.export_all')}
             </Button>
             <Button variant="secondary" as="label">
               <FaUpload />
-              Import
+              {t('presets.import')}
               <input
                 type="file"
                 accept=".json"
@@ -345,8 +345,8 @@ const StreamPresets: React.FC<StreamPresetsProps> = ({
               <PresetName>{preset.name}</PresetName>
               <PresetDescription>{preset.description}</PresetDescription>
               <PresetMeta>
-                <span>{preset.streams.length} streams</span>
-                <span>{new Date(preset.createdAt).toLocaleDateString()}</span>
+                <span>{t('presets.streams_count', { count: preset.streams.length })}</span>
+                <span>{t('presets.created_on', { date: new Date(preset.createdAt).toLocaleDateString() })}</span>
               </PresetMeta>
               <PresetActions>
                 <ActionButton onClick={(e) => {
@@ -354,7 +354,7 @@ const StreamPresets: React.FC<StreamPresetsProps> = ({
                   handleLoadPreset(preset);
                 }}>
                   <FaPlay />
-                  Load
+                  {t('presets.load')}
                 </ActionButton>
                 <ActionButton 
                   variant="danger"
@@ -364,7 +364,7 @@ const StreamPresets: React.FC<StreamPresetsProps> = ({
                   }}
                 >
                   <FaTrash />
-                  Delete
+                  {t('presets.delete')}
                 </ActionButton>
               </PresetActions>
             </PresetCard>
