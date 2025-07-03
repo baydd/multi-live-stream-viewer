@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
-import { FaTimes, FaExpand, FaVolumeMute, FaVolumeUp, FaCompress, FaPlay, FaPause, FaEdit, FaLock, FaUnlock, FaCheck } from 'react-icons/fa';
+import { FaTimes, FaExpand, FaVolumeMute, FaVolumeUp, FaCompress, FaEdit, FaLock, FaUnlock } from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
 import Hls from 'hls.js';
 import { Stream } from '../types';
@@ -234,15 +234,17 @@ const ControlButton = styled.button<{ variant?: 'danger' | 'success' | 'primary'
 `;
 
 const InfoArea = styled.div<{ visible: boolean }>`
-  padding: ${props => props.visible ? '8px 12px' : '4px 8px'};
-  background: ${props => props.theme.cardBackground};
-  border-top: 1px solid ${props => props.theme.border};
-  font-size: ${props => props.visible ? '0.75rem' : '0.6rem'};
-  min-height: ${props => props.visible ? '40px' : '20px'};
-  display: flex;
+  padding: ${props => props.visible ? '8px 12px' : '0'};
+  background: ${props => props.visible ? props.theme.cardBackground : 'transparent'};
+  border-top: ${props => props.visible ? `1px solid ${props.theme.border}` : 'none'};
+  font-size: ${props => props.visible ? '0.75rem' : '0'};
+  min-height: ${props => props.visible ? '40px' : '0'};
+  max-height: ${props => props.visible ? '40px' : '0'};
+  display: ${props => props.visible ? 'flex' : 'none'};
   flex-direction: column;
   justify-content: center;
   transition: all 0.2s ease;
+  overflow: hidden;
 `;
 
 const Title = styled.div`
@@ -637,6 +639,7 @@ const StreamCard: React.FC<StreamCardProps> = ({
         </PlatformBadge>
       </VideoContainer>
 
+      {/* Info area sadece edit modunda görünür */}
       <InfoArea visible={isEditMode}>
         <Title>{stream.title || stream.url}</Title>
         {stream.notes && <Notes>{stream.notes}</Notes>}

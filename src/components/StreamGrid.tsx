@@ -4,7 +4,6 @@ import { Responsive, WidthProvider, Layout } from 'react-grid-layout';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Stream } from '../types';
 import StreamCard from './StreamCard';
-import GridControls from './GridControls';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 
@@ -136,7 +135,6 @@ const StreamGrid: React.FC<StreamGridProps> = ({
   const [gridLocks, setGridLocks] = useState<{ [key: string]: boolean }>({});
   const [isDragOver, setIsDragOver] = useState(false);
   const [selectedStreams, setSelectedStreams] = useState<Set<string>>(new Set());
-  const [isCompactMode, setIsCompactMode] = useState(false);
 
   // Window size state with debounced updates
   const [windowSize, setWindowSize] = useState({
@@ -179,7 +177,7 @@ const StreamGrid: React.FC<StreamGridProps> = ({
     setSelectedStreams(new Set());
   }, []);
 
-  // Optimized grid calculation
+  // Optimized grid calculation with proper bounds
   const gridConfig = useMemo(() => {
     const gridWidth = windowSize.width - (isEditMode ? 16 : 0);
     const gridHeight = windowSize.height - 60 - (isEditMode ? 16 : 0);
@@ -216,9 +214,9 @@ const StreamGrid: React.FC<StreamGridProps> = ({
       height = width / gridAspect;
     }
 
-    // Ensure grid doesn't exceed viewport
-    const maxWidth = gridWidth * 0.98;
-    const maxHeight = gridHeight * 0.98;
+    // Ensure grid doesn't exceed viewport with safety margins
+    const maxWidth = gridWidth * 0.95;
+    const maxHeight = gridHeight * 0.95;
     
     if (width > maxWidth) {
       width = maxWidth;
@@ -257,14 +255,14 @@ const StreamGrid: React.FC<StreamGridProps> = ({
     });
   }, [streams, channelCount, gridConfig.cols]);
 
-  // Generate layouts for react-grid-layout
+  // Generate layouts for react-grid-layout with bounds checking
   const layouts = useMemo(() => ({
     lg: orderedStreams.map((stream) => ({
       i: stream.id,
-      x: stream.layout.x,
-      y: stream.layout.y,
-      w: stream.layout.w,
-      h: stream.layout.h,
+      x: Math.min(stream.layout.x, gridConfig.cols - 1),
+      y: Math.max(0, stream.layout.y),
+      w: Math.min(stream.layout.w, gridConfig.cols),
+      h: Math.max(1, stream.layout.h),
       minW: 1,
       minH: 1,
       maxW: gridConfig.cols,
@@ -279,17 +277,19 @@ const StreamGrid: React.FC<StreamGridProps> = ({
     const updatedStreams = streams.map((stream: Stream) => {
       const newLayout = layout.find((l: Layout) => l.i === stream.id);
       if (newLayout && !gridLocks[stream.id]) {
-        // Ensure layout stays within bounds
+        // Strict bounds checking to prevent grid items from going off-screen
         const boundedX = Math.max(0, Math.min(newLayout.x, gridConfig.cols - newLayout.w));
         const boundedY = Math.max(0, newLayout.y);
+        const boundedW = Math.max(1, Math.min(newLayout.w, gridConfig.cols - boundedX));
+        const boundedH = Math.max(1, newLayout.h);
         
         return {
           ...stream,
           layout: {
             x: boundedX,
             y: boundedY,
-            w: Math.min(newLayout.w, gridConfig.cols),
-            h: Math.max(1, newLayout.h),
+            w: boundedW,
+            h: boundedH,
           },
         };
       }
@@ -330,31 +330,6 @@ const StreamGrid: React.FC<StreamGridProps> = ({
       return newSet;
     });
   }, []);
-
-  const handleMuteAll = useCallback(() => {
-    const newMutedState = streams.reduce((acc, stream) => ({
-      ...acc,
-      [stream.id]: true
-    }), {});
-    setIsMuted(newMutedState);
-  }, [streams]);
-
-  const handleUnmuteAll = useCallback(() => {
-    setIsMuted({});
-  }, []);
-
-  const handleResetLayout = useCallback(() => {
-    const resetStreams = streams.map((stream, idx) => ({
-      ...stream,
-      layout: {
-        x: idx % gridConfig.cols,
-        y: Math.floor(idx / gridConfig.cols),
-        w: 1,
-        h: 1,
-      }
-    }));
-    onUpdateStreams(resetStreams);
-  }, [streams, gridConfig.cols, onUpdateStreams]);
 
   // Drag and drop handlers
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -423,17 +398,6 @@ const StreamGrid: React.FC<StreamGridProps> = ({
       onDrop={handleDrop}
     >
       <GridOverlay visible={isDragOver} />
-      
-      <GridControls
-        visible={isEditMode}
-        onMuteAll={handleMuteAll}
-        onUnmuteAll={handleUnmuteAll}
-        onResetLayout={handleResetLayout}
-        onToggleCompact={() => setIsCompactMode(!isCompactMode)}
-        isCompactMode={isCompactMode}
-        selectedCount={selectedStreams.size}
-        totalCount={streams.length}
-      />
 
       <GridWrapper isEditMode={isEditMode}>
         <div style={{ 
@@ -457,8 +421,8 @@ const StreamGrid: React.FC<StreamGridProps> = ({
             rowHeight={gridConfig.rowHeight}
             margin={isEditMode ? [4, 4] : [0, 0]}
             containerPadding={[0, 0]}
-            compactType={isCompactMode ? "vertical" : null}
-            preventCollision={!isCompactMode}
+            compactType="vertical"
+            preventCollision={false}
             onLayoutChange={handleLayoutChange}
             isDraggable={isEditMode}
             isResizable={isEditMode}
