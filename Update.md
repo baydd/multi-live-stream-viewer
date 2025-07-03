@@ -64,6 +64,19 @@ Bug Fix
 
 ----------------------------------------------------
 
+1.2 Beta
+
+You can now directly publish content to the site using Ctrl+V.
+
+You can monitor performance using the performance monitor tool.
+
+HLS links now work more reliably.
+
+Browser resizing is now more stable.
+
+
+
+----------------------------------------------------------
 
 
 
