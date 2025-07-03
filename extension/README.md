@@ -1,4 +1,4 @@
-# Multi-Stream Video Extractor Eklentisi
+# Hls-M3U8 link finder
 
 Bu klasör, Multi-Stream Video Extractor Chrome/Edge eklentisinin kaynak kodunu içerir.
 
@@ -9,7 +9,3 @@ Eklenti, ziyaret ettiğiniz web sitelerindeki video kaynaklarını (HLS, YouTube
 1. Chrome veya Edge'de "Geliştirici Modu"nu açın.
 2. "Paketlenmemiş uzantı yükle" seçeneğiyle bu klasörü seçin.
 3. Eklenti simgesine tıklayın, tespit edilen video kaynaklarını görebilirsiniz
-
-## Not
-- `popup.js` ve `content.js` dosyaları iletişim için Chrome messaging API'sini kullanır.
-- Multi-Stream panel adresinizi `popup.js` içinde `base` değişkenine yazmalısınız. 
