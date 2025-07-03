@@ -4,6 +4,7 @@ import { FaTimes, FaExpand, FaVolumeMute, FaVolumeUp, FaCompress, FaEdit, FaLock
 import { useTranslation } from 'react-i18next';
 import Hls from 'hls.js';
 import { Stream } from '../types';
+import ReactDOM from 'react-dom';
 
 interface StreamCardProps {
   stream: Stream;
@@ -18,6 +19,7 @@ interface StreamCardProps {
   onUpdateStream?: (updatedStream: Stream) => void;
   onToggleGridLock?: (streamId: string, locked: boolean) => void;
   isGridLocked?: boolean;
+  freezeGrid?: (freeze: boolean) => void;
 }
 
 const Card = styled.div<{ isEditMode: boolean; isSelected: boolean }>`
@@ -103,6 +105,11 @@ const TwitchIframe = styled.iframe`
   height: 100%;
   border: none;
   background: #000;
+  &::-webkit-scrollbar { display: none; }
+`;
+
+const TwitchOverlayStyle = styled.style`
+  iframe[src*="twitch.tv"] .player-button--fullscreen { display: none !important; }
 `;
 
 const KickIframe = styled.iframe`
@@ -384,16 +391,17 @@ const Button = styled.button<{ variant?: 'primary' | 'secondary' }>`
   }
 `;
 
-const HLSPlayer: React.FC<{ url: string; isMuted: boolean; onError: (error: string) => void }> = ({ url, isMuted, onError }) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
+const HLSPlayer: React.FC<{ url: string; isMuted: boolean; onError: (error: string) => void; videoRef?: React.RefObject<HTMLVideoElement> }> = ({ url, isMuted, onError, videoRef }) => {
+  const localVideoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const [showPlayButton, setShowPlayButton] = useState(false);
   const [error, setError] = useState<string>('');
+  const ref = videoRef || localVideoRef;
 
   useEffect(() => {
     setError('');
     setShowPlayButton(false);
-    const video = videoRef.current;
+    const video = ref.current;
     if (!video) return;
     // Native HLS desteği (Safari, bazı mobil tarayıcılar)
     if (video.canPlayType('application/vnd.apple.mpegurl')) {
@@ -435,8 +443,8 @@ const HLSPlayer: React.FC<{ url: string; isMuted: boolean; onError: (error: stri
   }, [url, onError]);
 
   const handlePlayClick = () => {
-    if (videoRef.current) {
-      videoRef.current.play().then(() => setShowPlayButton(false)).catch(() => setShowPlayButton(true));
+    if (ref.current) {
+      ref.current.play().then(() => setShowPlayButton(false)).catch(() => setShowPlayButton(true));
     }
   };
 
@@ -454,7 +462,7 @@ const HLSPlayer: React.FC<{ url: string; isMuted: boolean; onError: (error: stri
   return (
     <div style={{width: '100%', height: '100%', position: 'relative'}}>
       <video
-        ref={videoRef}
+        ref={ref}
         style={{width: '100%', height: '100%', background: '#000'}}
         autoPlay
         muted={isMuted}
@@ -507,10 +515,15 @@ const StreamCard: React.FC<StreamCardProps> = ({
   onSelect,
   onUpdateStream,
   onToggleGridLock,
-  isGridLocked
+  isGridLocked,
+  freezeGrid
 }) => {
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const youtubeRef = useRef<HTMLIFrameElement>(null);
+  const twitchRef = useRef<HTMLIFrameElement>(null);
+  const kickRef = useRef<HTMLIFrameElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [youtubeEmbedError, setYoutubeEmbedError] = useState(false);
@@ -521,6 +534,7 @@ const StreamCard: React.FC<StreamCardProps> = ({
     notes: stream.notes,
     platform: stream.platform
   });
+  const [fullscreenModal, setFullscreenModal] = useState(false);
 
   // Update edit form when stream changes
   useEffect(() => {
@@ -579,8 +593,15 @@ const StreamCard: React.FC<StreamCardProps> = ({
   };
 
   const getYouTubeEmbedUrl = useCallback((url: string) => {
-    const videoId = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/)?.[1];
-    return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=${isMuted ? 1 : 0}&rel=0&modestbranding=1` : url;
+    const videoId = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/)
+      ?. [1];
+    let embedUrl = videoId
+      ? `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=${isMuted ? 1 : 0}&rel=0&modestbranding=1&enablejsapi=1`
+      : url;
+    if (!embedUrl.includes('enablejsapi=1')) {
+      embedUrl += (embedUrl.includes('?') ? '&' : '?') + 'enablejsapi=1';
+    }
+    return embedUrl;
   }, [isMuted]);
 
   const getTwitchEmbedUrl = useCallback((url: string) => {
@@ -615,95 +636,150 @@ const StreamCard: React.FC<StreamCardProps> = ({
       );
     }
 
-    switch (stream.platform) {
-      case 'youtube':
-        if (youtubeEmbedError) {
-          const videoId = stream.url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/)?.[1];
-          const watchUrl = videoId ? `https://www.youtube.com/watch?v=${videoId}` : stream.url;
+    const player = (() => {
+      switch (stream.platform) {
+        case 'youtube':
+          if (youtubeEmbedError) {
+            const videoId = stream.url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/)?.[1];
+            const watchUrl = videoId ? `https://www.youtube.com/watch?v=${videoId}` : stream.url;
+            return (
+              <ErrorOverlay>
+                <h4>Embed Restricted</h4>
+                <p>This video cannot be embedded.</p>
+                <button onClick={() => window.open(watchUrl, '_blank')}>
+                  Watch on YouTube
+                </button>
+              </ErrorOverlay>
+            );
+          }
+          return (
+            <YouTubeIframe
+              ref={youtubeRef}
+              src={getYouTubeEmbedUrl(stream.url)}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+              allowFullScreen
+              onLoad={() => setIsLoading(false)}
+              onError={() => setYoutubeEmbedError(true)}
+            />
+          );
+        case 'twitch':
+          return (
+            <TwitchIframe
+              ref={twitchRef}
+              src={getTwitchEmbedUrl(stream.url)}
+              allow="fullscreen"
+              allowFullScreen
+              onLoad={() => setIsLoading(false)}
+              onError={() => handleError('Failed to load Twitch stream')}
+            />
+          );
+        case 'kick':
+          return (
+            <KickIframe
+              ref={kickRef}
+              src={getKickEmbedUrl(stream.url)}
+              allow="fullscreen"
+              allowFullScreen
+              onLoad={() => setIsLoading(false)}
+              onError={() => handleError('Failed to load Kick stream')}
+            />
+          );
+        case 'hls':
+          return (
+            <HLSPlayer 
+              url={stream.url} 
+              isMuted={isMuted} 
+              onError={handleError}
+              videoRef={videoRef}
+            />
+          );
+        case 'dash':
           return (
             <ErrorOverlay>
-              <h4>Embed Restricted</h4>
-              <p>This video cannot be embedded.</p>
-              <button onClick={() => window.open(watchUrl, '_blank')}>
-                Watch on YouTube
-              </button>
+              <h4>DASH Player</h4>
+              <p>DASH streaming not yet implemented</p>
             </ErrorOverlay>
           );
-        }
-        return (
-          <YouTubeIframe
-            src={getYouTubeEmbedUrl(stream.url)}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            onLoad={() => setIsLoading(false)}
-            onError={() => setYoutubeEmbedError(true)}
-          />
-        );
-      case 'twitch':
-        return (
-          <TwitchIframe
-            src={getTwitchEmbedUrl(stream.url)}
-            allowFullScreen
-            onLoad={() => setIsLoading(false)}
-            onError={() => handleError('Failed to load Twitch stream')}
-          />
-        );
-      case 'kick':
-        return (
-          <KickIframe
-            src={getKickEmbedUrl(stream.url)}
-            allowFullScreen
-            onLoad={() => setIsLoading(false)}
-            onError={() => handleError('Failed to load Kick stream')}
-          />
-        );
-      case 'hls':
-        return (
-          <HLSPlayer 
-            url={stream.url} 
-            isMuted={isMuted} 
-            onError={handleError}
-          />
-        );
-      case 'dash':
-        return (
-          <ErrorOverlay>
-            <h4>DASH Player</h4>
-            <p>DASH streaming not yet implemented</p>
-          </ErrorOverlay>
-        );
-      case 'twitter':
-        return (
-          <TwitterEmbedContainer>
-            <a
-              className="twitter-timeline"
-              data-theme="dark"
-              href={`https://twitter.com/${stream.url.replace('@','')}`}
-            >
-              Tweets by {stream.url.replace('@','')}
-            </a>
-          </TwitterEmbedContainer>
-        );
-      default:
-        return (
-          <ErrorOverlay>
-            <h4>Unsupported Platform</h4>
-            <p>Platform "{stream.platform}" is not supported</p>
-          </ErrorOverlay>
-        );
-    }
+        case 'twitter':
+          return (
+            <TwitterEmbedContainer>
+              <a
+                className="twitter-timeline"
+                data-theme="dark"
+                href={`https://twitter.com/${stream.url.replace('@','')}`}
+              >
+                Tweets by {stream.url.replace('@','')}
+              </a>
+            </TwitterEmbedContainer>
+          );
+        default:
+          return (
+            <ErrorOverlay>
+              <h4>Unsupported Platform</h4>
+              <p>Platform "{stream.platform}" is not supported</p>
+            </ErrorOverlay>
+          );
+      }
+    })();
+
+    return player;
   }, [stream, isMuted, error, youtubeEmbedError, getYouTubeEmbedUrl, getTwitchEmbedUrl, getKickEmbedUrl, handleError, handleRetry]);
+
+  // Fullscreen değişimini dinle ve grid'i dondur/aç
+  useEffect(() => {
+    function onFullscreenChange() {
+      if (document.fullscreenElement) {
+        freezeGrid?.(true);
+      } else {
+        freezeGrid?.(false);
+      }
+    }
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', onFullscreenChange);
+    };
+  }, [freezeGrid]);
 
   const handleFullscreen = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    const el = containerRef.current;
+    const el = videoRef.current || youtubeRef.current || twitchRef.current || kickRef.current;
     if (!el) return;
     if (!document.fullscreenElement) {
+      freezeGrid?.(true); // Fullscreen'e geçerken grid'i dondur
       el.requestFullscreen?.();
     } else {
       document.exitFullscreen?.();
+      freezeGrid?.(false); // Çıkarken grid'i aç
     }
-  }, []);
+  }, [freezeGrid]);
+
+  const closeFullscreenModal = useCallback(() => {
+    setFullscreenModal(false);
+    freezeGrid?.(false);
+  }, [freezeGrid]);
+
+  // Modal içeriği (player'ın kopyası)
+  const FullscreenModal = fullscreenModal ? ReactDOM.createPortal(
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100vw',
+      height: '100vh',
+      background: '#000',
+      zIndex: 99999,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
+      <div style={{position: 'relative', width: '100%', height: '100%'}}>
+        <button onClick={closeFullscreenModal} style={{position: 'absolute', top: 16, right: 16, zIndex: 100000, fontSize: 24, background: '#222', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', cursor: 'pointer'}}>Kapat ✕</button>
+        {/* Player'ın kopyası */}
+        {renderStream()}
+      </div>
+    </div>,
+    document.body
+  ) : null;
 
   useEffect(() => {
     if (stream.platform === 'twitter') {
@@ -725,153 +801,176 @@ const StreamCard: React.FC<StreamCardProps> = ({
   }, [stream.platform, stream.url]);
 
   return (
-    <Card 
-      isEditMode={isEditMode} 
-      isSelected={isSelected}
-      onClick={handleCardClick}
-      ref={containerRef}
-    >
-      {isEditMode && (
-        <DragHandle className="drag-handle" />
-      )}
+    <>
+      <Card 
+        isEditMode={isEditMode} 
+        isSelected={isSelected}
+        onClick={handleCardClick}
+        ref={containerRef}
+      >
+        {isEditMode && (
+          <DragHandle className="drag-handle" />
+        )}
+        <VideoContainer>
+          {renderStream()}
+        </VideoContainer>
+        {/* Info area sadece edit modunda görünür */}
+        <InfoArea visible={isEditMode}>
+          <Title>{stream.title || stream.url || 'Empty Stream'}</Title>
+          {stream.notes && <Notes>{stream.notes}</Notes>}
+        </InfoArea>
 
-      <VideoContainer>
-        {renderStream()}
-      </VideoContainer>
+        <Controls visible={isEditMode}>
+          <ControlButton 
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEditClick();
+            }} 
+            title={t('edit_source') as string}
+          >
+            <FaEdit />
+          </ControlButton>
+          
+          <ControlButton 
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleMute();
+            }} 
+            title={isMuted ? "Unmute" : "Mute"}
+          >
+            {isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
+          </ControlButton>
+          
+          <ControlButton 
+            onClick={handleFullscreen}
+            title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+          >
+            {isFullscreen ? <FaCompress /> : <FaExpand />}
+          </ControlButton>
+          
+          <ControlButton 
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleGridLock && onToggleGridLock(stream.id, !isGridLocked);
+            }} 
+            title={isGridLocked ? "Unlock Grid" : "Lock Grid"}
+            variant={isGridLocked ? 'success' : 'primary'}
+          >
+            {isGridLocked ? <FaUnlock /> : <FaLock />}
+          </ControlButton>
+          
+          <ControlButton 
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemove();
+            }} 
+            title="Remove" 
+            variant="danger"
+          >
+            <FaTimes />
+          </ControlButton>
+        </Controls>
 
-      {/* Info area sadece edit modunda görünür */}
-      <InfoArea visible={isEditMode}>
-        <Title>{stream.title || stream.url || 'Empty Stream'}</Title>
-        {stream.notes && <Notes>{stream.notes}</Notes>}
-      </InfoArea>
-
-      <Controls visible={isEditMode}>
-        <ControlButton 
-          onClick={(e) => {
-            e.stopPropagation();
-            handleEditClick();
-          }} 
-          title={t('edit_source') as string}
-        >
-          <FaEdit />
-        </ControlButton>
-        
-        <ControlButton 
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleMute();
-          }} 
-          title={isMuted ? "Unmute" : "Mute"}
-        >
-          {isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
-        </ControlButton>
-        
-        <ControlButton 
-          onClick={handleFullscreen}
-          title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
-        >
-          {isFullscreen ? <FaCompress /> : <FaExpand />}
-        </ControlButton>
-        
-        <ControlButton 
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleGridLock && onToggleGridLock(stream.id, !isGridLocked);
-          }} 
-          title={isGridLocked ? "Unlock Grid" : "Lock Grid"}
-          variant={isGridLocked ? 'success' : 'primary'}
-        >
-          {isGridLocked ? <FaUnlock /> : <FaLock />}
-        </ControlButton>
-        
-        <ControlButton 
-          onClick={(e) => {
-            e.stopPropagation();
-            onRemove();
-          }} 
-          title="Remove" 
-          variant="danger"
-        >
-          <FaTimes />
-        </ControlButton>
-      </Controls>
-
-      {isEditModalOpen && (
-        <Modal onClick={handleEditCancel}>
-          <ModalContent onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
-            <ModalTitle>{t('edit_stream')}</ModalTitle>
-            <FormGroup>
-              <Label>{t('url')}</Label>
-              <Input
-                type="text"
-                value={editForm.url}
-                onChange={(e) => setEditForm(prev => ({ ...prev, url: e.target.value }))}
-                onClick={(e) => e.stopPropagation()}
-                onMouseDown={(e) => e.stopPropagation()}
-                placeholder={t('enter_stream_url') as string}
-              />
-            </FormGroup>
-            <FormGroup>
-              <Label>{t('title')}</Label>
-              <Input
-                type="text"
-                value={editForm.title}
-                onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))}
-                onClick={(e) => e.stopPropagation()}
-                onMouseDown={(e) => e.stopPropagation()}
-                placeholder={t('enter_stream_title') as string}
-              />
-            </FormGroup>
-            <FormGroup>
-              <Label>{t('platform')}</Label>
-              <Select
-                value={editForm.platform}
-                onChange={(e) => setEditForm(prev => ({ ...prev, platform: e.target.value as 'youtube' | 'twitch' | 'hls' | 'dash' | 'twitter' | 'kick' }))}
-                onClick={(e) => e.stopPropagation()}
-                onMouseDown={(e) => e.stopPropagation()}
-              >
-                <option value="youtube">{t('settings.platforms.youtube')}</option>
-                <option value="twitch">{t('settings.platforms.twitch')}</option>
-                <option value="kick">{t('settings.platforms.kick')}</option>
-                <option value="hls">{t('settings.platforms.hls')}</option>
-                <option value="twitter">{t('settings.platforms.twitter')}</option>
-              </Select>
-            </FormGroup>
-            <FormGroup>
-              <Label>{t('notes')}</Label>
-              <Input
-                type="text"
-                value={editForm.notes}
-                onChange={(e) => setEditForm(prev => ({ ...prev, notes: e.target.value }))}
-                onClick={(e) => e.stopPropagation()}
-                onMouseDown={(e) => e.stopPropagation()}
-                placeholder={t('enter_stream_notes') as string}
-              />
-            </FormGroup>
-            <ModalButtonGroup>
-              <Button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleEditCancel();
-                }}
-              >
-                {t('cancel')}
-              </Button>
-              <Button 
-                variant="primary" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleEditSubmit();
-                }}
-              >
-                {t('save_changes')}
-              </Button>
-            </ModalButtonGroup>
-          </ModalContent>
-        </Modal>
-      )}
-    </Card>
+        {isEditModalOpen && (
+          <Modal onClick={handleEditCancel}>
+            <ModalContent onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
+              <ModalTitle>{t('edit_stream')}</ModalTitle>
+              <FormGroup>
+                <Label>{t('url')}</Label>
+                <Input
+                  type="text"
+                  value={editForm.url}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, url: e.target.value }))}
+                  onClick={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  placeholder={t('enter_stream_url') as string}
+                />
+              </FormGroup>
+              <FormGroup>
+                <Label>{t('title')}</Label>
+                <Input
+                  type="text"
+                  value={editForm.title}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))}
+                  onClick={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  placeholder={t('enter_stream_title') as string}
+                />
+              </FormGroup>
+              <FormGroup>
+                <Label>{t('platform')}</Label>
+                <Select
+                  value={editForm.platform}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, platform: e.target.value as 'youtube' | 'twitch' | 'hls' | 'dash' | 'twitter' | 'kick' }))}
+                  onClick={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
+                >
+                  <option value="youtube">{t('settings.platforms.youtube')}</option>
+                  <option value="twitch">{t('settings.platforms.twitch')}</option>
+                  <option value="kick">{t('settings.platforms.kick')}</option>
+                  <option value="hls">{t('settings.platforms.hls')}</option>
+                  <option value="twitter">{t('settings.platforms.twitter')}</option>
+                </Select>
+              </FormGroup>
+              <FormGroup>
+                <Label>{t('notes')}</Label>
+                <Input
+                  type="text"
+                  value={editForm.notes}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, notes: e.target.value }))}
+                  onClick={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  placeholder={t('enter_stream_notes') as string}
+                />
+              </FormGroup>
+              <ModalButtonGroup>
+                <Button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEditCancel();
+                  }}
+                >
+                  {t('cancel')}
+                </Button>
+                <Button 
+                  variant="primary" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEditSubmit();
+                  }}
+                >
+                  {t('save_changes')}
+                </Button>
+              </ModalButtonGroup>
+            </ModalContent>
+          </Modal>
+        )}
+      </Card>
+      {FullscreenModal}
+    </>
   );
 };
 
-export default StreamCard;
+const areEqual = (prevProps: StreamCardProps, nextProps: StreamCardProps) => {
+  return (
+    prevProps.stream.id === nextProps.stream.id &&
+    prevProps.stream.url === nextProps.stream.url &&
+    prevProps.stream.platform === nextProps.stream.platform &&
+    prevProps.isMuted === nextProps.isMuted &&
+    prevProps.isEditMode === nextProps.isEditMode &&
+    prevProps.isSelected === nextProps.isSelected &&
+    prevProps.isFullscreen === nextProps.isFullscreen &&
+    prevProps.isGridLocked === nextProps.isGridLocked &&
+    prevProps.onRemove === nextProps.onRemove &&
+    prevProps.onToggleMute === nextProps.onToggleMute &&
+    prevProps.onToggleFullscreen === nextProps.onToggleFullscreen &&
+    prevProps.onSelect === nextProps.onSelect &&
+    prevProps.onUpdateStream === nextProps.onUpdateStream &&
+    prevProps.onToggleGridLock === nextProps.onToggleGridLock &&
+    prevProps.freezeGrid === nextProps.freezeGrid
+  );
+};
+
+const MemoizedStreamCard = React.memo(StreamCard, areEqual);
+
+export default MemoizedStreamCard;

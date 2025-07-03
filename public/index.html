@@ -114,6 +114,14 @@
         background: #2563eb;
       }
     </style>
+    <script>
+      if (window.trustedTypes && window.trustedTypes.createPolicy) {
+        window.trustedTypes.createPolicy('default', {
+          createScriptURL: input => input,
+          createURL: input => input
+        });
+      }
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>

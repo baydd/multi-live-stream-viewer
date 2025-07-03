@@ -136,14 +136,16 @@ const StreamGrid: React.FC<StreamGridProps> = ({
   const [gridLocks, setGridLocks] = useState<{ [key: string]: boolean }>({});
   const [isDragOver, setIsDragOver] = useState(false);
   const [selectedStreams, setSelectedStreams] = useState<Set<string>>(new Set());
+  const [isGridFrozen, setIsGridFrozen] = useState(false);
 
-  // Window size state with debounced updates
+  // Window size state with debounced updates (freeze kontrolü)
   const [windowSize, setWindowSize] = useState({
     width: window.innerWidth,
     height: window.innerHeight
   });
 
   useEffect(() => {
+    if (isGridFrozen) return; // Freeze iken resize dinleme
     let timeoutId: NodeJS.Timeout;
     const handleResize = () => {
       clearTimeout(timeoutId);
@@ -151,13 +153,12 @@ const StreamGrid: React.FC<StreamGridProps> = ({
         setWindowSize({ width: window.innerWidth, height: window.innerHeight });
       }, 100);
     };
-    
     window.addEventListener('resize', handleResize);
     return () => {
       window.removeEventListener('resize', handleResize);
       clearTimeout(timeoutId);
     };
-  }, []);
+  }, [isGridFrozen]);
 
   // Keyboard shortcuts
   useHotkeys('ctrl+a', (e) => {
@@ -346,8 +347,13 @@ const StreamGrid: React.FC<StreamGridProps> = ({
     }))
   }), [orderedStreams, gridConfig, gridLocks]);
 
+  // Freeze grid callback
+  const freezeGrid = useCallback((freeze: boolean) => {
+    setIsGridFrozen(freeze);
+  }, []);
+
   const handleLayoutChange = useCallback((layout: Layout[], layouts: { [key: string]: Layout[] }) => {
-    if (!isEditMode) return;
+    if (isGridFrozen || !isEditMode) return;
     
     const updatedStreams = streams.map((stream: Stream) => {
       const newLayout = layout.find((l: Layout) => l.i === stream.id);
@@ -374,7 +380,7 @@ const StreamGrid: React.FC<StreamGridProps> = ({
       return stream;
     });
     onUpdateStreams(updatedStreams);
-  }, [streams, isEditMode, gridLocks, gridConfig, onUpdateStreams]);
+  }, [streams, isEditMode, gridLocks, gridConfig, onUpdateStreams, isGridFrozen]);
 
   const handleToggleMute = useCallback((streamId: string) => {
     setIsMuted(prev => ({
@@ -421,6 +427,7 @@ const StreamGrid: React.FC<StreamGridProps> = ({
   }, []);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
+    if (isGridFrozen) return;
     e.preventDefault();
     setIsDragOver(false);
     
@@ -455,7 +462,7 @@ const StreamGrid: React.FC<StreamGridProps> = ({
 
       onUpdateStreams([...streams, newStream]);
     }
-  }, [streams, channelCount, gridConfig.cols, onUpdateStreams]);
+  }, [streams, channelCount, gridConfig.cols, onUpdateStreams, isGridFrozen]);
 
   if (!channelCount || !gridConfig.cols) {
     return (
@@ -487,6 +494,11 @@ const StreamGrid: React.FC<StreamGridProps> = ({
           position: 'relative',
           overflow: 'hidden'
         }}>
+          {isGridFrozen && (
+            <div style={{position: 'fixed', top: 0, left: 0, width: '100vw', background: '#222', color: '#fff', zIndex: 99999, textAlign: 'center', padding: 8, fontSize: 16}}>
+              Tam ekran modunda grid düzeni donduruldu. Çıkınca devam edecek.
+            </div>
+          )}
           <ResponsiveGridLayout
             key={`${channelCount}-${streams.length}-${gridConfig.cols}-${windowSize.width}-${windowSize.height}`}
             className="layout"
@@ -553,6 +565,7 @@ const StreamGrid: React.FC<StreamGridProps> = ({
                   }}
                   onToggleGridLock={handleToggleGridLock}
                   isGridLocked={gridLocks[stream.id] || false}
+                  freezeGrid={freezeGrid}
                 />
               </div>
             ))}
