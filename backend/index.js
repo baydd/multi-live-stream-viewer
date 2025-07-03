@@ -1,6 +1,8 @@
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const server = http.createServer(app);
@@ -269,8 +271,17 @@ io.on('connection', (socket) => {
   });
 });
 
+// React build klasörünü sun
+const buildPath = path.join(__dirname, '../build');
+if (fs.existsSync(buildPath)) {
+  app.use(express.static(buildPath));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(buildPath, 'index.html'));
+  });
+}
+
 server.listen(PORT, () => {
-  console.log(`WebSocket sunucusu http://localhost:${PORT} adresinde çalışıyor`);
+  console.log(`Server listening on port ${PORT}`);
 });
 
 function generateRoomCode() {

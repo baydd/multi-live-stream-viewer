@@ -25,8 +25,11 @@
     "react-virtualized": "^9.22.5"
   },
   "scripts": {
-    "start": "concurrently \"react-scripts start\" \"node backend/index.js\"",
+    "heroku-postbuild": "npm run build",
     "build": "react-scripts build",
+    "start": "node backend/index.js",
+    "client": "react-scripts start",
+    "server": "node backend/index.js",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -53,5 +56,9 @@
     "@types/uuid": "^10.0.0",
     "@types/react-virtualized": "^9.21.21",
     "concurrently": "^9.2.0"
+  },
+  "engines": {
+    "node": "20.x",
+    "npm": "9.x"
   }
 }
