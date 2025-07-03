@@ -25,6 +25,8 @@ Supports a wide range of streaming platforms and formats, including HLS (.m3u8),
 
 🌓 Dark Theme Only — Eye-comfort optimized interface
 
+🔎 We now have an HLS link finder extension for your browser.
+
 📡 Supported Stream Types
 ✅ HLS streams (.m3u8)
 
