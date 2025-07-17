@@ -363,6 +363,10 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     { value: 'hls', label: 'HLS' },
     { value: 'dash', label: 'DASH' },
     { value: 'twitter', label: 'Twitter' },
+    { value: 'facebook', label: 'Facebook Live' },
+    { value: 'instagram', label: 'Instagram Live' },
+    { value: 'dlive', label: 'DLive' },
+    { value: 'trovo', label: 'Trovo' },
   ];
 
   const handleSave = () => {

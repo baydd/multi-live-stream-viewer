@@ -396,6 +396,9 @@ const HLSPlayer: React.FC<{ url: string; isMuted: boolean; onError: (error: stri
   const hlsRef = useRef<Hls | null>(null);
   const [showPlayButton, setShowPlayButton] = useState(false);
   const [error, setError] = useState<string>('');
+  const [levels, setLevels] = useState<any[]>([]);
+  const [selectedLevel, setSelectedLevel] = useState<number>(-1); // -1: Otomatik
+  const [isHovered, setIsHovered] = useState(false); // <-- burada tanımla
   const ref = videoRef || localVideoRef;
 
   useEffect(() => {
@@ -403,7 +406,6 @@ const HLSPlayer: React.FC<{ url: string; isMuted: boolean; onError: (error: stri
     setShowPlayButton(false);
     const video = ref.current;
     if (!video) return;
-    // Native HLS desteği (Safari, bazı mobil tarayıcılar)
     if (video.canPlayType('application/vnd.apple.mpegurl')) {
       video.src = url;
       video.onloadedmetadata = () => {
@@ -415,14 +417,18 @@ const HLSPlayer: React.FC<{ url: string; isMuted: boolean; onError: (error: stri
       };
       return;
     }
-    // HLS.js ile oynatma
     if (Hls.isSupported()) {
       const hls = new Hls();
       hlsRef.current = hls;
       hls.loadSource(url);
       hls.attachMedia(video);
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+      hls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
+        setLevels(data.levels || []);
+        setSelectedLevel(-1);
         video.play().catch(() => setShowPlayButton(true));
+      });
+      hls.on(Hls.Events.LEVEL_SWITCHED, (_, data) => {
+        setSelectedLevel(data.level);
       });
       hls.on(Hls.Events.ERROR, (event, data) => {
         if (data && data.fatal) {
@@ -442,6 +448,15 @@ const HLSPlayer: React.FC<{ url: string; isMuted: boolean; onError: (error: stri
     };
   }, [url, onError]);
 
+  // Kalite değiştirici
+  const handleQualityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const level = parseInt(e.target.value, 10);
+    setSelectedLevel(level);
+    if (hlsRef.current) {
+      hlsRef.current.currentLevel = level;
+    }
+  };
+
   const handlePlayClick = () => {
     if (ref.current) {
       ref.current.play().then(() => setShowPlayButton(false)).catch(() => setShowPlayButton(true));
@@ -460,7 +475,11 @@ const HLSPlayer: React.FC<{ url: string; isMuted: boolean; onError: (error: stri
   }
 
   return (
-    <div style={{width: '100%', height: '100%', position: 'relative'}}>
+    <div
+      style={{width: '100%', height: '100%', position: 'relative'}}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       <video
         ref={ref}
         style={{width: '100%', height: '100%', background: '#000'}}
@@ -469,6 +488,27 @@ const HLSPlayer: React.FC<{ url: string; isMuted: boolean; onError: (error: stri
         controls
         playsInline
       />
+      {levels.length > 1 && (
+        <div style={{
+          position: 'absolute',
+          bottom: 8,
+          right: 8,
+          zIndex: 20,
+          background: '#222b',
+          borderRadius: 8,
+          padding: '4px 10px',
+          opacity: isHovered ? 1 : 0,
+          pointerEvents: isHovered ? 'auto' : 'none',
+          transition: 'opacity 0.2s',
+        }}>
+          <select value={selectedLevel} onChange={handleQualityChange} style={{color: '#fff', background: '#222', border: '1px solid #444', borderRadius: 4, padding: '2px 6px'}}>
+            <option value={-1}>Otomatik</option>
+            {levels.map((level, idx) => (
+              <option key={idx} value={idx}>{level.height ? `${level.height}p` : `Seviye ${idx+1}`}</option>
+            ))}
+          </select>
+        </div>
+      )}
       {showPlayButton && (
         <div style={{
           position: 'absolute',
@@ -535,6 +575,8 @@ const StreamCard: React.FC<StreamCardProps> = ({
     platform: stream.platform
   });
   const [fullscreenModal, setFullscreenModal] = useState(false);
+  // Kalite seçici hover ile gösterilecek kapsayıcı
+  const [isHovered, setIsHovered] = useState(false);
 
   // Update edit form when stream changes
   useEffect(() => {

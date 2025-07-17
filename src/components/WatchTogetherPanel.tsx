@@ -4,10 +4,11 @@ import { useTranslation } from 'react-i18next';
 import { 
   FaTimes, FaUsers, FaCrown, FaUserShield, FaCopy, FaSync, FaSignOutAlt, 
   FaEye, FaEyeSlash, FaPlus, FaUserFriends, FaDownload, FaShare, FaBan,
-  FaUserCog, FaCheck, FaExclamationTriangle, FaLock, FaUnlock, FaHandPaper, FaUser
+  FaUserCog, FaCheck, FaExclamationTriangle, FaLock, FaUnlock, FaHandPaper, FaUser, FaComments, FaPaperPlane
 } from 'react-icons/fa';
 import { WatchTogetherRoom, WatchTogetherUser, Stream } from '../types';
 import { watchTogetherService } from '../services/watchTogetherService';
+import SimplePeer from 'simple-peer';
 
 interface WatchTogetherPanelProps {
   isOpen: boolean;
@@ -407,6 +408,54 @@ const ModeButton = styled.button<{ active: boolean }>`
   }
 `;
 
+const ChatContainer = styled.div`
+  background: ${props => props.theme.background};
+  border: 2px solid ${props => props.theme.border};
+  border-radius: 16px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+  max-height: 300px;
+  overflow-y: auto;
+`;
+const ChatMessage = styled.div`
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+`;
+const ChatUser = styled.span`
+  font-weight: 700;
+  color: ${props => props.theme.primary};
+  margin-right: 0.5rem;
+`;
+const ChatInputRow = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+`;
+const ChatInput = styled.input`
+  flex: 1;
+  padding: 0.75rem;
+  border: 2px solid ${props => props.theme.border};
+  border-radius: 8px;
+  font-size: 1rem;
+  background: ${props => props.theme.inputBackground};
+  color: ${props => props.theme.text};
+`;
+const ChatSendButton = styled.button`
+  background: ${props => props.theme.primary};
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1.2rem;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  &:hover { background: ${props => props.theme.primaryDark}; }
+`;
+
 const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
   isOpen,
   onClose,
@@ -428,6 +477,10 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
   const [showRoomCode, setShowRoomCode] = useState(false);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [chatInput, setChatInput] = useState('');
+
+  const userId = currentUser?.id;
 
   useEffect(() => {
     watchTogetherService.connect();
@@ -498,9 +551,12 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
         setSuccess(t('watch_together.permission_requested', { username: requestingUsername }) as string);
         setTimeout(() => setSuccess(''), 3000);
       },
-      onError: (error) => setError(error)
+      onError: (error) => setError(error),
+      onMessage: (msg) => setMessages(prev => [...prev, msg]),
+      onMessagesInit: (msgs) => setMessages(msgs || []),
     });
-  }, [currentUser?.username, currentUser?.id]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser, t]);
 
   const handleCreateRoom = async () => {
     if (!roomName.trim() || !username.trim()) {
@@ -620,6 +676,16 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
 
       setSuccess(t('watch_together.update_applied', { username: update.username }) || `Update applied by ${update.username}`);
       setTimeout(() => setSuccess(''), 3000);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!chatInput.trim()) return;
+    try {
+      await watchTogetherService.sendMessage(chatInput.trim());
+      setChatInput('');
+    } catch (err) {
+      setError('Mesaj gönderilemedi');
     }
   };
 
@@ -757,11 +823,7 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
                     variant="success" 
                     onClick={() => {
                       handleToggleSharePermission(userId);
-                      setPermissionRequests(prev => {
-                        const newRequests = { ...prev };
-                        delete newRequests[userId];
-                        return newRequests;
-                      });
+                      setPermissionRequests(prev => { const newRequests = { ...prev }; delete newRequests[userId]; return newRequests; });
                     }}
                   >
                     <FaCheck />
@@ -770,11 +832,7 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
                   <Button 
                     variant="danger" 
                     onClick={() => {
-                      setPermissionRequests(prev => {
-                        const newRequests = { ...prev };
-                        delete newRequests[userId];
-                        return newRequests;
-                      });
+                      setPermissionRequests(prev => { const newRequests = { ...prev }; delete newRequests[userId]; return newRequests; });
                     }}
                   >
                     <FaTimes />
@@ -882,24 +940,51 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
             {t('watch_together.leave_room_button') as string}
           </Button>
         </ButtonGroup>
-      </Section>
+        {!currentUser?.canShare && (
+          <UpdateNotification type="warning">
+            <FaExclamationTriangle />
+            <div>
+              {t('watch_together.no_share_permission') as string}
+              <Button 
+                variant="secondary" 
+                onClick={handleRequestSharePermission}
+                style={{ marginTop: '0.75rem', marginBottom: 0 }}
+              >
+                <FaHandPaper />
+                {t('watch_together.request_permission') as string}
+              </Button>
+            </div>
+          </UpdateNotification>
+        )}
 
-      {!currentUser?.canShare && (
-        <UpdateNotification type="warning">
-          <FaExclamationTriangle />
-          <div>
-            {t('watch_together.no_share_permission') as string}
-            <Button 
-              variant="secondary" 
-              onClick={handleRequestSharePermission}
-              style={{ marginTop: '0.75rem', marginBottom: 0 }}
-            >
-              <FaHandPaper />
-              {t('watch_together.request_permission') as string}
-            </Button>
-          </div>
-        </UpdateNotification>
-      )}
+        <Section>
+          <SectionTitle>
+            <FaComments /> Sohbet
+          </SectionTitle>
+          <ChatContainer>
+            {messages.length === 0 && <div style={{ color: '#888' }}>Henüz mesaj yok.</div>}
+            {messages.map(msg => (
+              <ChatMessage key={msg.id}>
+                <ChatUser>{msg.user.username}:</ChatUser>
+                <span>{msg.text}</span>
+                <span style={{ color: '#aaa', fontSize: '0.8em', marginLeft: 'auto' }}>{new Date(msg.timestamp).toLocaleTimeString()}</span>
+              </ChatMessage>
+            ))}
+          </ChatContainer>
+          <ChatInputRow>
+            <ChatInput
+              type="text"
+              placeholder="Mesaj yaz..."
+              value={chatInput}
+              onChange={e => setChatInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleSendMessage(); }}
+            />
+            <ChatSendButton onClick={handleSendMessage} title="Gönder">
+              <FaPaperPlane />
+            </ChatSendButton>
+          </ChatInputRow>
+        </Section>
+      </Section>
     </>
   );
 
@@ -929,7 +1014,7 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
         </UpdateNotification>
       )}
 
-      {mode === 'room' && currentRoom ? renderRoom() : renderJoinCreate()}
+      {mode === 'room' ? renderRoom() : renderJoinCreate()}
     </Panel>
   );
 };

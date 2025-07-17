@@ -34,7 +34,11 @@ const resources = {
           twitter: 'Twitter',
           kick: 'Kick',
           hls: 'HLS',
-          dash: 'DASH'
+          dash: 'DASH',
+          facebook: 'Facebook Live',
+          instagram: 'Instagram Live',
+          dlive: 'DLive',
+          trovo: 'Trovo'
         },
         stream_title_placeholder: 'Stream Title',
         stream_url_placeholder: 'URL or ID',
@@ -193,7 +197,11 @@ const resources = {
           twitter: 'Twitter',
           kick: 'Kick',
           hls: 'HLS',
-          dash: 'DASH'
+          dash: 'DASH',
+          facebook: 'Facebook Live',
+          instagram: 'Instagram Live',
+          dlive: 'DLive',
+          trovo: 'Trovo'
         },
         stream_title_placeholder: 'Stream Title',
         stream_url_placeholder: 'URL or ID',

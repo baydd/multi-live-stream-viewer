@@ -14,6 +14,8 @@ class WatchTogetherService {
     onAdminStatusChanged?: (targetUserId: string, isAdmin: boolean, changedBy: string) => void;
     onPermissionRequested?: (requestingUserId: string, requestingUsername: string) => void;
     onError?: (error: string) => void;
+    onMessage?: (msg: any) => void;
+    onMessagesInit?: (msgs: any[]) => void;
   } = {};
 
   private readonly SERVER_URL = process.env.NODE_ENV === 'production'
@@ -78,6 +80,10 @@ class WatchTogetherService {
     this.socket.on('permissionRequested', ({ requestingUserId, requestingUsername }) => {
       this.callbacks.onPermissionRequested?.(requestingUserId, requestingUsername);
     });
+
+    this.socket.on('message', (msg: any) => {
+      this.callbacks.onMessage?.(msg);
+    });
   }
 
   disconnect() {
@@ -111,11 +117,10 @@ class WatchTogetherService {
     });
   }
 
-  async joinRoom(roomCode: string, username: string): Promise<{ room: WatchTogetherRoom; user: WatchTogetherUser }> {
+  async joinRoom(roomCode: string, username: string): Promise<{ room: WatchTogetherRoom; user: WatchTogetherUser, messages: any[] }> {
     if (!this.socket?.connected) {
       throw new Error('WebSocket bağlantısı yok');
     }
-
     return new Promise((resolve, reject) => {
       this.socket?.emit('joinRoom', { roomCode, username }, (response: any) => {
         if (response.error) {
@@ -123,6 +128,9 @@ class WatchTogetherService {
         } else {
           this.currentRoom = response.room;
           this.currentUser = response.user;
+          if (response.messages) {
+            this.callbacks.onMessagesInit?.(response.messages);
+          }
           resolve(response);
         }
       });
@@ -235,12 +243,32 @@ class WatchTogetherService {
     this.currentUser = null;
   }
 
+  async sendMessage(message: string) {
+    if (!this.socket?.connected || !this.currentRoom || !this.currentUser) {
+      throw new Error('WebSocket bağlantısı yok veya oda/kullanıcı bilgisi eksik');
+    }
+    const roomCode = this.currentRoom.code;
+    return new Promise((resolve, reject) => {
+      this.socket?.emit('sendMessage', { roomCode, message }, (response: any) => {
+        if (response.error) {
+          reject(new Error(response.error));
+        } else {
+          resolve(response);
+        }
+      });
+    });
+  }
+
   getCurrentRoom(): WatchTogetherRoom | null {
     return this.currentRoom;
   }
 
   getCurrentUser(): WatchTogetherUser | null {
     return this.currentUser;
+  }
+
+  getSocket() {
+    return this.socket;
   }
 }
 

@@ -79,4 +79,14 @@ Browser resizing is now more stable.
 ----------------------------------------------------------
 
 
+1.3 Beta
 
+
+
+Modern Participant List: Avatars (initials in colored circles), colored badges (Owner, Admin, Can Share), hover effect, and improved alignment.
+Room Info Card:** Modern card style for room name and code, more spacing, and badges.
+New Platforms:** Added support for Facebook Live, Instagram Live, DLive, and Trovo.
+*HLS Quality Selector: Choose quality (480p, 720p, 1080p, etc.) for HLS streams.
+In-Room Chat Panel: Participants can chat in real-time with text messages.
+Responsive & Modern UI: All panels and grid are mobile-friendly and visually modernized.
+Improved error/success notifications and tooltips.**

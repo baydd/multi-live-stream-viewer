@@ -3,6 +3,8 @@ const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
 const fs = require('fs');
+const fetch = (...args) => import('node-fetch').then(mod => mod.default(...args)); // Kick API'ye istek atmak için
+const cors = require('cors'); // CORS middleware
 
 const app = express();
 const server = http.createServer(app);
@@ -46,7 +48,8 @@ io.on('connection', (socket) => {
       streams: [],
       channelCount: 6,
       lastUpdatedBy: userId,
-      lastUpdatedAt: new Date().toISOString()
+      lastUpdatedAt: new Date().toISOString(),
+      messages: [] // Oda içi mesajlar
     };
 
     rooms[roomCode] = newRoom;
@@ -56,6 +59,10 @@ io.on('connection', (socket) => {
     callback({ room: newRoom, user });
     io.to(roomCode).emit('roomUpdate', newRoom);
   });
+
+  // Anket başlatma (sadece admin/owner) -- KALDIRILDI
+  // Oylama -- KALDIRILDI
+  // Anketi bitirme (sadece admin/owner) -- KALDIRILDI
 
   socket.on('joinRoom', ({ roomCode, username }, callback) => {
     const room = rooms[roomCode.toUpperCase()];
@@ -79,7 +86,7 @@ io.on('connection', (socket) => {
     socket.join(roomCode);
 
     console.log(`Kullanıcı ${username} (${userId}) odaya katıldı: ${roomCode}`);
-    callback({ room, user });
+    callback({ room, user, messages: room.messages || [] }); // poll kaldırıldı
     io.to(roomCode).emit('userJoined', user);
     io.to(roomCode).emit('roomUpdate', room);
   });
@@ -234,6 +241,38 @@ io.on('connection', (socket) => {
     });
   });
 
+  // Oda içi sohbet mesajı gönderme
+  socket.on('sendMessage', ({ roomCode, message }, callback) => {
+    const room = rooms[roomCode];
+    if (!room) {
+      callback && callback({ error: 'Oda bulunamadı.' });
+      return;
+    }
+    const user = room.participants.find(p => p.id === socket.id);
+    if (!user) {
+      callback && callback({ error: 'Oda katılımcısı değil.' });
+      return;
+    }
+    const msgObj = {
+      id: Date.now().toString() + Math.random().toString(36).substring(2, 8),
+      user: { id: user.id, username: user.username },
+      text: message,
+      timestamp: new Date().toISOString()
+    };
+    room.messages = room.messages || [];
+    room.messages.push(msgObj);
+    // Son 100 mesajı tut (isteğe bağlı)
+    if (room.messages.length > 100) room.messages = room.messages.slice(-100);
+    io.to(roomCode).emit('message', msgObj);
+    callback && callback({ success: true });
+  });
+
+  // WebRTC signaling mesajı iletimi
+  socket.on('signal', ({ roomCode, to, data }) => {
+    // Belirli kullanıcıya signaling mesajı ilet
+    io.to(to).emit('signal', { from: socket.id, data });
+  });
+
   socket.on('leaveRoom', ({ roomCode }) => {
     const room = rooms[roomCode];
     if (!room) return;
@@ -280,6 +319,37 @@ if (fs.existsSync(buildPath)) {
   });
 }
 
+// Kick API proxy endpoint
+app.get('/api/kick/:channel/livestream', async (req, res) => {
+  const { channel } = req.params;
+  try {
+    const response = await fetch(`https://kick.com/api/v2/channels/${channel}/livestream`);
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch from Kick API' });
+  }
+});
+
+// Genel proxy endpoint (herhangi bir URL için)
+app.get('/api/proxy', async (req, res) => {
+  const { url } = req.query;
+  if (!url || !/^https?:\/\//.test(url)) {
+    return res.status(400).json({ error: 'Geçersiz veya eksik url parametresi.' });
+  }
+  try {
+    const response = await fetch(url);
+    const contentType = response.headers.get('content-type');
+    if (contentType) {
+      res.set('Content-Type', contentType);
+    }
+    const data = await response.text();
+    res.send(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Proxy isteği başarısız.' });
+  }
+});
+
 server.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
@@ -291,3 +361,5 @@ function generateRoomCode() {
 function generateRoomId() {
   return 'room_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
 }
+
+app.use(cors()); // Tüm endpointler için CORS'u aktif et
