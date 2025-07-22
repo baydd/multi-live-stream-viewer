@@ -258,6 +258,25 @@ const defaultChannelCount = 6;
 
 type Language = 'tr' | 'en' | 'ar' | 'es' | 'zh' | 'ru' | 'pt';
 
+const KickstarterBanner = styled.a`
+  display: inline-flex;
+  align-items: center;
+  background: linear-gradient(90deg, #06f,rgb(75, 233, 43));
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-decoration: none;
+  margin-right: 1rem;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+`;
+
 const App: React.FC = () => {
   const { i18n } = useTranslation();
   const [streams, setStreams] = useState<Stream[]>([]);
@@ -449,9 +468,13 @@ const App: React.FC = () => {
       <GlobalStyle />
       <AppContainer>
         <Header>
-          <DevBy href="https://github.com/baydd" target="_blank" rel="noopener noreferrer">
-            Developed by: baydd
-          </DevBy>
+          <KickstarterBanner
+            href="https://www.kickstarter.com/projects/mesuthost/mesuthost-ai-powered-website-builder-and-ecosystem"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Kickstarter projemize destek olun
+          </KickstarterBanner>
           <ButtonGroup>
             <IconButton
               as="a"
