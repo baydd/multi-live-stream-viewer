@@ -469,11 +469,11 @@ const App: React.FC = () => {
       <AppContainer>
         <Header>
           <KickstarterBanner
-            href="https://www.kickstarter.com/projects/mesuthost/mesuthost-ai-powered-website-builder-and-ecosystem"
+            href="https://github.com/baydd"
             target="_blank"
             rel="noopener noreferrer"
           >
-            Kickstarter projemize destek olun
+            Developed by : Baydd
           </KickstarterBanner>
           <ButtonGroup>
             <IconButton
