@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: multi-live-stream-viewer
+    env: node
+    buildCommand: npm install && npm run format && npm run build
+    staticPublishPath: ./build
+    envVars:
+      - key: NODE_VERSION
+        value: 18.x
+      - key: NPM_CONFIG_PRODUCTION
+        value: false
