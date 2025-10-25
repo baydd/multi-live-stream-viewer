@@ -267,7 +267,38 @@ io.on('connection', (socket) => {
     callback && callback({ success: true });
   });
 
-  // WebRTC signaling mesajı iletimi
+  // Sesli sohbet - odaya katıl/ayrıl
+  socket.on('voice:join', ({ roomCode }, callback) => {
+    const room = rooms[roomCode];
+    if (!room) {
+      callback && callback({ error: 'Oda bulunamadı.' });
+      return;
+    }
+    // Voice katılımı bildirimini odaya yayınla
+    io.to(roomCode).emit('voice:peer-joined', { userId: socket.id });
+    callback && callback({ success: true, userId: socket.id });
+  });
+
+  socket.on('voice:leave', ({ roomCode }) => {
+    const room = rooms[roomCode];
+    if (!room) return;
+    io.to(roomCode).emit('voice:peer-left', { userId: socket.id });
+  });
+
+  // WebRTC SDP/ICE sinyalizasyonu (voice)
+  socket.on('voice:offer', ({ roomCode, targetUserId, sdp }) => {
+    io.to(targetUserId).emit('voice:offer', { fromUserId: socket.id, sdp });
+  });
+
+  socket.on('voice:answer', ({ roomCode, targetUserId, sdp }) => {
+    io.to(targetUserId).emit('voice:answer', { fromUserId: socket.id, sdp });
+  });
+
+  socket.on('voice:candidate', ({ roomCode, targetUserId, candidate }) => {
+    io.to(targetUserId).emit('voice:candidate', { fromUserId: socket.id, candidate });
+  });
+
+  // WebRTC signaling mesajı iletimi (genel)
   socket.on('signal', ({ roomCode, to, data }) => {
     // Belirli kullanıcıya signaling mesajı ilet
     io.to(to).emit('signal', { from: socket.id, data });

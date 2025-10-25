@@ -11,8 +11,10 @@ import {
   FaBookmark,
   FaChartLine,
   FaKeyboard,
-  FaLink
+  FaLink,
+  FaTv
 } from 'react-icons/fa';
+import ChannelList from './components/ChannelList';
 import { Stream, Settings } from './types';
 import StreamGrid from './components/StreamGrid';
 import SettingsPanel from './components/SettingsPanel';
@@ -109,53 +111,128 @@ const AppContainer = styled.div`
   background: ${props => props.theme.background};
   color: ${props => props.theme.text};
   position: relative;
+  padding-top: 64px; /* Match header height */
+  
+  @media (max-width: 768px) {
+    padding-top: 56px;
+  }
 `;
 
 const Header = styled.header`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 1.5rem;
+  padding: 0.5rem 1.5rem;
   background: ${props => props.theme.cardBackground};
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid ${props => props.theme.border};
-  box-shadow: ${props => props.theme.shadow};
-  position: relative;
-  z-index: 100;
-  height: 60px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  height: 64px;
+  transition: all 0.3s ease;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: ${props => props.theme.cardBackground};
+    opacity: 0.9;
+    z-index: -1;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 0.5rem 1rem;
+    height: 56px;
+  }
 `;
 
 const Title = styled.h1`
-  font-size: 1.25rem;
-  font-weight: 600;
-  background: ${props => props.theme.gradient};
+  font-size: 1.5rem;
+  font-weight: 700;
+  background: ${props => props.theme.gradient || `linear-gradient(135deg, ${props.theme.primary}, ${props.theme.secondary})`};
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   margin: 0;
   letter-spacing: -0.025em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+  position: relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: ${props => props.theme.primary}20;
+    border-radius: 2px;
+  }
+  
+  @media (max-width: 768px) {
+    font-size: 1.25rem;
+  }
 `;
 
 const DevBy = styled.a`
   font-size: 0.875rem;
   font-weight: 500;
-  color: ${props => props.theme.secondary};
+  color: ${props => props.theme.text};
   text-decoration: none;
-  transition: color 0.2s;
+  transition: all 0.2s ease;
   cursor: pointer;
-  margin-right: 1rem;
-  opacity: 0.8;
+  margin-right: 1.5rem;
+  opacity: 0.9;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 8px;
+  background: ${props => props.theme.background}40;
+  border: 1px solid ${props => props.theme.border};
   
   &:hover {
     color: ${props => props.theme.primary};
-    opacity: 1;
+    background: ${props => props.theme.primary}15;
+    border-color: ${props => props.theme.primary}30;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  @media (max-width: 768px) {
+    display: none;
   }
 `;
 
 const ButtonGroup = styled.div`
   display: flex;
-  gap: 0.375rem;
+  gap: 0.5rem;
   align-items: center;
+  flex-wrap: nowrap;
+  padding: 0.25rem;
+  background: ${props => props.theme.background}20;
+  border-radius: 12px;
+  border: 1px solid ${props => props.theme.border};
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  
+  @media (max-width: 768px) {
+    gap: 0.375rem;
+    padding: 0.125rem;
+    border-radius: 10px;
+  }
 `;
 
 const IconButton = styled.button<{ active?: boolean; variant?: 'primary' | 'secondary' | 'success' }>`
@@ -164,37 +241,46 @@ const IconButton = styled.button<{ active?: boolean; variant?: 'primary' | 'seco
     if (props.variant === 'success') return props.theme.success;
     return 'transparent';
   }};
-  border: 1px solid ${props => {
-    if (props.active) return props.theme.primary;
-    if (props.variant === 'success') return props.theme.success;
-    return props.theme.border;
-  }};
+  border: none;
   color: ${props => {
     if (props.active || props.variant === 'success') return '#ffffff';
     return props.theme.text;
   }};
-  font-size: 0.875rem;
+  font-size: 1rem;
   cursor: pointer;
-  padding: 0.625rem;
+  padding: 0.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 8px;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  min-width: 40px;
-  height: 40px;
+  min-width: 36px;
+  height: 36px;
+  box-shadow: none;
+  opacity: ${props => props.disabled ? '0.5' : '1'};
   
   &:hover {
     background: ${props => {
       if (props.active) return props.theme.primary;
       if (props.variant === 'success') return props.theme.success;
-      return props.theme.hover;
+      return props.theme.background;
     }};
     transform: translateY(-1px);
-    box-shadow: ${props => props.theme.shadow};
-    border-color: ${props => props.theme.primary};
+    box-shadow: 0 2px 12px ${props => props.theme.shadow || 'rgba(0, 0, 0, 0.1)'};
     color: ${props => props.active || props.variant === 'success' ? '#ffffff' : props.theme.primary};
+  }
+  
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+  
+  @media (max-width: 768px) {
+    min-width: 32px;
+    height: 32px;
+    padding: 0.375rem;
+    font-size: 0.875rem;
   }
 
   &:active {
@@ -204,13 +290,29 @@ const IconButton = styled.button<{ active?: boolean; variant?: 'primary' | 'seco
 
 const LanguageButton = styled(IconButton)`
   gap: 0.375rem;
-  padding: 0.625rem 0.75rem;
+  padding: 0.5rem 0.75rem;
   min-width: auto;
+  font-weight: 500;
+  background: ${props => props.theme.background}40 !important;
+  border: 1px solid ${props => props.theme.border} !important;
+  
+  &:hover {
+    background: ${props => props.theme.primary}15 !important;
+    border-color: ${props => props.theme.primary}30 !important;
+  }
   
   span {
     font-size: 0.75rem;
     font-weight: 600;
     letter-spacing: 0.025em;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 0.375rem 0.5rem;
+    
+    span {
+      display: none;
+    }
   }
 `;
 
@@ -258,25 +360,6 @@ const defaultChannelCount = 6;
 
 type Language = 'tr' | 'en' | 'ar' | 'es' | 'zh' | 'ru' | 'pt';
 
-const KickstarterBanner = styled.a`
-  display: inline-flex;
-  align-items: center;
-  background: linear-gradient(90deg, #06f,rgb(75, 233, 43));
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  font-weight: 600;
-  font-size: 0.875rem;
-  text-decoration: none;
-  margin-right: 1rem;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  }
-`;
-
 const App: React.FC = () => {
   const { i18n } = useTranslation();
   const [streams, setStreams] = useState<Stream[]>([]);
@@ -312,84 +395,78 @@ const App: React.FC = () => {
     saveSettings({ theme: isDarkMode ? 'dark' : 'light' });
   }, [isDarkMode]);
 
-  // Auto-save streams and channel count
+  // Auto-save streams and channel count (storage utils ile tek noktadan)
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      localStorage.setItem('streams', JSON.stringify(streams));
-    }, 500);
+      saveStreams(streams);
+    }, 300);
     return () => clearTimeout(timeoutId);
   }, [streams]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      localStorage.setItem('channelCount', channelCount.toString());
-    }, 500);
+      saveSettings({ channelCount });
+    }, 300);
     return () => clearTimeout(timeoutId);
   }, [channelCount]);
 
   // Ctrl+V paste handler for adding streams
+  // URL -> platform tespit yardımcı fonksiyonu
+  const detectPlatform = (url: string): Stream['platform'] => {
+    const u = url.toLowerCase();
+    if (u.includes('youtube.com') || u.includes('youtu.be')) return 'youtube';
+    if (u.includes('twitch.tv')) return 'twitch';
+    if (u.includes('kick.com')) return 'kick';
+    if (u.includes('twitter.com') || u.includes('x.com')) return 'twitter';
+    return 'hls';
+  };
+
+  // Ctrl+V ile pano yapıştırma ve stream ekleme (izin/güvenli bağlam kontrolü)
   useEffect(() => {
     const handlePaste = async (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.key === 'v') {
-        try {
-          const clipboardText = await navigator.clipboard.readText();
-          
-          // Check if it's a valid URL
-          if (clipboardText && (clipboardText.startsWith('http') || clipboardText.includes('.'))) {
-            // Find first empty slot or add new one
-            let targetIndex = streams.findIndex(stream => !stream.url || stream.url.trim() === '');
-            
-            if (targetIndex === -1) {
-              // No empty slot found, add new stream if under channel count
-              if (streams.length < channelCount) {
-                targetIndex = streams.length;
-              } else {
-                // Increase channel count and add new stream
-                setChannelCount(prev => prev + 1);
-                targetIndex = streams.length;
-              }
-            }
+      if (!(e.ctrlKey && e.key === 'v')) return;
 
-            // Auto-detect platform
-            let platform: Stream['platform'] = 'hls';
-            if (clipboardText.includes('youtube.com') || clipboardText.includes('youtu.be')) {
-              platform = 'youtube';
-            } else if (clipboardText.includes('twitch.tv')) {
-              platform = 'twitch';
-            } else if (clipboardText.includes('kick.com')) {
-              platform = 'kick';
-            } else if (clipboardText.includes('twitter.com') || clipboardText.includes('x.com')) {
-              platform = 'twitter';
-            }
-
-            const newStream: Stream = {
-              id: Date.now().toString(),
-              url: clipboardText,
-              title: `Stream ${targetIndex + 1}`,
-              platform,
-              category: '',
-              notes: '',
-              layout: {
-                x: targetIndex % 3,
-                y: Math.floor(targetIndex / 3),
-                w: 1,
-                h: 1,
-              }
-            };
-
-            if (targetIndex < streams.length) {
-              // Replace existing empty stream
-              const updatedStreams = [...streams];
-              updatedStreams[targetIndex] = newStream;
-              setStreams(updatedStreams);
-            } else {
-              // Add new stream
-              setStreams(prev => [...prev, newStream]);
-            }
-          }
-        } catch (error) {
-          console.error('Failed to read clipboard:', error);
+      try {
+        if (!('clipboard' in navigator) || !('readText' in navigator.clipboard)) {
+          return; // Destek yoksa sessizce geç
         }
+        const clipboardText = await navigator.clipboard.readText();
+        if (!clipboardText || !(clipboardText.startsWith('http') || clipboardText.includes('.'))) return;
+
+        let targetIndex = streams.findIndex(stream => !stream.url || stream.url.trim() === '');
+        if (targetIndex === -1) {
+          if (streams.length < channelCount) {
+            targetIndex = streams.length;
+          } else {
+            setChannelCount(prev => prev + 1);
+            targetIndex = streams.length;
+          }
+        }
+
+        const newStream: Stream = {
+          id: Date.now().toString(),
+          url: clipboardText,
+          title: `Stream ${targetIndex + 1}`,
+          platform: detectPlatform(clipboardText),
+          category: '',
+          notes: '',
+          layout: {
+            x: targetIndex % 3,
+            y: Math.floor(targetIndex / 3),
+            w: 1,
+            h: 1,
+          }
+        };
+
+        if (targetIndex < streams.length) {
+          const updatedStreams = [...streams];
+          updatedStreams[targetIndex] = newStream;
+          setStreams(updatedStreams);
+        } else {
+          setStreams(prev => [...prev, newStream]);
+        }
+      } catch (error) {
+        console.error('Clipboard okunamadı:', error);
       }
     };
 
@@ -399,9 +476,24 @@ const App: React.FC = () => {
 
   const handleAddStream = useCallback((stream: Stream) => {
     setPreviousStreams(prev => [...prev, streams]);
-    const newStreams = [...streams, stream];
+    const newStream = {
+      ...stream,
+      id: stream.id || `stream-${Date.now()}`,
+      layout: {
+        x: streams.length % 3,
+        y: Math.floor(streams.length / 3),
+        w: 1,
+        h: 1
+      }
+    };
+    const newStreams = [...streams, newStream];
     setStreams(newStreams);
-  }, [streams]);
+    
+    // Auto-expand grid if needed
+    if (streams.length >= channelCount) {
+      setChannelCount(prev => prev + 1);
+    }
+  }, [streams, channelCount]);
 
   const handleRemoveStream = useCallback((id: string) => {
     setPreviousStreams(prev => [...prev, streams]);
@@ -468,13 +560,21 @@ const App: React.FC = () => {
       <GlobalStyle />
       <AppContainer>
         <Header>
-          <KickstarterBanner
-            href="https://github.com/baydd"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Developed by : Baydd
-          </KickstarterBanner>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <Title>
+              <FaTv />
+              <span>Stream Viewer</span>
+            </Title>
+            <DevBy href="https://github.com/baydd" target="_blank" rel="noopener noreferrer">
+              <FaGlobe size={14} />
+              <span>by baydd</span>
+            </DevBy>
+          </div>
+          
+          <div style={{ flex: 1, maxWidth: '600px', margin: '0 1.5rem' }}>
+            <ChannelList onSelectChannel={handleAddStream} />
+          </div>
+          
           <ButtonGroup>
             <IconButton
               as="a"
@@ -482,45 +582,72 @@ const App: React.FC = () => {
               target="_blank"
               rel="noopener noreferrer"
               title="HLS Link Extension (GitHub)"
-              style={{ textDecoration: 'none' }}
+              aria-label="HLS Link Extension (GitHub)"
             >
-              <FaLink style={{ marginRight: 6 }} />
-              Extension
+              <FaLink />
+              <span style={{ marginLeft: '0.25rem', display: 'inline-block', minWidth: '60px' }}>Extension</span>
             </IconButton>
+            
             <IconButton 
               onClick={() => setIsEditMode(!isEditMode)} 
               title="Edit Mode (Ctrl+E)"
+              aria-label="Edit Mode (Ctrl+E)"
               active={isEditMode}
             >
               <FaEdit />
             </IconButton>
+            
             <IconButton 
               onClick={() => setIsPresetsOpen(true)} 
               title="Stream Presets (Ctrl+P)"
+              aria-label="Stream Presets (Ctrl+P)"
             >
               <FaBookmark />
             </IconButton>
+            
             <IconButton 
               onClick={() => setIsWatchTogetherOpen(true)} 
               title="Watch Together"
+              aria-label="Watch Together"
             >
               <FaUsers />
             </IconButton>
+            
             <IconButton 
               onClick={() => setShowPerformanceMonitor(!showPerformanceMonitor)} 
               title="Performance Monitor (Ctrl+M)"
+              aria-label="Performance Monitor (Ctrl+M)"
               active={showPerformanceMonitor}
             >
               <FaChartLine />
             </IconButton>
-            <LanguageButton onClick={cycleLanguage} title="Change Language">
+            
+            <LanguageButton 
+              onClick={cycleLanguage} 
+              title={`Change Language (${getLanguageLabel(language)})`} 
+              aria-label={`Change Language (${getLanguageLabel(language)})`}
+            >
               <FaGlobe />
               <span>{getLanguageLabel(language)}</span>
             </LanguageButton>
-            <IconButton onClick={toggleTheme} title={`${isDarkMode ? "Light" : "Dark"} Mode (Ctrl+T)`}>
+            
+            <IconButton 
+              onClick={toggleTheme} 
+              title={`${isDarkMode ? "Light" : "Dark"} Mode (Ctrl+T)`} 
+              aria-label={`${isDarkMode ? "Light" : "Dark"} Mode (Ctrl+T)`}
+            >
               {isDarkMode ? <FaSun /> : <FaMoon />}
             </IconButton>
-            <IconButton onClick={toggleSettings} title="Settings (Ctrl+S)">
+            
+            <IconButton 
+              onClick={toggleSettings} 
+              title="Settings (Ctrl+S)" 
+              aria-label="Settings (Ctrl+S)"
+              style={{
+                background: isSettingsOpen ? `${darkTheme.primary}20` : 'transparent',
+                border: isSettingsOpen ? `1px solid ${darkTheme.primary}40` : 'none'
+              }}
+            >
               <FaCog />
             </IconButton>
           </ButtonGroup>
@@ -565,8 +692,8 @@ const App: React.FC = () => {
 
         <PerformanceMonitor visible={showPerformanceMonitor} />
 
-        <KeyboardShortcuts visible={isShortcutsOpen}>
-          <h3 style={{ marginBottom: '1rem', color: 'inherit', fontSize: '1.1rem', fontWeight: '600' }}>Keyboard Shortcuts</h3>
+        <KeyboardShortcuts visible={isShortcutsOpen} role="dialog" aria-modal="true" aria-labelledby="kb-title">
+          <h3 id="kb-title" style={{ marginBottom: '1rem', color: 'inherit', fontSize: '1.1rem', fontWeight: '600' }}>Keyboard Shortcuts</h3>
           <ShortcutItem>
             <span>Toggle Edit Mode</span>
             <ShortcutKey>Ctrl + E</ShortcutKey>
@@ -610,6 +737,7 @@ const App: React.FC = () => {
           <div style={{ marginTop: '1rem', textAlign: 'center' }}>
             <button 
               onClick={() => setIsShortcutsOpen(false)}
+              autoFocus
               style={{
                 background: 'transparent',
                 border: '1px solid currentColor',

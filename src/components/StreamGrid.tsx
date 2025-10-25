@@ -1,13 +1,9 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import styled from 'styled-components';
-import { Responsive, WidthProvider, Layout } from 'react-grid-layout';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import styled, { css } from 'styled-components';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Stream } from '../types';
 import StreamCard from './StreamCard';
-import 'react-grid-layout/css/styles.css';
-import 'react-resizable/css/styles.css';
-
-const ResponsiveGridLayout = WidthProvider(Responsive);
+import { FaExpand, FaCompress, FaTrash } from 'react-icons/fa';
 
 interface StreamGridProps {
   streams: Stream[];
@@ -18,23 +14,38 @@ interface StreamGridProps {
 }
 
 const GridContainer = styled.div`
-  width: 100vw;
+  width: 100%;
   height: calc(100vh - 60px);
-  display: flex;
-  flex-direction: column;
   background: #000;
-  overflow: hidden;
+  overflow: auto;
   position: relative;
+  padding: 0;
+  box-sizing: border-box;
 `;
 
-const GridWrapper = styled.div<{ isEditMode: boolean }>`
-  flex: 1;
+const GridWrapper = styled.div<{ $isEditMode: boolean; $gridCols: number; $cellHeight: number }>`
+  display: grid;
+  grid-template-columns: repeat(${props => props.$gridCols}, 1fr);
+  grid-auto-rows: ${props => props.$cellHeight}px;
+  gap: ${props => props.$isEditMode ? '8px' : '0'};
   width: 100%;
-  height: 100%;
-  position: relative;
-  padding: ${props => props.isEditMode ? '8px' : '0'};
+  min-height: 100%;
+  padding: ${props => props.$isEditMode ? '4px' : '0'};
   box-sizing: border-box;
-  overflow: hidden;
+  position: relative;
+  transition: all 0.3s ease;
+  
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(${props => Math.max(1, Math.min(3, props.$gridCols))}, 1fr);
+  }
+  
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
 `;
 
 const Info = styled.div`
@@ -133,19 +144,18 @@ const StreamGrid: React.FC<StreamGridProps> = ({
 }) => {
   const [isMuted, setIsMuted] = useState<{ [key: string]: boolean }>({});
   const [isFullscreen, setIsFullscreen] = useState<{ [key: string]: boolean }>({});
-  const [gridLocks, setGridLocks] = useState<{ [key: string]: boolean }>({});
-  const [isDragOver, setIsDragOver] = useState(false);
   const [selectedStreams, setSelectedStreams] = useState<Set<string>>(new Set());
-  const [isGridFrozen, setIsGridFrozen] = useState(false);
-
-  // Window size state with debounced updates (freeze kontrolü)
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragItem, setDragItem] = useState<{ id: string; index: number } | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [windowSize, setWindowSize] = useState({
     width: window.innerWidth,
     height: window.innerHeight
   });
+  const gridRef = useRef<HTMLDivElement>(null);
 
+  // Debounced window resize handler
   useEffect(() => {
-    if (isGridFrozen) return; // Freeze iken resize dinleme
     let timeoutId: NodeJS.Timeout;
     const handleResize = () => {
       clearTimeout(timeoutId);
@@ -158,7 +168,24 @@ const StreamGrid: React.FC<StreamGridProps> = ({
       window.removeEventListener('resize', handleResize);
       clearTimeout(timeoutId);
     };
-  }, [isGridFrozen]);
+  }, []);
+
+  // Calculate grid columns based on window size
+  const gridCols = useMemo(() => {
+    if (windowSize.width < 480) return 1;
+    if (windowSize.width < 768) return 2;
+    if (windowSize.width < 1200) return Math.min(3, Math.ceil(Math.sqrt(channelCount)));
+    return Math.min(4, Math.ceil(Math.sqrt(channelCount) * 1.2));
+  }, [windowSize.width, channelCount]);
+
+  // Calculate cell height based on window size and number of rows
+  const cellHeight = useMemo(() => {
+    const rows = Math.ceil(channelCount / gridCols);
+    const headerHeight = 60; // Top bar height
+    const padding = 16; // Total vertical padding
+    const gap = 8 * (rows - 1); // Total gap between rows
+    return Math.max(150, (windowSize.height - headerHeight - padding - gap) / rows);
+  }, [channelCount, gridCols, windowSize.height]);
 
   // Keyboard shortcuts
   useHotkeys('ctrl+a', (e) => {
@@ -179,208 +206,145 @@ const StreamGrid: React.FC<StreamGridProps> = ({
     setSelectedStreams(new Set());
   }, []);
 
-  // Optimized grid calculation with proper responsive behavior
-  const gridConfig = useMemo(() => {
-    const padding = isEditMode ? 16 : 0;
-    const gridWidth = Math.max(windowSize.width - padding, 320);
-    const gridHeight = Math.max(windowSize.height - 60 - padding, 240);
-    
-    // Calculate optimal grid layout based on screen size and channel count
-    let cols = 1;
-    let rows = channelCount;
-    
-    if (channelCount <= 1) {
-      cols = 1;
-      rows = 1;
-    } else if (channelCount <= 4) {
-      cols = Math.min(2, channelCount);
-      rows = Math.ceil(channelCount / cols);
-    } else if (channelCount <= 9) {
-      cols = Math.min(3, Math.ceil(Math.sqrt(channelCount)));
-      rows = Math.ceil(channelCount / cols);
-    } else if (channelCount <= 16) {
-      cols = Math.min(4, Math.ceil(Math.sqrt(channelCount)));
-      rows = Math.ceil(channelCount / cols);
-    } else {
-      cols = Math.min(5, Math.ceil(Math.sqrt(channelCount)));
-      rows = Math.ceil(channelCount / cols);
-    }
+  // Drag and drop handlers
+  const handleDragStart = useCallback((e: React.DragEvent, id: string, index: number) => {
+    if (!isEditMode) return;
+    e.dataTransfer.setData('text/plain', id);
+    e.dataTransfer.effectAllowed = 'move';
+    setIsDragging(true);
+    setDragItem({ id, index });
+    // Add a small delay to allow the drag image to be set
+    setTimeout(() => {
+      const element = document.getElementById(`stream-${id}`);
+      if (element) {
+        element.style.opacity = '0.5';
+      }
+    }, 0);
+  }, [isEditMode]);
 
-    // Responsive breakpoints
-    if (gridWidth < 768) {
-      // Mobile: Force single column or max 2 columns
-      cols = Math.min(cols, gridWidth < 480 ? 1 : 2);
-      rows = Math.ceil(channelCount / cols);
-    } else if (gridWidth < 1024) {
-      // Tablet: Max 3 columns
-      cols = Math.min(cols, 3);
-      rows = Math.ceil(channelCount / cols);
+  const handleDragOver = useCallback((e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragItem && dragItem.index !== index) {
+      setDragOverIndex(index);
     }
+  }, [dragItem]);
 
-    // Calculate cell dimensions
-    const cellWidth = Math.floor(gridWidth / cols);
-    const cellHeight = Math.floor(gridHeight / rows);
+  const handleDragLeave = useCallback(() => {
+    setDragOverIndex(null);
+  }, []);
+
+  // Handle drop for both reordering streams and adding new streams
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    setDragOverIndex(null);
     
-    // Ensure minimum cell size
-    const minCellWidth = 200;
-    const minCellHeight = 150;
+    const id = e.dataTransfer.getData('text/plain');
     
-    if (cellWidth < minCellWidth || cellHeight < minCellHeight) {
-      // Recalculate with minimum constraints
-      const maxColsByWidth = Math.floor(gridWidth / minCellWidth);
-      const maxRowsByHeight = Math.floor(gridHeight / minCellHeight);
+    // If we have a dragItem, this is a reorder operation
+    if (dragItem && dragOverIndex !== null) {
+      const newStreams = [...streams];
+      const fromIndex = newStreams.findIndex(s => s.id === dragItem.id);
+      const toIndex = dragOverIndex;
       
-      cols = Math.min(cols, maxColsByWidth);
-      rows = Math.min(rows, maxRowsByHeight);
+      if (fromIndex !== toIndex && fromIndex !== -1) {
+        const [movedItem] = newStreams.splice(fromIndex, 1);
+        newStreams.splice(toIndex, 0, movedItem);
+        onUpdateStreams(newStreams);
+      }
       
-      // Ensure we can fit all channels
-      if (cols * rows < channelCount) {
-        if (maxColsByWidth * maxRowsByHeight >= channelCount) {
-          // Redistribute
-          cols = Math.min(maxColsByWidth, Math.ceil(Math.sqrt(channelCount)));
-          rows = Math.ceil(channelCount / cols);
-        } else {
-          // Use maximum possible
-          cols = maxColsByWidth;
-          rows = maxRowsByHeight;
+      // Reset drag state with a small delay
+      setTimeout(() => {
+        setDragItem(null);
+        const element = document.getElementById(`stream-${id}`);
+        if (element) {
+          element.style.opacity = '1';
         }
+      }, 100);
+    } 
+    // If we don't have a dragItem but have a URL, this is a new stream
+    else if (id && id.startsWith('http')) {
+      if (streams.length < channelCount) {
+        // Auto-detect platform and add stream
+        let platform: Stream['platform'] = 'hls';
+        if (id.includes('youtube.com') || id.includes('youtu.be')) {
+          platform = 'youtube';
+        } else if (id.includes('twitch.tv')) {
+          platform = 'twitch';
+        } else if (id.includes('kick.com')) {
+          platform = 'kick';
+        } else if (id.includes('twitter.com') || id.includes('x.com')) {
+          platform = 'twitter';
+        }
+
+        const newStream: Stream = {
+          id: Date.now().toString(),
+          url: id,
+          title: `Stream ${streams.length + 1}`,
+          platform,
+          category: '',
+          notes: '',
+          layout: {
+            x: 0,
+            y: 0,
+            w: 1,
+            h: 1,
+          }
+        };
+
+        onUpdateStreams([...streams, newStream]);
       }
     }
+    
+    // Reset drag state if it's still set
+    setDragItem(null);
+    setDragOverIndex(null);
+  }, [streams, channelCount, onUpdateStreams, dragItem, dragOverIndex]);
 
-    const finalCellWidth = Math.floor(gridWidth / cols);
-    const finalCellHeight = Math.floor(gridHeight / rows);
-
-    return {
-      cols: Math.max(1, cols),
-      rows: Math.max(1, rows),
-      width: gridWidth,
-      height: gridHeight,
-      cellWidth: Math.max(minCellWidth, finalCellWidth),
-      cellHeight: Math.max(minCellHeight, finalCellHeight),
-      rowHeight: Math.max(minCellHeight, finalCellHeight)
-    };
-  }, [windowSize, channelCount, isEditMode]);
-
-  // Generate ordered streams with proper layout and bounds checking
-  const orderedStreams = useMemo(() => {
-    return streams.slice(0, channelCount).map((stream, idx) => {
-      const col = idx % gridConfig.cols;
-      const row = Math.floor(idx / gridConfig.cols);
+  // Generate grid items with proper styling
+  const gridItems = useMemo(() => {
+    return streams.slice(0, channelCount).map((stream, index) => {
+      const isSelected = selectedStreams.has(stream.id);
+      const isDragged = dragItem?.id === stream.id;
+      const isDragOver = dragOverIndex === index && dragItem?.id !== stream.id;
       
-      // Ensure the stream fits within grid bounds
-      const maxRow = Math.max(0, gridConfig.rows - 1);
-      const boundedRow = Math.min(row, maxRow);
+      // Calculate grid position for non-edit mode
+      const gridColumn = isEditMode ? 'auto' : `${(index % gridCols) + 1} / span 1`;
+      const gridRow = isEditMode ? 'auto' : `${Math.floor(index / gridCols) + 1} / span 1`;
       
       return {
         ...stream,
-        layout: {
-          x: col,
-          y: boundedRow,
-          w: 1,
-          h: 1,
-        },
+        index,
+        isSelected,
+        isDragged,
+        isDragOver,
+        style: {
+          gridColumn: gridColumn,
+          gridRow: gridRow,
+          opacity: isDragged ? 0.5 : 1,
+          cursor: isEditMode ? 'grab' : 'default',
+          transition: 'all 0.3s ease',
+          transform: isDragged ? 'scale(0.98)' : isDragOver ? 'scale(0.99)' : 'scale(1)',
+          zIndex: isDragged ? 10 : isDragOver ? 5 : 1,
+          boxShadow: isEditMode && isSelected ? '0 0 0 2px #3b82f6' : 'none',
+          borderRadius: isEditMode ? '8px' : '0',
+          overflow: 'hidden',
+          backgroundColor: '#000',
+          position: 'relative',
+          border: 'none',
+          '&:hover': {
+            boxShadow: isEditMode ? '0 4px 16px rgba(59, 130, 246, 0.4)' : 'none',
+          },
+          '&:active': {
+            cursor: isEditMode ? 'grabbing' : 'default'
+          }
+        }
       };
     });
-  }, [streams, channelCount, gridConfig]);
+  }, [streams, channelCount, selectedStreams, dragItem, dragOverIndex, isEditMode]);
 
-  // Generate layouts for react-grid-layout with strict bounds checking
-  const layouts = useMemo(() => ({
-    lg: orderedStreams.map((stream) => ({
-      i: stream.id,
-      x: Math.max(0, Math.min(stream.layout.x, gridConfig.cols - 1)),
-      y: Math.max(0, stream.layout.y),
-      w: Math.max(1, Math.min(stream.layout.w, gridConfig.cols)),
-      h: Math.max(1, stream.layout.h),
-      minW: 1,
-      minH: 1,
-      maxW: gridConfig.cols,
-      maxH: gridConfig.rows,
-      static: gridLocks[stream.id] || false,
-    })),
-    md: orderedStreams.map((stream) => ({
-      i: stream.id,
-      x: Math.max(0, Math.min(stream.layout.x, Math.max(1, gridConfig.cols - 1))),
-      y: Math.max(0, stream.layout.y),
-      w: Math.max(1, Math.min(stream.layout.w, Math.max(1, gridConfig.cols - 1))),
-      h: Math.max(1, stream.layout.h),
-      minW: 1,
-      minH: 1,
-      maxW: Math.max(1, gridConfig.cols - 1),
-      maxH: gridConfig.rows,
-      static: gridLocks[stream.id] || false,
-    })),
-    sm: orderedStreams.map((stream) => ({
-      i: stream.id,
-      x: Math.max(0, Math.min(stream.layout.x, 1)),
-      y: Math.max(0, stream.layout.y),
-      w: 1,
-      h: Math.max(1, stream.layout.h),
-      minW: 1,
-      minH: 1,
-      maxW: 2,
-      maxH: gridConfig.rows,
-      static: gridLocks[stream.id] || false,
-    })),
-    xs: orderedStreams.map((stream) => ({
-      i: stream.id,
-      x: 0,
-      y: Math.max(0, stream.layout.y),
-      w: 1,
-      h: Math.max(1, stream.layout.h),
-      minW: 1,
-      minH: 1,
-      maxW: 1,
-      maxH: gridConfig.rows,
-      static: gridLocks[stream.id] || false,
-    })),
-    xxs: orderedStreams.map((stream) => ({
-      i: stream.id,
-      x: 0,
-      y: Math.max(0, stream.layout.y),
-      w: 1,
-      h: Math.max(1, stream.layout.h),
-      minW: 1,
-      minH: 1,
-      maxW: 1,
-      maxH: gridConfig.rows,
-      static: gridLocks[stream.id] || false,
-    }))
-  }), [orderedStreams, gridConfig, gridLocks]);
-
-  // Freeze grid callback
-  const freezeGrid = useCallback((freeze: boolean) => {
-    setIsGridFrozen(freeze);
-  }, []);
-
-  const handleLayoutChange = useCallback((layout: Layout[], layouts: { [key: string]: Layout[] }) => {
-    if (isGridFrozen || !isEditMode) return;
-    
-    const updatedStreams = streams.map((stream: Stream) => {
-      const newLayout = layout.find((l: Layout) => l.i === stream.id);
-      if (newLayout && !gridLocks[stream.id]) {
-        // Strict bounds checking to prevent grid items from going off-screen
-        const maxX = Math.max(0, gridConfig.cols - newLayout.w);
-        const maxY = Math.max(0, gridConfig.rows - newLayout.h);
-        
-        const boundedX = Math.max(0, Math.min(newLayout.x, maxX));
-        const boundedY = Math.max(0, Math.min(newLayout.y, maxY));
-        const boundedW = Math.max(1, Math.min(newLayout.w, gridConfig.cols - boundedX));
-        const boundedH = Math.max(1, Math.min(newLayout.h, gridConfig.rows - boundedY));
-        
-        return {
-          ...stream,
-          layout: {
-            x: boundedX,
-            y: boundedY,
-            w: boundedW,
-            h: boundedH,
-          },
-        };
-      }
-      return stream;
-    });
-    onUpdateStreams(updatedStreams);
-  }, [streams, isEditMode, gridLocks, gridConfig, onUpdateStreams, isGridFrozen]);
+  // Removed react-grid-layout related code as we're using CSS Grid now
 
   const handleToggleMute = useCallback((streamId: string) => {
     setIsMuted(prev => ({
@@ -396,12 +360,7 @@ const StreamGrid: React.FC<StreamGridProps> = ({
     }));
   }, []);
 
-  const handleToggleGridLock = useCallback((streamId: string, locked: boolean) => {
-    setGridLocks(prev => ({
-      ...prev,
-      [streamId]: locked
-    }));
-  }, []);
+  // Removed handleToggleGridLock as it's not used with CSS Grid
 
   const handleStreamSelect = useCallback((streamId: string, selected: boolean) => {
     setSelectedStreams(prev => {
@@ -415,56 +374,8 @@ const StreamGrid: React.FC<StreamGridProps> = ({
     });
   }, []);
 
-  // Drag and drop handlers
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(true);
-  }, []);
 
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-  }, []);
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    if (isGridFrozen) return;
-    e.preventDefault();
-    setIsDragOver(false);
-    
-    const url = e.dataTransfer.getData('text/plain');
-    if (url && streams.length < channelCount) {
-      // Auto-detect platform and add stream
-      let platform: Stream['platform'] = 'hls';
-      if (url.includes('youtube.com') || url.includes('youtu.be')) {
-        platform = 'youtube';
-      } else if (url.includes('twitch.tv')) {
-        platform = 'twitch';
-      } else if (url.includes('kick.com')) {
-        platform = 'kick';
-      } else if (url.includes('twitter.com') || url.includes('x.com')) {
-        platform = 'twitter';
-      }
-
-      const newStream: Stream = {
-        id: Date.now().toString(),
-        url,
-        title: `Stream ${streams.length + 1}`,
-        platform,
-        category: '',
-        notes: '',
-        layout: {
-          x: streams.length % gridConfig.cols,
-          y: Math.floor(streams.length / gridConfig.cols),
-          w: 1,
-          h: 1,
-        }
-      };
-
-      onUpdateStreams([...streams, newStream]);
-    }
-  }, [streams, channelCount, gridConfig.cols, onUpdateStreams, isGridFrozen]);
-
-  if (!channelCount || !gridConfig.cols) {
+  if (!channelCount) {
     return (
       <GridContainer>
         <Info>
@@ -477,114 +388,78 @@ const StreamGrid: React.FC<StreamGridProps> = ({
   }
 
   return (
-    <GridContainer
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
+    <GridContainer 
+      ref={gridRef}
+      onDragOver={(e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+      }}
       onDrop={handleDrop}
     >
-      <GridOverlay visible={isDragOver} />
-
-      <GridWrapper isEditMode={isEditMode}>
-        <div style={{ 
-          width: '100%', 
-          height: '100%',
-          maxWidth: gridConfig.width,
-          maxHeight: gridConfig.height,
-          margin: '0 auto',
-          position: 'relative',
-          overflow: 'hidden'
-        }}>
-          {isGridFrozen && (
-            <div style={{position: 'fixed', top: 0, left: 0, width: '100vw', background: '#222', color: '#fff', zIndex: 99999, textAlign: 'center', padding: 8, fontSize: 16}}>
-              Tam ekran modunda grid düzeni donduruldu. Çıkınca devam edecek.
-            </div>
-          )}
-          <ResponsiveGridLayout
-            key={`${channelCount}-${streams.length}-${gridConfig.cols}-${windowSize.width}-${windowSize.height}`}
-            className="layout"
-            layouts={layouts}
-            breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-            cols={{ 
-              lg: gridConfig.cols, 
-              md: Math.max(1, gridConfig.cols - 1), 
-              sm: Math.min(2, gridConfig.cols), 
-              xs: 1, 
-              xxs: 1 
-            }}
-            rowHeight={gridConfig.rowHeight}
-            width={gridConfig.width}
-            margin={isEditMode ? [4, 4] : [0, 0]}
-            containerPadding={[0, 0]}
-            compactType="vertical"
-            preventCollision={false}
-            onLayoutChange={handleLayoutChange}
-            isDraggable={isEditMode}
-            isResizable={isEditMode}
-            resizeHandles={['se']}
-            draggableHandle={isEditMode ? '.drag-handle' : undefined}
-            isBounded={true}
-            useCSSTransforms={true}
-            transformScale={1}
-            autoSize={false}
-            verticalCompact={true}
-            style={{ 
-              width: '100%', 
-              height: '100%',
-              overflow: 'hidden'
+      <GridWrapper 
+        $isEditMode={isEditMode}
+        $gridCols={gridCols}
+        $cellHeight={cellHeight}
+      >
+        {gridItems.map((item) => (
+          <div
+            key={item.id}
+            id={`stream-${item.id}`}
+            draggable={isEditMode}
+            onDragStart={(e) => handleDragStart(e, item.id, item.index)}
+            onDragOver={(e) => handleDragOver(e, item.index)}
+            onDragLeave={handleDragLeave}
+            style={item.style as React.CSSProperties}
+            onClick={() => {
+              if (isEditMode) {
+                handleStreamSelect(item.id, !item.isSelected);
+              }
             }}
           >
-            {orderedStreams.map((stream: Stream) => (
-              <div
-                key={stream.id}
-                style={{
-                  background: '#000',
-                  borderRadius: isEditMode ? '8px' : '0',
-                  overflow: 'hidden',
-                  border: selectedStreams.has(stream.id) ? `2px solid ${isEditMode ? '#3b82f6' : 'transparent'}` : 'none',
-                  transition: 'all 0.2s ease',
-                  position: 'relative',
-                  width: '100%',
-                  height: '100%'
-                }}
-              >
-                <StreamCard
-                  stream={stream}
-                  onRemove={() => onRemoveStream(stream.id)}
-                  onToggleMute={() => handleToggleMute(stream.id)}
-                  isMuted={isMuted[stream.id] ?? true}
-                  onToggleFullscreen={() => handleToggleFullscreen(stream.id)}
-                  isFullscreen={isFullscreen[stream.id] ?? false}
-                  isEditMode={isEditMode}
-                  isSelected={selectedStreams.has(stream.id)}
-                  onSelect={(selected) => handleStreamSelect(stream.id, selected)}
-                  onUpdateStream={(updatedStream) => {
-                    const updatedStreams = streams.map(s => 
-                      s.id === updatedStream.id ? updatedStream : s
-                    );
-                    onUpdateStreams(updatedStreams);
-                  }}
-                  onToggleGridLock={handleToggleGridLock}
-                  isGridLocked={gridLocks[stream.id] || false}
-                  freezeGrid={freezeGrid}
-                />
-              </div>
-            ))}
-          </ResponsiveGridLayout>
-        </div>
+            <StreamCard
+              stream={item}
+              onRemove={() => onRemoveStream(item.id)}
+              onToggleMute={() => {
+                setIsMuted(prev => ({
+                  ...prev,
+                  [item.id]: !prev[item.id]
+                }));
+              }}
+              isMuted={isMuted[item.id] ?? true}
+              onToggleFullscreen={() => {
+                setIsFullscreen(prev => ({
+                  ...prev,
+                  [item.id]: !prev[item.id]
+                }));
+              }}
+              isFullscreen={isFullscreen[item.id] ?? false}
+              isEditMode={isEditMode}
+              isSelected={item.isSelected}
+              onSelect={(selected) => handleStreamSelect(item.id, selected)}
+              onUpdateStream={(updatedStream) => {
+                const updatedStreams = streams.map(s => 
+                  s.id === updatedStream.id ? updatedStream : s
+                );
+                onUpdateStreams(updatedStreams);
+              }}
+            />
+          </div>
+        ))}
       </GridWrapper>
 
-      <QuickActions visible={isEditMode && selectedStreams.size > 0}>
-        <QuickActionButton
-          variant="danger"
-          onClick={() => {
-            selectedStreams.forEach(id => onRemoveStream(id));
-            setSelectedStreams(new Set());
-          }}
-          title="Delete selected streams"
-        >
-          🗑️
-        </QuickActionButton>
-      </QuickActions>
+      {isEditMode && selectedStreams.size > 0 && (
+        <QuickActions visible={selectedStreams.size > 0}>
+          <QuickActionButton
+            onClick={() => {
+              selectedStreams.forEach(id => onRemoveStream(id));
+              setSelectedStreams(new Set());
+            }}
+            title="Delete selected streams"
+          >
+            <FaTrash />
+          </QuickActionButton>
+        </QuickActions>
+      )}
     </GridContainer>
   );
 };

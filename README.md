@@ -95,11 +95,16 @@ This project is licensed under the MIT License.
 
 ## 🚀 Recent Updates & Improvements
 
-- **Modern Participant List:** Avatars (initials in colored circles), colored badges (Owner, Admin, Can Share), hover effect, and improved alignment.
-- **Room Info Card:** Modern card style for room name and code, more spacing, and badges.
-- **New Platforms:** Added support for Facebook Live, Instagram Live, DLive, and Trovo.
-- **HLS Quality Selector:** Choose quality (480p, 720p, 1080p, etc.) for HLS streams.
-- **In-Room Chat Panel:** Participants can chat in real-time with text messages.
-- **Responsive & Modern UI:** All panels and grid are mobile-friendly and visually modernized.
-- **Improved error/success notifications and tooltips.**
+- **Enhanced Grid System:** Completely redesigned grid layout with improved resizing and drag-and-drop functionality
+- **Voice Chat:** Added real-time voice chat for room participants
+- **Channel List:** New channel list feature to easily manage and switch between multiple streams
+- **Modern Participant List:** Avatars (initials in colored circles), colored badges (Owner, Admin, Can Share), hover effect, and improved alignment
+- **Room Info Card:** Modern card style for room name and code, more spacing, and badges
+- **New Platforms:** Added support for Facebook Live, Instagram Live, DLive, Trovo, and Twitter Spaces
+- **HLS Quality Selector:** Choose quality (480p, 720p, 1080p, etc.) for HLS streams
+- **In-Room Chat Panel:** Participants can chat in real-time with text messages
+- **Responsive & Modern UI:** All panels and grid are mobile-friendly and visually modernized
+- **Improved error/success notifications and tooltips**
+- **Custom Stream Sizes:** Individual control over each stream's size in the grid
+- **Performance Optimizations:** Smoother resizing and better memory management
 

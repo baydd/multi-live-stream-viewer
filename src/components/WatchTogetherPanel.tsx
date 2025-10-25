@@ -9,6 +9,7 @@ import {
 import { WatchTogetherRoom, WatchTogetherUser, Stream } from '../types';
 import { watchTogetherService } from '../services/watchTogetherService';
 import SimplePeer from 'simple-peer';
+import { voiceService } from '../services/voiceService';
 
 interface WatchTogetherPanelProps {
   isOpen: boolean;
@@ -479,6 +480,8 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
   const [showRoomCode, setShowRoomCode] = useState(false);
   const [messages, setMessages] = useState<any[]>([]);
   const [chatInput, setChatInput] = useState('');
+  const [voiceJoined, setVoiceJoined] = useState(false);
+  const [micOn, setMicOn] = useState(false);
 
   const userId = currentUser?.id;
 
@@ -612,6 +615,11 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
   };
 
   const handleLeaveRoom = async () => {
+    // Sesli sohbetten çık
+    try { await voiceService.leave(); } catch {}
+    setVoiceJoined(false);
+    setMicOn(false);
+
     await watchTogetherService.leaveRoom();
     setCurrentRoom(null);
     setCurrentUser(null);
@@ -983,6 +991,52 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
               <FaPaperPlane />
             </ChatSendButton>
           </ChatInputRow>
+        </Section>
+
+        <Section>
+          <SectionTitle>
+            🎤 Sesli Sohbet
+          </SectionTitle>
+          <ButtonGroup>
+            {!voiceJoined ? (
+              <Button 
+                onClick={async () => {
+                  if (!currentRoom?.code) return;
+                  await voiceService.join(currentRoom.code);
+                  setVoiceJoined(true);
+                }}
+              >
+                Odaya Sesli Katıl
+              </Button>
+            ) : (
+              <>
+                <Button 
+                  variant={micOn ? 'danger' : 'primary'}
+                  onClick={async () => {
+                    if (!micOn) {
+                      await voiceService.enableMic();
+                      setMicOn(true);
+                    } else {
+                      voiceService.disableMic();
+                      setMicOn(false);
+                    }
+                  }}
+                >
+                  {micOn ? 'Mikrofonu Kapat' : 'Mikrofonu Aç'}
+                </Button>
+                <Button 
+                  variant="secondary"
+                  onClick={async () => {
+                    await voiceService.leave();
+                    setVoiceJoined(false);
+                    setMicOn(false);
+                  }}
+                >
+                  Sesli Sohbetten Ayrıl
+                </Button>
+              </>
+            )}
+          </ButtonGroup>
         </Section>
       </Section>
     </>

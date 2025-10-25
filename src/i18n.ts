@@ -74,6 +74,15 @@ const resources = {
         close_panels: 'Close Panels',
         show_shortcuts: 'Show Shortcuts',
       },
+      channel_selector: {
+        select_channel: 'Select Channel',
+        search_placeholder: 'Search channel or country',
+        loading: 'Loading...',
+        no_channels: 'No channels found',
+        no_results: 'No results found',
+        expand_all: 'Expand All',
+        collapse_all: 'Collapse All'
+      },
       watch_together: {
         title: 'Watch Together',
         username_placeholder: 'Enter your username',
@@ -237,6 +246,15 @@ const resources = {
         close_panels: 'Panelleri Kapat',
         show_shortcuts: 'Kısayolları Göster',
       },
+      channel_selector: {
+        select_channel: 'Kanal Seç',
+        search_placeholder: 'Kanal veya ülke ara',
+        loading: 'Yükleniyor...',
+        no_channels: 'Kanal bulunamadı',
+        no_results: 'Sonuç bulunamadı',
+        expand_all: 'Tümünü Aç',
+        collapse_all: 'Tümünü Kapat'
+      },
       watch_together: {
         title: 'Birlikte İzle',
         username_placeholder: 'Kullanıcı adınızı girin',
@@ -395,6 +413,15 @@ const resources = {
         delete_selected: 'حذف المحدد',
         close_panels: 'إغلاق اللوحات',
         show_shortcuts: 'إظهار الاختصارات',
+      },
+      channel_selector: {
+        select_channel: 'اختر قناة',
+        search_placeholder: 'ابحث عن قناة أو دولة',
+        loading: 'جاري التحميل...',
+        no_channels: 'لم يتم العثور على قنوات',
+        no_results: 'لم يتم العثور على نتائج',
+        expand_all: 'توسيع الكل',
+        collapse_all: 'طي الكل'
       },
       watch_together: {
         title: 'مشاهدة معاً',
@@ -555,6 +582,15 @@ const resources = {
         close_panels: 'Cerrar Paneles',
         show_shortcuts: 'Mostrar Atajos',
       },
+      channel_selector: {
+        select_channel: 'Seleccionar Canal',
+        search_placeholder: 'Buscar canal o país',
+        loading: 'Cargando...',
+        no_channels: 'No se encontraron canales',
+        no_results: 'No se encontraron resultados',
+        expand_all: 'Expandir Todo',
+        collapse_all: 'Contraer Todo'
+      },
       watch_together: {
         title: 'Ver Juntos',
         username_placeholder: 'Ingresa tu nombre de usuario',
@@ -665,6 +701,15 @@ const resources = {
         delete_selected: '删除选中项',
         close_panels: '关闭面板',
         show_shortcuts: '显示快捷键',
+      },
+      channel_selector: {
+        select_channel: '选择频道',
+        search_placeholder: '搜索频道或国家',
+        loading: '加载中...',
+        no_channels: '未找到频道',
+        no_results: '未找到结果',
+        expand_all: '全部展开',
+        collapse_all: '全部折叠'
       },
       watch_together: {
         title: '一起观看',
@@ -777,6 +822,15 @@ const resources = {
         close_panels: 'Закрыть панели',
         show_shortcuts: 'Показать горячие клавиши',
       },
+      channel_selector: {
+        select_channel: 'Выбрать канал',
+        search_placeholder: 'Поиск канала или страны',
+        loading: 'Загрузка...',
+        no_channels: 'Каналы не найдены',
+        no_results: 'Ничего не найдено',
+        expand_all: 'Развернуть все',
+        collapse_all: 'Свернуть все'
+      },
       watch_together: {
         title: 'Смотреть Вместе',
         username_placeholder: 'Введите ваше имя пользователя',
@@ -887,6 +941,15 @@ const resources = {
         delete_selected: 'Excluir Selecionados',
         close_panels: 'Fechar Painéis',
         show_shortcuts: 'Mostrar Atalhos',
+      },
+      channel_selector: {
+        select_channel: 'Selecionar Canal',
+        search_placeholder: 'Pesquisar canal ou país',
+        loading: 'Carregando...',
+        no_channels: 'Nenhum canal encontrado',
+        no_results: 'Nenhum resultado encontrado',
+        expand_all: 'Expandir Tudo',
+        collapse_all: 'Recolher Tudo'
       },
       watch_together: {
         title: 'Assistir Juntos',

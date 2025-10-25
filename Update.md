@@ -90,3 +90,19 @@ New Platforms:** Added support for Facebook Live, Instagram Live, DLive, and Tro
 In-Room Chat Panel: Participants can chat in real-time with text messages.
 Responsive & Modern UI: All panels and grid are mobile-friendly and visually modernized.
 Improved error/success notifications and tooltips.**
+
+
+----------------------------------------------------------
+
+
+1.4 Beta
+
+
+- **Redesigned Grid System:** Completely overhauled grid layout with improved resizing and drag-and-drop functionality
+- **Voice Chat:** Added real-time voice communication for room participants
+- **Channel List:** New feature to easily manage and switch between multiple streams
+- **Custom Stream Sizes:** Individual control over each stream's dimensions in the grid
+- **Performance Improvements:** Smoother resizing and better memory management
+- **Bug Fixes & Stability Improvements**
+
+-----------------------------------------
