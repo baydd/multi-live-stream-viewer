@@ -1,10 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useTranslation } from 'react-i18next';
-import { 
-  FaTimes, FaUsers, FaCrown, FaUserShield, FaCopy, FaSync, FaSignOutAlt, 
-  FaEye, FaEyeSlash, FaPlus, FaUserFriends, FaDownload, FaShare, FaBan,
-  FaUserCog, FaCheck, FaExclamationTriangle, FaLock, FaUnlock, FaHandPaper, FaUser, FaComments, FaPaperPlane
+import {
+  FaTimes,
+  FaUsers,
+  FaCrown,
+  FaUserShield,
+  FaCopy,
+  FaSync,
+  FaSignOutAlt,
+  FaEye,
+  FaEyeSlash,
+  FaPlus,
+  FaUserFriends,
+  FaDownload,
+  FaShare,
+  FaBan,
+  FaUserCog,
+  FaCheck,
+  FaExclamationTriangle,
+  FaLock,
+  FaUnlock,
+  FaHandPaper,
+  FaUser,
+  FaComments,
+  FaPaperPlane,
 } from 'react-icons/fa';
 import { WatchTogetherRoom, WatchTogetherUser, Stream } from '../types';
 import { watchTogetherService } from '../services/watchTogetherService';
@@ -23,19 +43,19 @@ interface WatchTogetherPanelProps {
 const Panel = styled.div<{ isOpen: boolean }>`
   position: fixed;
   top: 0;
-  right: ${props => props.isOpen ? '0' : '-500px'};
+  right: ${(props) => (props.isOpen ? '0' : '-500px')};
   width: 500px;
   height: 100vh;
-  background: ${props => props.theme.cardBackground};
+  background: ${(props) => props.theme.cardBackground};
   backdrop-filter: blur(20px);
-  box-shadow: ${props => props.theme.shadowLg};
+  box-shadow: ${(props) => props.theme.shadowLg};
   transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   padding: 2rem;
   display: flex;
   flex-direction: column;
   z-index: 1000;
   overflow-y: auto;
-  border-left: 1px solid ${props => props.theme.border};
+  border-left: 1px solid ${(props) => props.theme.border};
 
   &::-webkit-scrollbar {
     width: 8px;
@@ -46,7 +66,7 @@ const Panel = styled.div<{ isOpen: boolean }>`
   }
 
   &::-webkit-scrollbar-thumb {
-    background: ${props => props.theme.primary};
+    background: ${(props) => props.theme.primary};
     border-radius: 4px;
   }
 `;
@@ -57,17 +77,17 @@ const Header = styled.div`
   justify-content: space-between;
   margin-bottom: 2rem;
   padding-bottom: 1rem;
-  border-bottom: 2px solid ${props => props.theme.border};
+  border-bottom: 2px solid ${(props) => props.theme.border};
 `;
 
 const Title = styled.h2`
   font-size: 1.6rem;
   font-weight: 700;
-  color: ${props => props.theme.text};
+  color: ${(props) => props.theme.text};
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  background: ${props => props.theme.gradient};
+  background: ${(props) => props.theme.gradient};
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -76,7 +96,7 @@ const Title = styled.h2`
 const CloseButton = styled.button`
   background: none;
   border: none;
-  color: ${props => props.theme.text};
+  color: ${(props) => props.theme.text};
   font-size: 1.25rem;
   cursor: pointer;
   padding: 0.75rem;
@@ -84,8 +104,8 @@ const CloseButton = styled.button`
   transition: all 0.2s ease;
 
   &:hover {
-    background: ${props => props.theme.hover};
-    color: ${props => props.theme.primary};
+    background: ${(props) => props.theme.hover};
+    color: ${(props) => props.theme.primary};
     transform: scale(1.1);
   }
 `;
@@ -97,37 +117,37 @@ const Section = styled.div`
 const SectionTitle = styled.h3`
   font-size: 1.2rem;
   font-weight: 600;
-  color: ${props => props.theme.text};
+  color: ${(props) => props.theme.text};
   margin-bottom: 1rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1rem;
-  background: ${props => props.theme.primary}10;
+  background: ${(props) => props.theme.primary}10;
   border-radius: 12px;
-  border-left: 4px solid ${props => props.theme.primary};
+  border-left: 4px solid ${(props) => props.theme.primary};
 `;
 
 const Input = styled.input`
   width: 100%;
   padding: 1rem;
-  border: 2px solid ${props => props.theme.border};
+  border: 2px solid ${(props) => props.theme.border};
   border-radius: 12px;
-  background: ${props => props.theme.background};
-  color: ${props => props.theme.text};
+  background: ${(props) => props.theme.background};
+  color: ${(props) => props.theme.text};
   font-size: 1rem;
   margin-bottom: 1rem;
   transition: all 0.2s ease;
 
   &:focus {
     outline: none;
-    border-color: ${props => props.theme.primary};
-    box-shadow: 0 0 0 3px ${props => props.theme.primary}20;
+    border-color: ${(props) => props.theme.primary};
+    box-shadow: 0 0 0 3px ${(props) => props.theme.primary}20;
     transform: translateY(-1px);
   }
 
   &::placeholder {
-    color: ${props => props.theme.secondary};
+    color: ${(props) => props.theme.secondary};
   }
 `;
 
@@ -143,15 +163,19 @@ const Button = styled.button<{ variant?: 'primary' | 'secondary' | 'danger' | 's
   padding: 1rem 1.5rem;
   border: none;
   border-radius: 12px;
-  background: ${props => {
+  background: ${(props) => {
     switch (props.variant) {
-      case 'danger': return props.theme.error;
-      case 'success': return props.theme.success;
-      case 'secondary': return props.theme.secondary;
-      default: return props.theme.primary;
+      case 'danger':
+        return props.theme.error;
+      case 'success':
+        return props.theme.success;
+      case 'secondary':
+        return props.theme.secondary;
+      default:
+        return props.theme.primary;
     }
   }};
-  color: ${props => props.variant === 'secondary' ? props.theme.text : '#ffffff'};
+  color: ${(props) => (props.variant === 'secondary' ? props.theme.text : '#ffffff')};
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -160,11 +184,11 @@ const Button = styled.button<{ variant?: 'primary' | 'secondary' | 'danger' | 's
   gap: 0.5rem;
   min-width: 140px;
   justify-content: center;
-  box-shadow: ${props => props.theme.shadow};
+  box-shadow: ${(props) => props.theme.shadow};
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: ${props => props.theme.shadowLg};
+    box-shadow: ${(props) => props.theme.shadowLg};
     filter: brightness(1.1);
   }
 
@@ -173,7 +197,7 @@ const Button = styled.button<{ variant?: 'primary' | 'secondary' | 'danger' | 's
   }
 
   &:disabled {
-    background: ${props => props.theme.buttonDisabled};
+    background: ${(props) => props.theme.buttonDisabled};
     cursor: not-allowed;
     transform: none;
     filter: none;
@@ -181,18 +205,18 @@ const Button = styled.button<{ variant?: 'primary' | 'secondary' | 'danger' | 's
 `;
 
 const RoomInfo = styled.div`
-  background: ${props => props.theme.background};
+  background: ${(props) => props.theme.background};
   padding: 2rem;
   border-radius: 16px;
   margin-bottom: 1.5rem;
-  border: 2px solid ${props => props.theme.border};
-  box-shadow: ${props => props.theme.shadow};
+  border: 2px solid ${(props) => props.theme.border};
+  box-shadow: ${(props) => props.theme.shadow};
 `;
 
 const RoomName = styled.div`
   font-size: 1.3rem;
   font-weight: 700;
-  color: ${props => props.theme.text};
+  color: ${(props) => props.theme.text};
   margin-bottom: 0.75rem;
   display: flex;
   align-items: center;
@@ -203,24 +227,28 @@ const RoomCode = styled.div`
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   font-size: 1.4rem;
   font-weight: 700;
-  color: ${props => props.theme.primary};
+  color: ${(props) => props.theme.primary};
   margin: 1rem 0;
   display: flex;
   align-items: center;
   gap: 0.75rem;
   padding: 1rem;
-  background: ${props => props.theme.primary}15;
+  background: ${(props) => props.theme.primary}15;
   border-radius: 12px;
-  border: 2px solid ${props => props.theme.primary}30;
+  border: 2px solid ${(props) => props.theme.primary}30;
 `;
 
 const IconButton = styled.button<{ variant?: 'primary' | 'secondary' | 'danger' | 'success' }>`
-  background: ${props => {
+  background: ${(props) => {
     switch (props.variant) {
-      case 'danger': return props.theme.error;
-      case 'success': return props.theme.success;
-      case 'secondary': return props.theme.secondary;
-      default: return props.theme.primary;
+      case 'danger':
+        return props.theme.error;
+      case 'success':
+        return props.theme.success;
+      case 'secondary':
+        return props.theme.secondary;
+      default:
+        return props.theme.primary;
     }
   }};
   border: none;
@@ -237,20 +265,20 @@ const IconButton = styled.button<{ variant?: 'primary' | 'secondary' | 'danger' 
 
   &:hover {
     transform: scale(1.1);
-    box-shadow: ${props => props.theme.shadow};
+    box-shadow: ${(props) => props.theme.shadow};
   }
 `;
 
 const ParticipantsList = styled.div`
   max-height: 400px;
   overflow-y: auto;
-  
+
   &::-webkit-scrollbar {
     width: 6px;
   }
 
   &::-webkit-scrollbar-thumb {
-    background: ${props => props.theme.primary};
+    background: ${(props) => props.theme.primary};
     border-radius: 3px;
   }
 `;
@@ -261,25 +289,26 @@ const Participant = styled.div<{ hasUpdate?: boolean; isCurrentUser?: boolean }>
   justify-content: space-between;
   padding: 1.5rem;
   margin-bottom: 1rem;
-  background: ${props => {
+  background: ${(props) => {
     if (props.isCurrentUser) return props.theme.primary + '20';
     if (props.hasUpdate) return props.theme.success + '15';
     return props.theme.background;
   }};
-  border: 2px solid ${props => {
-    if (props.isCurrentUser) return props.theme.primary;
-    if (props.hasUpdate) return props.theme.success;
-    return props.theme.border;
-  }};
+  border: 2px solid
+    ${(props) => {
+      if (props.isCurrentUser) return props.theme.primary;
+      if (props.hasUpdate) return props.theme.success;
+      return props.theme.border;
+    }};
   border-radius: 16px;
-  cursor: ${props => props.hasUpdate ? 'pointer' : 'default'};
+  cursor: ${(props) => (props.hasUpdate ? 'pointer' : 'default')};
   transition: all 0.2s ease;
-  box-shadow: ${props => props.theme.shadow};
+  box-shadow: ${(props) => props.theme.shadow};
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: ${props => props.theme.shadowLg};
-    border-color: ${props => props.theme.primary};
+    box-shadow: ${(props) => props.theme.shadowLg};
+    border-color: ${(props) => props.theme.primary};
   }
 `;
 
@@ -294,7 +323,7 @@ const Avatar = styled.div<{ isOwner?: boolean; isAdmin?: boolean }>`
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: ${props => {
+  background: ${(props) => {
     if (props.isOwner) return 'linear-gradient(135deg, #ffd700 0%, #ffed4e 100%)';
     if (props.isAdmin) return props.theme.primary;
     return props.theme.gradient;
@@ -302,10 +331,10 @@ const Avatar = styled.div<{ isOwner?: boolean; isAdmin?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
-  color: ${props => props.isOwner ? '#000' : 'white'};
+  color: ${(props) => (props.isOwner ? '#000' : 'white')};
   font-weight: 700;
   font-size: 1.1rem;
-  box-shadow: ${props => props.theme.shadow};
+  box-shadow: ${(props) => props.theme.shadow};
 `;
 
 const ParticipantDetails = styled.div`
@@ -314,7 +343,7 @@ const ParticipantDetails = styled.div`
 
 const ParticipantName = styled.span`
   font-weight: 600;
-  color: ${props => props.theme.text};
+  color: ${(props) => props.theme.text};
   font-size: 1.1rem;
   display: block;
   margin-bottom: 0.25rem;
@@ -328,16 +357,21 @@ const BadgeContainer = styled.div`
 `;
 
 const Badge = styled.span<{ type: 'owner' | 'admin' | 'share' | 'no-share' }>`
-  background: ${props => {
+  background: ${(props) => {
     switch (props.type) {
-      case 'owner': return '#ffd700';
-      case 'admin': return props.theme.primary;
-      case 'share': return props.theme.success;
-      case 'no-share': return props.theme.error;
-      default: return props.theme.secondary;
+      case 'owner':
+        return '#ffd700';
+      case 'admin':
+        return props.theme.primary;
+      case 'share':
+        return props.theme.success;
+      case 'no-share':
+        return props.theme.error;
+      default:
+        return props.theme.secondary;
     }
   }};
-  color: ${props => props.type === 'owner' ? '#000' : '#fff'};
+  color: ${(props) => (props.type === 'owner' ? '#000' : '#fff')};
   padding: 0.25rem 0.75rem;
   border-radius: 8px;
   font-size: 0.75rem;
@@ -356,13 +390,18 @@ const ControlButtons = styled.div`
 `;
 
 const UpdateNotification = styled.div<{ type?: 'success' | 'error' | 'warning' | 'info' }>`
-  background: ${props => {
+  background: ${(props) => {
     switch (props.type) {
-      case 'success': return props.theme.success;
-      case 'error': return props.theme.error;
-      case 'warning': return props.theme.warning;
-      case 'info': return props.theme.info;
-      default: return props.theme.primary;
+      case 'success':
+        return props.theme.success;
+      case 'error':
+        return props.theme.error;
+      case 'warning':
+        return props.theme.warning;
+      case 'info':
+        return props.theme.info;
+      default:
+        return props.theme.primary;
     }
   }};
   color: white;
@@ -374,7 +413,7 @@ const UpdateNotification = styled.div<{ type?: 'success' | 'error' | 'warning' |
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  box-shadow: ${props => props.theme.shadow};
+  box-shadow: ${(props) => props.theme.shadow};
 `;
 
 const ModeToggle = styled.div`
@@ -382,17 +421,17 @@ const ModeToggle = styled.div`
   grid-template-columns: 1fr 1fr;
   gap: 0.5rem;
   margin-bottom: 1.5rem;
-  background: ${props => props.theme.background};
+  background: ${(props) => props.theme.background};
   padding: 0.5rem;
   border-radius: 16px;
-  border: 2px solid ${props => props.theme.border};
+  border: 2px solid ${(props) => props.theme.border};
 `;
 
 const ModeButton = styled.button<{ active: boolean }>`
   padding: 1rem;
   border: none;
-  background: ${props => props.active ? props.theme.primary : 'transparent'};
-  color: ${props => props.active ? '#ffffff' : props.theme.text};
+  background: ${(props) => (props.active ? props.theme.primary : 'transparent')};
+  color: ${(props) => (props.active ? '#ffffff' : props.theme.text)};
   border-radius: 12px;
   cursor: pointer;
   font-weight: 600;
@@ -404,14 +443,14 @@ const ModeButton = styled.button<{ active: boolean }>`
   gap: 0.5rem;
 
   &:hover {
-    background: ${props => props.active ? props.theme.primary : props.theme.hover};
+    background: ${(props) => (props.active ? props.theme.primary : props.theme.hover)};
     transform: translateY(-1px);
   }
 `;
 
 const ChatContainer = styled.div`
-  background: ${props => props.theme.background};
-  border: 2px solid ${props => props.theme.border};
+  background: ${(props) => props.theme.background};
+  border: 2px solid ${(props) => props.theme.border};
   border-radius: 16px;
   padding: 1rem;
   margin-bottom: 2rem;
@@ -426,7 +465,7 @@ const ChatMessage = styled.div`
 `;
 const ChatUser = styled.span`
   font-weight: 700;
-  color: ${props => props.theme.primary};
+  color: ${(props) => props.theme.primary};
   margin-right: 0.5rem;
 `;
 const ChatInputRow = styled.div`
@@ -437,14 +476,14 @@ const ChatInputRow = styled.div`
 const ChatInput = styled.input`
   flex: 1;
   padding: 0.75rem;
-  border: 2px solid ${props => props.theme.border};
+  border: 2px solid ${(props) => props.theme.border};
   border-radius: 8px;
   font-size: 1rem;
-  background: ${props => props.theme.inputBackground};
-  color: ${props => props.theme.text};
+  background: ${(props) => props.theme.inputBackground};
+  color: ${(props) => props.theme.text};
 `;
 const ChatSendButton = styled.button`
-  background: ${props => props.theme.primary};
+  background: ${(props) => props.theme.primary};
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -454,7 +493,9 @@ const ChatSendButton = styled.button`
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  &:hover { background: ${props => props.theme.primaryDark}; }
+  &:hover {
+    background: ${(props) => props.theme.primaryDark};
+  }
 `;
 
 const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
@@ -463,7 +504,7 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
   streams,
   channelCount,
   onUpdateStreams,
-  onUpdateChannelCount
+  onUpdateChannelCount,
 }) => {
   const { t } = useTranslation();
   const [mode, setMode] = useState<'join' | 'create' | 'room'>('join');
@@ -473,7 +514,9 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
   const [currentRoom, setCurrentRoom] = useState<WatchTogetherRoom | null>(null);
   const [currentUser, setCurrentUser] = useState<WatchTogetherUser | null>(null);
   const [pendingUpdates, setPendingUpdates] = useState<Record<string, any>>({});
-  const [permissionRequests, setPermissionRequests] = useState<Record<string, { userId: string; username: string }>>({});
+  const [permissionRequests, setPermissionRequests] = useState<
+    Record<string, { userId: string; username: string }>
+  >({});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
@@ -487,13 +530,13 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
 
   useEffect(() => {
     watchTogetherService.connect();
-    
+
     watchTogetherService.setCallbacks({
       onRoomUpdate: (room) => {
         setCurrentRoom(room);
         // Update currentUser state to ensure permissions are in sync
         if (currentUser) {
-          const updatedUser = room.participants.find(p => p.id === currentUser.id);
+          const updatedUser = room.participants.find((p) => p.id === currentUser.id);
           if (updatedUser) {
             setCurrentUser(updatedUser);
           }
@@ -508,29 +551,35 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
       },
       onStreamsUpdate: (newStreams, updatedBy, newChannelCount) => {
         if (updatedBy !== currentUser?.username) {
-          setPendingUpdates(prev => ({
+          setPendingUpdates((prev) => ({
             ...prev,
             [updatedBy]: {
               username: updatedBy,
               streams: newStreams,
               channelCount: newChannelCount,
-              timestamp: new Date().toISOString()
-            }
+              timestamp: new Date().toISOString(),
+            },
           }));
         }
       },
       onPermissionChanged: (targetUserId, canShare, changedBy) => {
-        console.log('Permission changed:', { targetUserId, canShare, changedBy, currentUserId: currentUser?.id });
+        console.log('Permission changed:', {
+          targetUserId,
+          canShare,
+          changedBy,
+          currentUserId: currentUser?.id,
+        });
         if (targetUserId === currentUser?.id) {
           // Update currentUser state when permission changes
-          setCurrentUser(prev => {
+          setCurrentUser((prev) => {
             const updated = prev ? { ...prev, canShare } : null;
             console.log('Updated currentUser:', updated);
             return updated;
           });
-          setSuccess(canShare ? 
-            (t('watch_together.permission_granted', { changedBy: changedBy }) as string) : 
-            (t('watch_together.permission_revoked', { changedBy: changedBy }) as string)
+          setSuccess(
+            canShare
+              ? (t('watch_together.permission_granted', { changedBy: changedBy }) as string)
+              : (t('watch_together.permission_revoked', { changedBy: changedBy }) as string)
           );
           setTimeout(() => setSuccess(''), 3000);
         }
@@ -538,27 +587,32 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
       onAdminStatusChanged: (targetUserId, isAdmin, changedBy) => {
         if (targetUserId === currentUser?.id) {
           // Update currentUser state when admin status changes
-          setCurrentUser(prev => prev ? { ...prev, isAdmin, canShare: isAdmin ? true : prev.canShare } : null);
-          setSuccess(isAdmin ? 
-            (t('watch_together.admin_granted', { changedBy: changedBy }) as string) : 
-            (t('watch_together.admin_revoked', { changedBy: changedBy }) as string)
+          setCurrentUser((prev) =>
+            prev ? { ...prev, isAdmin, canShare: isAdmin ? true : prev.canShare } : null
+          );
+          setSuccess(
+            isAdmin
+              ? (t('watch_together.admin_granted', { changedBy: changedBy }) as string)
+              : (t('watch_together.admin_revoked', { changedBy: changedBy }) as string)
           );
           setTimeout(() => setSuccess(''), 3000);
         }
       },
       onPermissionRequested: (requestingUserId, requestingUsername) => {
-        setPermissionRequests(prev => ({
+        setPermissionRequests((prev) => ({
           ...prev,
-          [requestingUserId]: { userId: requestingUserId, username: requestingUsername }
+          [requestingUserId]: { userId: requestingUserId, username: requestingUsername },
         }));
-        setSuccess(t('watch_together.permission_requested', { username: requestingUsername }) as string);
+        setSuccess(
+          t('watch_together.permission_requested', { username: requestingUsername }) as string
+        );
         setTimeout(() => setSuccess(''), 3000);
       },
       onError: (error) => setError(error),
-      onMessage: (msg) => setMessages(prev => [...prev, msg]),
+      onMessage: (msg) => setMessages((prev) => [...prev, msg]),
       onMessagesInit: (msgs) => setMessages(msgs || []),
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser, t]);
 
   const handleCreateRoom = async () => {
@@ -577,10 +631,10 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
       setMode('room');
       setSuccess(t('watch_together.room_created_success') || 'Room created successfully!');
       setTimeout(() => setSuccess(''), 3000);
-      
+
       await watchTogetherService.updateStreams(streams, channelCount);
     } catch (err: any) {
-      setError(err.message || (t('watch_together.create_room_error') || 'Error creating room'));
+      setError(err.message || t('watch_together.create_room_error') || 'Error creating room');
     } finally {
       setIsLoading(false);
     }
@@ -600,15 +654,17 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
       setCurrentRoom(room);
       setCurrentUser(user);
       setMode('room');
-      setSuccess(t('watch_together.room_joined_success') || 'You have successfully joined the room!');
+      setSuccess(
+        t('watch_together.room_joined_success') || 'You have successfully joined the room!'
+      );
       setTimeout(() => setSuccess(''), 3000);
-      
+
       if (room.streams.length > 0) {
         onUpdateStreams(room.streams);
         onUpdateChannelCount(room.channelCount);
       }
     } catch (err: any) {
-      setError(err.message || (t('watch_together.join_room_error') || 'Error joining room'));
+      setError(err.message || t('watch_together.join_room_error') || 'Error joining room');
     } finally {
       setIsLoading(false);
     }
@@ -616,7 +672,9 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
 
   const handleLeaveRoom = async () => {
     // Sesli sohbetten çık
-    try { await voiceService.leave(); } catch {}
+    try {
+      await voiceService.leave();
+    } catch {}
     setVoiceJoined(false);
     setMicOn(false);
 
@@ -640,7 +698,7 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
       setTimeout(() => setSuccess(''), 3000);
     } catch (err: any) {
       console.error('Share streams error:', err);
-      setError(err.message || (t('watch_together.share_error') || 'Error sharing streams'));
+      setError(err.message || t('watch_together.share_error') || 'Error sharing streams');
     }
   };
 
@@ -648,7 +706,9 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
     try {
       await watchTogetherService.toggleSharePermission(userId);
     } catch (err: any) {
-      setError(err.message || (t('watch_together.permission_toggle_error') || 'Permission toggle failed'));
+      setError(
+        err.message || t('watch_together.permission_toggle_error') || 'Permission toggle failed'
+      );
     }
   };
 
@@ -656,7 +716,7 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
     try {
       await watchTogetherService.toggleAdminStatus(userId);
     } catch (err: any) {
-      setError(err.message || (t('watch_together.admin_toggle_error') || 'Admin toggle failed'));
+      setError(err.message || t('watch_together.admin_toggle_error') || 'Admin toggle failed');
     }
   };
 
@@ -666,7 +726,9 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
       setSuccess(t('watch_together.permission_request_sent') || 'Permission request sent');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err: any) {
-      setError(err.message || (t('watch_together.permission_request_error') || 'Permission request failed'));
+      setError(
+        err.message || t('watch_together.permission_request_error') || 'Permission request failed'
+      );
     }
   };
 
@@ -675,14 +737,17 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
     if (update) {
       onUpdateStreams(update.streams);
       onUpdateChannelCount(update.channelCount);
-      
-      setPendingUpdates(prev => {
+
+      setPendingUpdates((prev) => {
         const newUpdates = { ...prev };
         delete newUpdates[userId];
         return newUpdates;
       });
 
-      setSuccess(t('watch_together.update_applied', { username: update.username }) || `Update applied by ${update.username}`);
+      setSuccess(
+        t('watch_together.update_applied', { username: update.username }) ||
+          `Update applied by ${update.username}`
+      );
       setTimeout(() => setSuccess(''), 3000);
     }
   };
@@ -739,7 +804,9 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
             <ButtonGroup>
               <Button onClick={handleJoinRoom} disabled={isLoading}>
                 <FaUsers />
-                {isLoading ? (t('watch_together.joining') as string) : (t('watch_together.join_room') as string)}
+                {isLoading
+                  ? (t('watch_together.joining') as string)
+                  : (t('watch_together.join_room') as string)}
               </Button>
             </ButtonGroup>
           </>
@@ -754,7 +821,9 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
             <ButtonGroup>
               <Button onClick={handleCreateRoom} disabled={isLoading}>
                 <FaUsers />
-                {isLoading ? (t('watch_together.creating') as string) : (t('watch_together.create_room') as string)}
+                {isLoading
+                  ? (t('watch_together.creating') as string)
+                  : (t('watch_together.create_room') as string)}
               </Button>
             </ButtonGroup>
           </>
@@ -776,16 +845,32 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
             <IconButton onClick={copyRoomCode} title={t('watch_together.copy_room_code') as string}>
               <FaCopy />
             </IconButton>
-            <IconButton 
+            <IconButton
               onClick={() => setShowRoomCode(!showRoomCode)}
-              title={showRoomCode ? (t('watch_together.hide_room_code') as string) : (t('watch_together.show_room_code') as string)}
+              title={
+                showRoomCode
+                  ? (t('watch_together.hide_room_code') as string)
+                  : (t('watch_together.show_room_code') as string)
+              }
             >
               {showRoomCode ? <FaEyeSlash /> : <FaEye />}
             </IconButton>
           </RoomCode>
-          <div style={{ color: '#64748b', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div
+            style={{
+              color: '#64748b',
+              fontSize: '0.9rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+            }}
+          >
             <FaUsers />
-            {t('watch_together.participants_count', { count: currentRoom?.participants.length }) as string}
+            {
+              t('watch_together.participants_count', {
+                count: currentRoom?.participants.length,
+              }) as string
+            }
           </div>
         </RoomInfo>
       </Section>
@@ -801,8 +886,8 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
               <FaCheck />
               <div>
                 <strong>{update.username}</strong> {t('watch_together.update_available') as string}
-                <Button 
-                  variant="secondary" 
+                <Button
+                  variant="secondary"
                   onClick={() => handleApplyUpdate(userId)}
                   style={{ marginTop: '0.75rem', marginBottom: 0 }}
                 >
@@ -815,43 +900,53 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
         </Section>
       )}
 
-      {Object.keys(permissionRequests).length > 0 && (currentUser?.isAdmin || currentUser?.isOwner) && (
-        <Section>
-          <SectionTitle>
-            <FaHandPaper />
-            {t('watch_together.permission_requests') as string}
-          </SectionTitle>
-          {Object.entries(permissionRequests).map(([userId, request]) => (
-            <UpdateNotification key={userId} type="info">
-              <FaUser />
-              <div>
-                <strong>{request.username}</strong> {t('watch_together.requesting_permission') as string}
-                <ButtonGroup style={{ marginTop: '0.75rem', marginBottom: 0 }}>
-                  <Button 
-                    variant="success" 
-                    onClick={() => {
-                      handleToggleSharePermission(userId);
-                      setPermissionRequests(prev => { const newRequests = { ...prev }; delete newRequests[userId]; return newRequests; });
-                    }}
-                  >
-                    <FaCheck />
-                    {t('watch_together.grant_permission') as string}
-                  </Button>
-                  <Button 
-                    variant="danger" 
-                    onClick={() => {
-                      setPermissionRequests(prev => { const newRequests = { ...prev }; delete newRequests[userId]; return newRequests; });
-                    }}
-                  >
-                    <FaTimes />
-                    {t('watch_together.deny_permission') as string}
-                  </Button>
-                </ButtonGroup>
-              </div>
-            </UpdateNotification>
-          ))}
-        </Section>
-      )}
+      {Object.keys(permissionRequests).length > 0 &&
+        (currentUser?.isAdmin || currentUser?.isOwner) && (
+          <Section>
+            <SectionTitle>
+              <FaHandPaper />
+              {t('watch_together.permission_requests') as string}
+            </SectionTitle>
+            {Object.entries(permissionRequests).map(([userId, request]) => (
+              <UpdateNotification key={userId} type="info">
+                <FaUser />
+                <div>
+                  <strong>{request.username}</strong>{' '}
+                  {t('watch_together.requesting_permission') as string}
+                  <ButtonGroup style={{ marginTop: '0.75rem', marginBottom: 0 }}>
+                    <Button
+                      variant="success"
+                      onClick={() => {
+                        handleToggleSharePermission(userId);
+                        setPermissionRequests((prev) => {
+                          const newRequests = { ...prev };
+                          delete newRequests[userId];
+                          return newRequests;
+                        });
+                      }}
+                    >
+                      <FaCheck />
+                      {t('watch_together.grant_permission') as string}
+                    </Button>
+                    <Button
+                      variant="danger"
+                      onClick={() => {
+                        setPermissionRequests((prev) => {
+                          const newRequests = { ...prev };
+                          delete newRequests[userId];
+                          return newRequests;
+                        });
+                      }}
+                    >
+                      <FaTimes />
+                      {t('watch_together.deny_permission') as string}
+                    </Button>
+                  </ButtonGroup>
+                </div>
+              </UpdateNotification>
+            ))}
+          </Section>
+        )}
 
       <Section>
         <SectionTitle>
@@ -860,17 +955,16 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
         </SectionTitle>
         <ParticipantsList>
           {currentRoom?.participants.map((participant) => (
-            <Participant 
+            <Participant
               key={participant.id}
               hasUpdate={!!pendingUpdates[participant.username]}
               isCurrentUser={participant.id === currentUser?.id}
-              onClick={() => pendingUpdates[participant.username] && handleApplyUpdate(participant.username)}
+              onClick={() =>
+                pendingUpdates[participant.username] && handleApplyUpdate(participant.username)
+              }
             >
               <ParticipantInfo>
-                <Avatar 
-                  isOwner={participant.isOwner}
-                  isAdmin={participant.isAdmin}
-                >
+                <Avatar isOwner={participant.isOwner} isAdmin={participant.isAdmin}>
                   {participant.username.charAt(0).toUpperCase()}
                 </Avatar>
                 <ParticipantDetails>
@@ -901,35 +995,44 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
                   </BadgeContainer>
                 </ParticipantDetails>
               </ParticipantInfo>
-              
-              {(currentUser?.isAdmin || currentUser?.isOwner) && participant.id !== currentUser?.id && (
-                <ControlButtons>
-                  {!participant.isOwner && !participant.isAdmin && (
-                    <IconButton
-                      variant={participant.canShare ? 'danger' : 'success'}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleToggleSharePermission(participant.id);
-                      }}
-                      title={participant.canShare ? (t('watch_together.toggle_share_permission') as string) : (t('watch_together.grant_share_permission') as string)}
-                    >
-                      {participant.canShare ? <FaBan /> : <FaShare />}
-                    </IconButton>
-                  )}
-                  {currentUser?.isOwner && !participant.isOwner && (
-                    <IconButton
-                      variant={participant.isAdmin ? 'secondary' : 'primary'}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleToggleAdminStatus(participant.id);
-                      }}
-                      title={participant.isAdmin ? (t('watch_together.toggle_admin_status') as string) : (t('watch_together.make_admin') as string)}
-                    >
-                      <FaUserCog />
-                    </IconButton>
-                  )}
-                </ControlButtons>
-              )}
+
+              {(currentUser?.isAdmin || currentUser?.isOwner) &&
+                participant.id !== currentUser?.id && (
+                  <ControlButtons>
+                    {!participant.isOwner && !participant.isAdmin && (
+                      <IconButton
+                        variant={participant.canShare ? 'danger' : 'success'}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleSharePermission(participant.id);
+                        }}
+                        title={
+                          participant.canShare
+                            ? (t('watch_together.toggle_share_permission') as string)
+                            : (t('watch_together.grant_share_permission') as string)
+                        }
+                      >
+                        {participant.canShare ? <FaBan /> : <FaShare />}
+                      </IconButton>
+                    )}
+                    {currentUser?.isOwner && !participant.isOwner && (
+                      <IconButton
+                        variant={participant.isAdmin ? 'secondary' : 'primary'}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleAdminStatus(participant.id);
+                        }}
+                        title={
+                          participant.isAdmin
+                            ? (t('watch_together.toggle_admin_status') as string)
+                            : (t('watch_together.make_admin') as string)
+                        }
+                      >
+                        <FaUserCog />
+                      </IconButton>
+                    )}
+                  </ControlButtons>
+                )}
             </Participant>
           ))}
         </ParticipantsList>
@@ -953,8 +1056,8 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
             <FaExclamationTriangle />
             <div>
               {t('watch_together.no_share_permission') as string}
-              <Button 
-                variant="secondary" 
+              <Button
+                variant="secondary"
                 onClick={handleRequestSharePermission}
                 style={{ marginTop: '0.75rem', marginBottom: 0 }}
               >
@@ -971,11 +1074,13 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
           </SectionTitle>
           <ChatContainer>
             {messages.length === 0 && <div style={{ color: '#888' }}>Henüz mesaj yok.</div>}
-            {messages.map(msg => (
+            {messages.map((msg) => (
               <ChatMessage key={msg.id}>
                 <ChatUser>{msg.user.username}:</ChatUser>
                 <span>{msg.text}</span>
-                <span style={{ color: '#aaa', fontSize: '0.8em', marginLeft: 'auto' }}>{new Date(msg.timestamp).toLocaleTimeString()}</span>
+                <span style={{ color: '#aaa', fontSize: '0.8em', marginLeft: 'auto' }}>
+                  {new Date(msg.timestamp).toLocaleTimeString()}
+                </span>
               </ChatMessage>
             ))}
           </ChatContainer>
@@ -984,8 +1089,10 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
               type="text"
               placeholder="Mesaj yaz..."
               value={chatInput}
-              onChange={e => setChatInput(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') handleSendMessage(); }}
+              onChange={(e) => setChatInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSendMessage();
+              }}
             />
             <ChatSendButton onClick={handleSendMessage} title="Gönder">
               <FaPaperPlane />
@@ -994,12 +1101,10 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
         </Section>
 
         <Section>
-          <SectionTitle>
-            🎤 Sesli Sohbet
-          </SectionTitle>
+          <SectionTitle>🎤 Sesli Sohbet</SectionTitle>
           <ButtonGroup>
             {!voiceJoined ? (
-              <Button 
+              <Button
                 onClick={async () => {
                   if (!currentRoom?.code) return;
                   await voiceService.join(currentRoom.code);
@@ -1010,7 +1115,7 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
               </Button>
             ) : (
               <>
-                <Button 
+                <Button
                   variant={micOn ? 'danger' : 'primary'}
                   onClick={async () => {
                     if (!micOn) {
@@ -1024,7 +1129,7 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
                 >
                   {micOn ? 'Mikrofonu Kapat' : 'Mikrofonu Aç'}
                 </Button>
-                <Button 
+                <Button
                   variant="secondary"
                   onClick={async () => {
                     await voiceService.leave();
@@ -1073,4 +1178,4 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
   );
 };
 
-export default WatchTogetherPanel; 
+export default WatchTogetherPanel;

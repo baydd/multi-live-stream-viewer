@@ -19,19 +19,19 @@ interface SettingsPanelProps {
 const Panel = styled.div<{ isOpen: boolean }>`
   position: fixed;
   top: 0;
-  right: ${props => props.isOpen ? '0' : '-450px'};
+  right: ${(props) => (props.isOpen ? '0' : '-450px')};
   width: 450px;
   height: 100vh;
-  background: ${props => props.theme.cardBackground};
+  background: ${(props) => props.theme.cardBackground};
   backdrop-filter: blur(20px);
-  box-shadow: ${props => props.theme.shadowLg};
+  box-shadow: ${(props) => props.theme.shadowLg};
   transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   padding: 2rem;
   display: flex;
   flex-direction: column;
   z-index: 1000;
   overflow-y: auto;
-  border-left: 1px solid ${props => props.theme.border};
+  border-left: 1px solid ${(props) => props.theme.border};
 
   &::-webkit-scrollbar {
     width: 6px;
@@ -42,12 +42,12 @@ const Panel = styled.div<{ isOpen: boolean }>`
   }
 
   &::-webkit-scrollbar-thumb {
-    background: ${props => props.theme.primary};
+    background: ${(props) => props.theme.primary};
     border-radius: 3px;
   }
 
   &::-webkit-scrollbar-thumb:hover {
-    background: ${props => props.theme.primary}cc;
+    background: ${(props) => props.theme.primary}cc;
   }
 `;
 
@@ -57,13 +57,13 @@ const Header = styled.div`
   justify-content: space-between;
   margin-bottom: 2rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid ${props => props.theme.border};
+  border-bottom: 1px solid ${(props) => props.theme.border};
 `;
 
 const Title = styled.h2`
   font-size: 1.5rem;
   font-weight: 700;
-  color: ${props => props.theme.text};
+  color: ${(props) => props.theme.text};
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -72,7 +72,7 @@ const Title = styled.h2`
 const CloseButton = styled.button`
   background: none;
   border: none;
-  color: ${props => props.theme.text};
+  color: ${(props) => props.theme.text};
   font-size: 1.25rem;
   cursor: pointer;
   padding: 0.5rem;
@@ -80,8 +80,8 @@ const CloseButton = styled.button`
   transition: all 0.2s ease;
 
   &:hover {
-    background: ${props => props.theme.hover};
-    color: ${props => props.theme.primary};
+    background: ${(props) => props.theme.hover};
+    color: ${(props) => props.theme.primary};
   }
 `;
 
@@ -92,7 +92,7 @@ const Section = styled.div`
 const SectionTitle = styled.h3`
   font-size: 1.1rem;
   font-weight: 600;
-  color: ${props => props.theme.text};
+  color: ${(props) => props.theme.text};
   margin-bottom: 1rem;
   display: flex;
   align-items: center;
@@ -109,20 +109,20 @@ const Input = styled.input`
   width: 100%;
   padding: 0.875rem 1rem;
   border-radius: 12px;
-  border: 1px solid ${props => props.theme.border};
-  background: ${props => props.theme.background};
-  color: ${props => props.theme.text};
+  border: 1px solid ${(props) => props.theme.border};
+  background: ${(props) => props.theme.background};
+  color: ${(props) => props.theme.text};
   font-size: 0.875rem;
   transition: all 0.2s ease;
 
   &:focus {
     outline: none;
-    border-color: ${props => props.theme.primary};
-    box-shadow: 0 0 0 3px ${props => props.theme.primary}20;
+    border-color: ${(props) => props.theme.primary};
+    box-shadow: 0 0 0 3px ${(props) => props.theme.primary}20;
   }
 
   &::placeholder {
-    color: ${props => props.theme.secondary};
+    color: ${(props) => props.theme.secondary};
   }
 `;
 
@@ -130,17 +130,17 @@ const Select = styled.select`
   width: 100%;
   padding: 0.875rem 1rem;
   border-radius: 12px;
-  border: 1px solid ${props => props.theme.border};
-  background: ${props => props.theme.background};
-  color: ${props => props.theme.text};
+  border: 1px solid ${(props) => props.theme.border};
+  background: ${(props) => props.theme.background};
+  color: ${(props) => props.theme.text};
   font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:focus {
     outline: none;
-    border-color: ${props => props.theme.primary};
-    box-shadow: 0 0 0 3px ${props => props.theme.primary}20;
+    border-color: ${(props) => props.theme.primary};
+    box-shadow: 0 0 0 3px ${(props) => props.theme.primary}20;
   }
 `;
 
@@ -148,8 +148,9 @@ const Button = styled.button<{ variant?: 'primary' | 'secondary' }>`
   padding: 0.875rem 1.5rem;
   border-radius: 12px;
   border: none;
-  background: ${props => props.variant === 'secondary' ? props.theme.hover : props.theme.primary};
-  color: ${props => props.variant === 'secondary' ? props.theme.text : '#ffffff'};
+  background: ${(props) =>
+    props.variant === 'secondary' ? props.theme.hover : props.theme.primary};
+  color: ${(props) => (props.variant === 'secondary' ? props.theme.text : '#ffffff')};
   cursor: pointer;
   font-weight: 600;
   font-size: 0.875rem;
@@ -161,8 +162,9 @@ const Button = styled.button<{ variant?: 'primary' | 'secondary' }>`
 
   &:hover {
     transform: translateY(-1px);
-    box-shadow: ${props => props.theme.shadow};
-    background: ${props => props.variant === 'secondary' ? props.theme.border : props.theme.primary}dd;
+    box-shadow: ${(props) => props.theme.shadow};
+    background: ${(props) =>
+      props.variant === 'secondary' ? props.theme.border : props.theme.primary}dd;
   }
 
   &:active {
@@ -180,17 +182,17 @@ const ChannelCountGrid = styled.div`
 const ChannelButton = styled.button<{ selected: boolean }>`
   padding: 0.75rem;
   border-radius: 12px;
-  border: 2px solid ${props => props.selected ? props.theme.primary : props.theme.border};
-  background: ${props => props.selected ? props.theme.primary + '20' : props.theme.background};
-  color: ${props => props.selected ? props.theme.primary : props.theme.text};
+  border: 2px solid ${(props) => (props.selected ? props.theme.primary : props.theme.border)};
+  background: ${(props) => (props.selected ? props.theme.primary + '20' : props.theme.background)};
+  color: ${(props) => (props.selected ? props.theme.primary : props.theme.text)};
   cursor: pointer;
   font-weight: 600;
   font-size: 0.875rem;
   transition: all 0.2s ease;
 
   &:hover {
-    border-color: ${props => props.theme.primary};
-    background: ${props => props.theme.primary}10;
+    border-color: ${(props) => props.theme.primary};
+    background: ${(props) => props.theme.primary}10;
   }
 `;
 
@@ -206,14 +208,14 @@ const ChannelRow = styled.div`
   gap: 0.75rem;
   align-items: center;
   padding: 1rem;
-  background: ${props => props.theme.background};
+  background: ${(props) => props.theme.background};
   border-radius: 12px;
-  border: 1px solid ${props => props.theme.border};
+  border: 1px solid ${(props) => props.theme.border};
   transition: all 0.2s ease;
 
   &:hover {
-    border-color: ${props => props.theme.primary};
-    box-shadow: ${props => props.theme.shadow};
+    border-color: ${(props) => props.theme.primary};
+    box-shadow: ${(props) => props.theme.shadow};
   }
 `;
 
@@ -235,17 +237,17 @@ const LanguageGrid = styled.div`
 const LanguageButton = styled.button<{ selected: boolean }>`
   padding: 0.75rem 1rem;
   border-radius: 12px;
-  border: 2px solid ${props => props.selected ? props.theme.primary : props.theme.border};
-  background: ${props => props.selected ? props.theme.primary + '20' : props.theme.background};
-  color: ${props => props.selected ? props.theme.primary : props.theme.text};
+  border: 2px solid ${(props) => (props.selected ? props.theme.primary : props.theme.border)};
+  background: ${(props) => (props.selected ? props.theme.primary + '20' : props.theme.background)};
+  color: ${(props) => (props.selected ? props.theme.primary : props.theme.text)};
   cursor: pointer;
   font-weight: 600;
   font-size: 0.8rem;
   transition: all 0.2s ease;
 
   &:hover {
-    border-color: ${props => props.theme.primary};
-    background: ${props => props.theme.primary}10;
+    border-color: ${(props) => props.theme.primary};
+    background: ${(props) => props.theme.primary}10;
   }
 `;
 
@@ -261,9 +263,9 @@ const TextArea = styled.textarea`
   height: 120px;
   padding: 1rem;
   border-radius: 12px;
-  border: 1px solid ${props => props.theme.border};
-  background: ${props => props.theme.background};
-  color: ${props => props.theme.text};
+  border: 1px solid ${(props) => props.theme.border};
+  background: ${(props) => props.theme.background};
+  color: ${(props) => props.theme.text};
   font-size: 0.875rem;
   resize: vertical;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
@@ -271,18 +273,18 @@ const TextArea = styled.textarea`
 
   &:focus {
     outline: none;
-    border-color: ${props => props.theme.primary};
-    box-shadow: 0 0 0 3px ${props => props.theme.primary}20;
+    border-color: ${(props) => props.theme.primary};
+    box-shadow: 0 0 0 3px ${(props) => props.theme.primary}20;
   }
 
   &::placeholder {
-    color: ${props => props.theme.secondary};
+    color: ${(props) => props.theme.secondary};
   }
 `;
 
 const Developed = styled.a`
   margin-top: auto;
-  color: ${props => props.theme.secondary};
+  color: ${(props) => props.theme.secondary};
   text-decoration: none;
   text-align: center;
   padding: 1.5rem;
@@ -293,8 +295,8 @@ const Developed = styled.a`
 
   &:hover {
     opacity: 1;
-    color: ${props => props.theme.primary};
-    background: ${props => props.theme.hover};
+    color: ${(props) => props.theme.primary};
+    background: ${(props) => props.theme.hover};
   }
 `;
 
@@ -321,7 +323,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     { value: 'es', label: 'Español' },
     { value: 'zh', label: '中文' },
     { value: 'ru', label: 'Русский' },
-    { value: 'pt', label: 'Português' }
+    { value: 'pt', label: 'Português' },
   ];
 
   useEffect(() => {
@@ -351,7 +353,9 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
   };
 
   const handleChannelChange = (idx: number, field: keyof Stream, value: string) => {
-    const updated = channelList.map((ch: Stream, i: number) => i === idx ? { ...ch, [field]: value } : ch);
+    const updated = channelList.map((ch: Stream, i: number) =>
+      i === idx ? { ...ch, [field]: value } : ch
+    );
     setChannelList(updated);
     onUpdateStreams(updated);
   };
@@ -374,7 +378,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
       channelCount,
       streams: channelList,
       language,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
     const saveString = btoa(JSON.stringify(saveData));
     setSaveLoadText(saveString);
@@ -409,11 +413,11 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
           <FaTimes />
         </CloseButton>
       </Header>
-      
+
       <Section>
         <SectionTitle>🌐 {t('change_language')}</SectionTitle>
         <LanguageGrid>
-          {languages.map(lang => (
+          {languages.map((lang) => (
             <LanguageButton
               key={lang.value}
               selected={language === lang.value}
@@ -427,7 +431,9 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
       </Section>
 
       <Section>
-        <SectionTitle>💾 {t('settings.save')} & {t('settings.load')}</SectionTitle>
+        <SectionTitle>
+          💾 {t('settings.save')} & {t('settings.load')}
+        </SectionTitle>
         <SaveLoadContainer>
           <Button onClick={handleSave} variant="secondary">
             <FaSave />
@@ -448,7 +454,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
       <Section>
         <SectionTitle>📺 {t('settings.channel_count')}</SectionTitle>
         <ChannelCountGrid>
-          {channelCounts.map(count => (
+          {channelCounts.map((count) => (
             <ChannelButton
               key={count}
               selected={channelCount === count}
@@ -469,27 +475,31 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
               <SmallInput
                 placeholder={t('settings.stream_title_placeholder') as string}
                 value={ch.title}
-                onChange={e => handleChannelChange(idx, 'title', e.target.value)}
+                onChange={(e) => handleChannelChange(idx, 'title', e.target.value)}
               />
               <SmallSelect
                 value={ch.platform}
-                onChange={e => handleChannelChange(idx, 'platform', e.target.value)}
+                onChange={(e) => handleChannelChange(idx, 'platform', e.target.value)}
               >
-                {platformOptions.map(opt => (
-                  <option key={opt.value} value={opt.value}>{t('settings.platforms.' + opt.value)}</option>
+                {platformOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {t('settings.platforms.' + opt.value)}
+                  </option>
                 ))}
               </SmallSelect>
               {ch.platform === 'twitter' ? (
                 <SmallInput
                   placeholder="@username"
                   value={ch.url}
-                  onChange={e => handleChannelChange(idx, 'url', e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
+                  onChange={(e) =>
+                    handleChannelChange(idx, 'url', e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))
+                  }
                 />
               ) : (
                 <SmallInput
                   placeholder={t('settings.stream_url_placeholder') as string}
                   value={ch.url}
-                  onChange={e => handleChannelChange(idx, 'url', e.target.value)}
+                  onChange={(e) => handleChannelChange(idx, 'url', e.target.value)}
                 />
               )}
             </ChannelRow>
@@ -498,12 +508,8 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
       </Section>
 
       <Button onClick={onClose}>{t('settings.close')}</Button>
-      
-      <Developed 
-        href="https://github.com/baydd/" 
-        target="_blank" 
-        rel="noopener noreferrer"
-      >
+
+      <Developed href="https://github.com/baydd/" target="_blank" rel="noopener noreferrer">
         💻 Developed by baydd
       </Developed>
     </Panel>

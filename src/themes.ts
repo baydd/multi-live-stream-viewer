@@ -3,6 +3,7 @@ import { DefaultTheme } from 'styled-components';
 export const lightTheme: DefaultTheme = {
   background: '#fafafa',
   text: '#2d3748',
+  textSecondary: '#64748b',
   primary: '#4f46e5',
   primaryDark: '#4338ca',
   secondary: '#64748b',
@@ -27,25 +28,26 @@ export const lightTheme: DefaultTheme = {
     primary: '#4f46e5',
     secondary: '#64748b',
     danger: '#ef4444',
-    text: '#ffffff'
+    text: '#ffffff',
   },
   modal: {
     background: '#ffffff',
-    overlay: 'rgba(0, 0, 0, 0.4)'
+    overlay: 'rgba(0, 0, 0, 0.4)',
   },
   tooltip: {
     background: '#1f2937',
-    text: '#ffffff'
+    text: '#ffffff',
   },
   scrollbar: {
     track: '#f1f5f9',
-    thumb: '#cbd5e1'
-  }
+    thumb: '#cbd5e1',
+  },
 };
 
 export const darkTheme: DefaultTheme = {
   background: '#0f172a',
   text: '#f1f5f9',
+  textSecondary: '#94a3b8',
   primary: '#6366f1',
   primaryDark: '#4f46e5',
   secondary: '#94a3b8',
@@ -70,18 +72,18 @@ export const darkTheme: DefaultTheme = {
     primary: '#6366f1',
     secondary: '#64748b',
     danger: '#f87171',
-    text: '#ffffff'
+    text: '#ffffff',
   },
   modal: {
     background: '#1e293b',
-    overlay: 'rgba(0, 0, 0, 0.6)'
+    overlay: 'rgba(0, 0, 0, 0.6)',
   },
   tooltip: {
     background: '#f1f5f9',
-    text: '#1f2937'
+    text: '#1f2937',
   },
   scrollbar: {
     track: '#334155',
-    thumb: '#475569'
-  }
+    thumb: '#475569',
+  },
 };

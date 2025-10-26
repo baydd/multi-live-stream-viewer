@@ -4,6 +4,7 @@ declare module 'styled-components' {
   export interface DefaultTheme {
     background: string;
     text: string;
+    textSecondary: string;
     primary: string;
     primaryDark: string;
     secondary: string;
@@ -43,4 +44,4 @@ declare module 'styled-components' {
       thumb: string;
     };
   }
-} 
+}

@@ -1,7 +1,14 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { Stream } from '../types';
-import { FaSearch, FaChevronDown, FaChevronUp, FaGlobe, FaSpinner, FaExclamationTriangle } from 'react-icons/fa';
+import {
+  FaSearch,
+  FaChevronDown,
+  FaChevronUp,
+  FaGlobe,
+  FaSpinner,
+  FaExclamationTriangle,
+} from 'react-icons/fa';
 import { loadAllChannels, Channel } from '../utils/m3uParser';
 import { useTranslation } from 'react-i18next';
 
@@ -41,10 +48,11 @@ const ChannelListContainer = styled.div`
   display: inline-block;
   margin-right: 16px;
   z-index: 1000;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   width: 100%;
   max-width: 350px;
-  
+
   @media (max-width: 480px) {
     margin: 0 0 16px 0;
     max-width: 100%;
@@ -66,12 +74,12 @@ const ChannelButton = styled.button`
   justify-content: space-between;
   transition: all 0.2s ease;
   text-align: left;
-  
+
   &:hover {
     border-color: ${({ theme }) => theme.primary || '#4a6cf7'};
     box-shadow: 0 0 0 1px ${({ theme }) => theme.primary || '#4a6cf7'};
   }
-  
+
   &:focus {
     outline: none;
     border-color: ${({ theme }) => theme.primary || '#4a6cf7'};
@@ -116,12 +124,12 @@ const SearchInput = styled.input`
   font-size: 14px;
   outline: none;
   transition: all 0.2s ease;
-  
+
   &::placeholder {
     color: #94a3b8;
     font-weight: 400;
   }
-  
+
   &:focus {
     border-color: ${({ theme }) => theme.primary || '#4a6cf7'};
     box-shadow: 0 0 0 2px ${({ theme }) => `${theme.primary || '#4a6cf7'}40`};
@@ -144,11 +152,12 @@ const SearchIcon = styled(FaSearch)`
   left: 26px;
   top: 50%;
   transform: translateY(-50%);
-  color: ${({ theme }) => theme.background === '#ffffff' ? '#64748b' : 'rgba(255, 255, 255, 0.7)'};
+  color: ${({ theme }) =>
+    theme.background === '#ffffff' ? '#64748b' : 'rgba(255, 255, 255, 0.7)'};
   font-size: 15px;
   pointer-events: none;
   transition: color 0.2s ease;
-  
+
   ${SearchInput}:focus ~ & {
     color: ${({ theme }) => theme.primary || '#4a6cf7'};
   }
@@ -171,7 +180,7 @@ const Dropdown = styled.div`
   transform: translateY(10px);
   transition: all 0.25s ease;
   border: 1px solid ${({ theme }) => theme.border || '#e2e8f0'};
-  
+
   @media (max-width: 768px) {
     position: fixed;
     top: auto;
@@ -183,13 +192,13 @@ const Dropdown = styled.div`
     max-height: 70vh;
     border-radius: 16px 16px 0 0;
     transform: translateY(100%);
-    
-    &[data-visible="true"] {
+
+    &[data-visible='true'] {
       transform: translateY(0);
     }
   }
 
-  &[data-visible="true"] {
+  &[data-visible='true'] {
     opacity: 1;
     transform: translateY(0);
   }
@@ -221,22 +230,23 @@ const CountriesList = styled.div`
   flex: 1;
   overflow-y: auto;
   padding: 8px;
-  
+
   /* Custom scrollbar */
   &::-webkit-scrollbar {
     width: 6px;
   }
-  
+
   &::-webkit-scrollbar-track {
-    background: ${({ theme }) => theme.background === '#ffffff' ? '#f1f5f9' : 'rgba(0, 0, 0, 0.1)'};
+    background: ${({ theme }) =>
+      theme.background === '#ffffff' ? '#f1f5f9' : 'rgba(0, 0, 0, 0.1)'};
     border-radius: 3px;
     margin: 4px 0;
   }
-  
+
   &::-webkit-scrollbar-thumb {
-    background: ${({ theme }) => theme.primary ? `${theme.primary}80` : '#c7d2fe80'};
+    background: ${({ theme }) => (theme.primary ? `${theme.primary}80` : '#c7d2fe80')};
     border-radius: 3px;
-    
+
     &:hover {
       background: ${({ theme }) => theme.primary || '#c7d2fe'};
     }
@@ -259,22 +269,26 @@ const CountrySection = styled.div<{ isExpanded: boolean } & ThemeProps>`
   border-radius: 12px;
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: ${({ theme }: ThemeProps) => theme.cardBackground || (theme.background === '#ffffff' ? 'rgba(248, 250, 252, 0.8)' : 'rgba(30, 41, 59, 0.6)')};
+  background: ${({ theme }: ThemeProps) =>
+    theme.cardBackground ||
+    (theme.background === '#ffffff' ? 'rgba(248, 250, 252, 0.8)' : 'rgba(30, 41, 59, 0.6)')};
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
   backdrop-filter: blur(8px);
   border: 1px solid ${({ theme }: ThemeProps) => theme.border || 'rgba(203, 213, 225, 0.2)'};
-  
+
   &:last-child {
     margin-bottom: 12px;
   }
-  
+
   /* Add a visual indicator for expanded state */
-  ${({ isExpanded, theme }: { isExpanded: boolean } & ThemeProps) => isExpanded && `
+  ${({ isExpanded, theme }: { isExpanded: boolean } & ThemeProps) =>
+    isExpanded &&
+    `
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     border-color: ${theme.primary ? `${theme.primary}30` : 'rgba(79, 70, 229, 0.2)'};
     background: ${theme.cardBackground || (theme.background === '#ffffff' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(30, 41, 59, 0.7)')};
   `}
-  
+
   &:hover {
     transform: translateY(-1px);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
@@ -296,14 +310,16 @@ const CountryHeader = styled.div<CountryHeaderProps>`
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   z-index: 1;
-  color: ${({ theme }: ThemeProps) => theme.text || (theme.background === '#ffffff' ? '#1e293b' : '#f8fafc')};
+  color: ${({ theme }: ThemeProps) =>
+    theme.text || (theme.background === '#ffffff' ? '#1e293b' : '#f8fafc')};
   border-radius: 10px;
-  
+
   /* Add a subtle background on hover */
   &:hover {
-    background: ${({ theme }: ThemeProps) => theme.background === '#ffffff' ? 'rgba(0, 0, 0, 0.03)' : 'rgba(255, 255, 255, 0.05)'};
+    background: ${({ theme }: ThemeProps) =>
+      theme.background === '#ffffff' ? 'rgba(0, 0, 0, 0.03)' : 'rgba(255, 255, 255, 0.05)'};
   }
-  
+
   /* Add a nice accent line on the left when expanded */
   &::before {
     content: '';
@@ -317,9 +333,11 @@ const CountryHeader = styled.div<CountryHeaderProps>`
     border-radius: 0 3px 3px 0;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  
+
   /* Show the accent line when expanded */
-  ${({ isExpanded }: { isExpanded?: boolean }) => isExpanded && `
+  ${({ isExpanded }: { isExpanded?: boolean }) =>
+    isExpanded &&
+    `
     &::before {
       height: 60%;
     }
@@ -346,29 +364,30 @@ const CountryHeader = styled.div<CountryHeaderProps>`
 `;
 
 const ChannelListWrapper = styled.div<{ $isExpanded: boolean }>`
-  max-height: ${({ $isExpanded }) => $isExpanded ? 'none' : '0'};
+  max-height: ${({ $isExpanded }) => ($isExpanded ? 'none' : '0')};
   overflow: hidden;
   transition: max-height 0.3s ease;
   background: ${({ theme }) => theme.background || '#ffffff'};
   padding: 0 8px;
   margin: 0;
-  opacity: ${({ $isExpanded }) => $isExpanded ? '1' : '0'};
-  
+  opacity: ${({ $isExpanded }) => ($isExpanded ? '1' : '0')};
+
   /* Custom scrollbar */
   &::-webkit-scrollbar {
     width: 6px;
   }
-  
+
   &::-webkit-scrollbar-track {
-    background: ${({ theme }) => theme.background === '#ffffff' ? '#f1f5f9' : 'rgba(0, 0, 0, 0.1)'};
+    background: ${({ theme }) =>
+      theme.background === '#ffffff' ? '#f1f5f9' : 'rgba(0, 0, 0, 0.1)'};
     border-radius: 3px;
     margin: 4px 0;
   }
-  
+
   &::-webkit-scrollbar-thumb {
-    background: ${({ theme }) => theme.primary ? `${theme.primary}80` : '#c7d2fe80'};
+    background: ${({ theme }) => (theme.primary ? `${theme.primary}80` : '#c7d2fe80')};
     border-radius: 3px;
-    
+
     &:hover {
       background: ${({ theme }) => theme.primary || '#c7d2fe'};
     }
@@ -388,15 +407,16 @@ const ChannelItem = styled.div`
   color: ${({ theme }) => theme.text || '#1a202c'};
   background: transparent;
   position: relative;
-  
+
   &:hover {
-    background: ${({ theme }) => theme.background === '#ffffff' ? '#f8fafc' : 'rgba(0, 0, 0, 0.05)'};
+    background: ${({ theme }) =>
+      theme.background === '#ffffff' ? '#f8fafc' : 'rgba(0, 0, 0, 0.05)'};
   }
-  
+
   &:active {
     transform: translateY(1px);
   }
-  
+
   /* Add a subtle gradient overlay on hover */
   &::before {
     content: '';
@@ -405,24 +425,29 @@ const ChannelItem = styled.div`
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(90deg, 
-      ${({ theme }) => theme.primary ? `${theme.primary}08` : 'rgba(79, 70, 229, 0.04)'} 0%, 
-      transparent 50%);
+    background: linear-gradient(
+      90deg,
+      ${({ theme }) => (theme.primary ? `${theme.primary}08` : 'rgba(79, 70, 229, 0.04)')} 0%,
+      transparent 50%
+    );
     border-radius: inherit;
     opacity: 0;
     transition: opacity 0.2s ease;
   }
 
   &:hover {
-    background: ${({ theme }) => theme.buttonHover || (theme.background === '#ffffff' ? 'rgba(248, 250, 252, 0.8)' : 'rgba(30, 41, 59, 0.7)')};
+    background: ${({ theme }) =>
+      theme.buttonHover ||
+      (theme.background === '#ffffff' ? 'rgba(248, 250, 252, 0.8)' : 'rgba(30, 41, 59, 0.7)')};
     transform: translateX(6px);
     box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.06);
-    border-color: ${({ theme }) => theme.primary ? `${theme.primary}30` : 'rgba(79, 70, 229, 0.2)'};
-    
+    border-color: ${({ theme }) =>
+      theme.primary ? `${theme.primary}30` : 'rgba(79, 70, 229, 0.2)'};
+
     &::before {
       opacity: 1;
     }
-    
+
     img {
       transform: scale(1.1);
     }
@@ -440,7 +465,8 @@ const ChannelItem = styled.div`
     border-radius: 6px;
     flex-shrink: 0;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-    background: ${({ theme }) => theme.background === '#ffffff' ? '#ffffff' : 'rgba(255, 255, 255, 0.9)'};
+    background: ${({ theme }) =>
+      theme.background === '#ffffff' ? '#ffffff' : 'rgba(255, 255, 255, 0.9)'};
     padding: 4px;
     border: 1px solid rgba(0, 0, 0, 0.05);
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -459,12 +485,14 @@ const ChannelItem = styled.div`
     position: relative;
     z-index: 1;
     letter-spacing: 0.01em;
-    
+
     /* Add a subtle gradient fade for long text */
-    mask-image: linear-gradient(to right, 
-      black calc(100% - 40px), 
-      rgba(0, 0, 0, 0.8) calc(100% - 20px), 
-      transparent 100%);
+    mask-image: linear-gradient(
+      to right,
+      black calc(100% - 40px),
+      rgba(0, 0, 0, 0.8) calc(100% - 20px),
+      transparent 100%
+    );
   }
 
   &:last-child {
@@ -492,15 +520,15 @@ const ChannelListComponent: React.FC<ChannelListProps> = ({ onSelectChannel }) =
       setIsLoading(true);
       setError(null);
       const channels = await loadAllChannels();
-      
+
       // Initialize expanded countries based on search
       const initialExpanded: Record<string, boolean> = {};
-      channels.forEach(channel => {
+      channels.forEach((channel) => {
         if (!initialExpanded[channel.country]) {
           initialExpanded[channel.country] = false;
         }
       });
-      
+
       setAllChannels(channels);
       setExpandedCountries(initialExpanded);
     } catch (err) {
@@ -518,121 +546,126 @@ const ChannelListComponent: React.FC<ChannelListProps> = ({ onSelectChannel }) =
   const filteredChannels = useMemo(() => {
     if (!searchQuery.trim()) return allChannels;
     const query = searchQuery.toLowerCase();
-    return allChannels.filter(channel => 
-      channel.name.toLowerCase().includes(query) || 
-      (channel.country && channel.country.toLowerCase().includes(query))
+    return allChannels.filter(
+      (channel) =>
+        channel.name.toLowerCase().includes(query) ||
+        (channel.country && channel.country.toLowerCase().includes(query))
     );
   }, [searchQuery, allChannels]);
 
   const channelsByCountry = useMemo(() => {
     const groups: Record<string, Channel[]> = {};
-    
-    filteredChannels.forEach(channel => {
+
+    filteredChannels.forEach((channel) => {
       const country = channel.country || 'Other';
       if (!groups[country]) {
         groups[country] = [];
       }
       groups[country].push(channel);
     });
-    
+
     // Auto-expand countries when searching
     if (searchQuery.trim()) {
       const newExpanded = { ...expandedCountries };
       let hasChanges = false;
-      
-      Object.keys(groups).forEach(country => {
+
+      Object.keys(groups).forEach((country) => {
         if (!newExpanded[country]) {
           newExpanded[country] = true;
           hasChanges = true;
         }
       });
-      
+
       if (hasChanges) {
         setTimeout(() => setExpandedCountries(newExpanded), 0);
       }
     }
-    
+
     // Sort countries alphabetically
     return Object.keys(groups)
       .sort()
-      .reduce((acc, country) => {
-        acc[country] = groups[country].sort((a, b) => 
-          a.name.localeCompare(b.name)
-        );
-        return acc;
-      }, {} as Record<string, Channel[]>);
+      .reduce(
+        (acc, country) => {
+          acc[country] = groups[country].sort((a, b) => a.name.localeCompare(b.name));
+          return acc;
+        },
+        {} as Record<string, Channel[]>
+      );
   }, [filteredChannels, searchQuery, expandedCountries]);
 
   const toggleCountry = useCallback((country: string, e: React.MouseEvent) => {
     e.stopPropagation();
     const isCurrentlyExpanded = expandedCountries[country];
-    
+
     // Toggle the expanded state
-    setExpandedCountries(prev => ({
+    setExpandedCountries((prev) => ({
       ...prev,
-      [country]: !isCurrentlyExpanded
+      [country]: !isCurrentlyExpanded,
     }));
-    
+
     // Only scroll if we're expanding, not collapsing
     if (!isCurrentlyExpanded) {
       const target = e.currentTarget.closest('.country-section');
-      
+
       if (target) {
         // Small delay to allow the DOM to update
         setTimeout(() => {
           target.scrollIntoView({
             behavior: 'smooth',
-            block: 'nearest'
+            block: 'nearest',
           });
         }, 50);
       }
     }
-    
+
     // Prevent event bubbling to parent elements
     e.nativeEvent.stopImmediatePropagation();
   }, []);
 
-  const handleChannelSelect = useCallback((channel: Channel, e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (!channel?.url) return;
-    
-    const stream: Stream = {
-      id: channel.id,
-      url: channel.url,
-      title: channel.name,
-      platform: 'hls',
-      layout: {
-        x: 0,
-        y: 0,
-        w: 1,
-        h: 1
-      }
-    };
-    
-    // Close dropdown first to avoid any UI glitches
-    setIsDropdownOpen(false);
-    
-    // Then trigger the onSelectChannel callback
-    onSelectChannel(stream);
-  }, [onSelectChannel]);
+  const handleChannelSelect = useCallback(
+    (channel: Channel, e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (!channel?.url) return;
+
+      const stream: Stream = {
+        id: channel.id,
+        url: channel.url,
+        title: channel.name,
+        platform: 'hls',
+        layout: {
+          x: 0,
+          y: 0,
+          w: 1,
+          h: 1,
+        },
+      };
+
+      // Close dropdown first to avoid any UI glitches
+      setIsDropdownOpen(false);
+
+      // Then trigger the onSelectChannel callback
+      onSelectChannel(stream);
+    },
+    [onSelectChannel]
+  );
 
   const toggleAllCountries = useCallback(() => {
     const allExpanded = Object.keys(channelsByCountry).every(
-      country => expandedCountries[country]
+      (country) => expandedCountries[country]
     );
-    
+
     const newState = { ...expandedCountries };
     let hasChanges = false;
-    
-    Object.keys(channelsByCountry).forEach(country => {
+
+    Object.keys(channelsByCountry).forEach((country) => {
       if (newState[country] === allExpanded) {
         newState[country] = !allExpanded;
         hasChanges = true;
       }
     });
-    
+
     if (hasChanges) {
       setExpandedCountries(newState);
     }
@@ -650,7 +683,7 @@ const ChannelListComponent: React.FC<ChannelListProps> = ({ onSelectChannel }) =
     if (isDropdownOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
-    
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
@@ -658,29 +691,29 @@ const ChannelListComponent: React.FC<ChannelListProps> = ({ onSelectChannel }) =
 
   return (
     <ChannelListContainer className="channel-list-container">
-      <ChannelButton 
+      <ChannelButton
         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
         aria-expanded={isDropdownOpen}
         disabled={isLoading}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {isLoading ? (
-            <LoadingSpinner size={14} />
-          ) : (
-            <FaGlobe style={{ color: '#4a6cf7' }} />
-          )}
-          <span>{isLoading ? (t('channel_selector.loading') || 'Loading...') : (t('channel_selector.select_channel') || 'Select Channel')}</span>
+          {isLoading ? <LoadingSpinner size={14} /> : <FaGlobe style={{ color: '#4a6cf7' }} />}
+          <span>
+            {isLoading
+              ? t('channel_selector.loading') || 'Loading...'
+              : t('channel_selector.select_channel') || 'Select Channel'}
+          </span>
         </div>
         {isDropdownOpen ? <FaChevronUp size={14} /> : <FaChevronDown size={14} />}
       </ChannelButton>
-      
-      <Dropdown 
+
+      <Dropdown
         className="channel-dropdown"
         onClick={(e) => e.stopPropagation()}
         style={{
           display: isDropdownOpen ? 'flex' : 'none',
           opacity: isDropdownOpen ? 1 : 0,
-          transform: isDropdownOpen ? 'translateY(0)' : 'translateY(10px)'
+          transform: isDropdownOpen ? 'translateY(0)' : 'translateY(10px)',
         }}
       >
         <SearchContainer>
@@ -696,13 +729,12 @@ const ChannelListComponent: React.FC<ChannelListProps> = ({ onSelectChannel }) =
           />
         </SearchContainer>
         <CountriesList>
-          
           <div>
             {error ? (
               <ErrorMessage>
                 <FaExclamationTriangle />
                 {error}
-                <button 
+                <button
                   onClick={loadChannels}
                   style={{
                     marginLeft: '8px',
@@ -714,7 +746,7 @@ const ChannelListComponent: React.FC<ChannelListProps> = ({ onSelectChannel }) =
                     cursor: 'pointer',
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: '4px'
+                    gap: '4px',
                   }}
                 >
                   <FaSpinner style={{ display: isLoading ? 'inline-block' : 'none' }} />
@@ -722,14 +754,16 @@ const ChannelListComponent: React.FC<ChannelListProps> = ({ onSelectChannel }) =
                 </button>
               </ErrorMessage>
             ) : isLoading ? (
-              <div style={{ 
-                padding: '20px', 
-                display: 'flex', 
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: '8px',
-                color: '#666'
-              }}>
+              <div
+                style={{
+                  padding: '20px',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: '8px',
+                  color: '#666',
+                }}
+              >
                 <LoadingSpinner size={16} />
                 <span>Kanallar yükleniyor...</span>
               </div>
@@ -738,22 +772,22 @@ const ChannelListComponent: React.FC<ChannelListProps> = ({ onSelectChannel }) =
                 <CountryHeader onClick={toggleAllCountries}>
                   <span>
                     <FaGlobe />
-                    {Object.keys(channelsByCountry).every(country => expandedCountries[country])
-                      ? (t('channel_selector.collapse_all') || 'Collapse All')
-                      : (t('channel_selector.expand_all') || 'Expand All')}
+                    {Object.keys(channelsByCountry).every((country) => expandedCountries[country])
+                      ? t('channel_selector.collapse_all') || 'Collapse All'
+                      : t('channel_selector.expand_all') || 'Expand All'}
                   </span>
                 </CountryHeader>
-                
+
                 {Object.keys(channelsByCountry).length > 0 ? (
                   Object.entries(channelsByCountry).map(([country, channels]) => {
                     const countryCode = channels[0]?.countryCode?.toLowerCase() || 'xx';
                     const isExpanded = expandedCountries[country] !== false;
-                    
+
                     return (
                       <CountrySection key={country} isExpanded={isExpanded}>
                         <CountryHeader onClick={(e) => toggleCountry(country, e)}>
                           <span>
-                            <img 
+                            <img
                               src={`https://flagcdn.com/16x12/${countryCode}.png`}
                               alt={country}
                               onError={(e) => {
@@ -765,17 +799,17 @@ const ChannelListComponent: React.FC<ChannelListProps> = ({ onSelectChannel }) =
                           </span>
                           {isExpanded ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
                         </CountryHeader>
-                        
+
                         <ChannelListWrapper $isExpanded={isExpanded}>
                           {channels.map((channel) => (
-                            <ChannelItem 
-                              key={channel.id} 
+                            <ChannelItem
+                              key={channel.id}
                               onClick={(e) => handleChannelSelect(channel, e)}
                               title={channel.name}
                             >
                               {channel.logo && (
-                                <img 
-                                  src={channel.logo} 
+                                <img
+                                  src={channel.logo}
                                   alt={channel.name}
                                   onError={(e) => {
                                     (e.target as HTMLImageElement).style.display = 'none';
@@ -783,7 +817,14 @@ const ChannelListComponent: React.FC<ChannelListProps> = ({ onSelectChannel }) =
                                   style={{ width: '20px', height: '20px', objectFit: 'contain' }}
                                 />
                               )}
-                              <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              <span
+                                style={{
+                                  flex: 1,
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                }}
+                              >
                                 {channel.name}
                               </span>
                             </ChannelItem>
@@ -793,13 +834,17 @@ const ChannelListComponent: React.FC<ChannelListProps> = ({ onSelectChannel }) =
                     );
                   })
                 ) : (
-                  <div style={{ 
-                    padding: '20px', 
-                    textAlign: 'center',
-                    color: '#666',
-                    fontSize: '14px'
-                  }}>
-                    {searchQuery ? (t('channel_selector.no_results') || 'No results found') : (t('channel_selector.no_channels') || 'No channels found')}
+                  <div
+                    style={{
+                      padding: '20px',
+                      textAlign: 'center',
+                      color: '#666',
+                      fontSize: '14px',
+                    }}
+                  >
+                    {searchQuery
+                      ? t('channel_selector.no_results') || 'No results found'
+                      : t('channel_selector.no_channels') || 'No channels found'}
                   </div>
                 )}
               </>

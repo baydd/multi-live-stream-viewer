@@ -18,9 +18,10 @@ class WatchTogetherService {
     onMessagesInit?: (msgs: any[]) => void;
   } = {};
 
-  private readonly SERVER_URL = process.env.NODE_ENV === 'production'
-    ? process.env.REACT_APP_BACKEND_URL || ''
-    : 'http://localhost:3001';
+  private readonly SERVER_URL =
+    process.env.NODE_ENV === 'production'
+      ? process.env.REACT_APP_BACKEND_URL || ''
+      : 'http://localhost:3001';
 
   connect() {
     if (this.socket?.connected) return;
@@ -99,7 +100,10 @@ class WatchTogetherService {
     this.callbacks = { ...this.callbacks, ...callbacks };
   }
 
-  async createRoom(roomName: string, username: string): Promise<{ room: WatchTogetherRoom; user: WatchTogetherUser }> {
+  async createRoom(
+    roomName: string,
+    username: string
+  ): Promise<{ room: WatchTogetherRoom; user: WatchTogetherUser }> {
     if (!this.socket?.connected) {
       throw new Error('WebSocket bağlantısı yok');
     }
@@ -117,7 +121,10 @@ class WatchTogetherService {
     });
   }
 
-  async joinRoom(roomCode: string, username: string): Promise<{ room: WatchTogetherRoom; user: WatchTogetherUser, messages: any[] }> {
+  async joinRoom(
+    roomCode: string,
+    username: string
+  ): Promise<{ room: WatchTogetherRoom; user: WatchTogetherUser; messages: any[] }> {
     if (!this.socket?.connected) {
       throw new Error('WebSocket bağlantısı yok');
     }
@@ -148,17 +155,21 @@ class WatchTogetherService {
     }
 
     return new Promise((resolve, reject) => {
-      this.socket?.emit('updateStreams', {
-        roomCode,
-        streams,
-        channelCount
-      }, (response: any) => {
-        if (response.error) {
-          reject(new Error(response.error));
-        } else {
-          resolve(response);
+      this.socket?.emit(
+        'updateStreams',
+        {
+          roomCode,
+          streams,
+          channelCount,
+        },
+        (response: any) => {
+          if (response.error) {
+            reject(new Error(response.error));
+          } else {
+            resolve(response);
+          }
         }
-      });
+      );
     });
   }
 
@@ -173,16 +184,20 @@ class WatchTogetherService {
     }
 
     return new Promise((resolve, reject) => {
-      this.socket?.emit('toggleSharePermission', {
-        roomCode,
-        targetUserId
-      }, (response: any) => {
-        if (response.error) {
-          reject(new Error(response.error));
-        } else {
-          resolve(response);
+      this.socket?.emit(
+        'toggleSharePermission',
+        {
+          roomCode,
+          targetUserId,
+        },
+        (response: any) => {
+          if (response.error) {
+            reject(new Error(response.error));
+          } else {
+            resolve(response);
+          }
         }
-      });
+      );
     });
   }
 
@@ -197,16 +212,20 @@ class WatchTogetherService {
     }
 
     return new Promise((resolve, reject) => {
-      this.socket?.emit('toggleAdminStatus', {
-        roomCode,
-        targetUserId
-      }, (response: any) => {
-        if (response.error) {
-          reject(new Error(response.error));
-        } else {
-          resolve(response);
+      this.socket?.emit(
+        'toggleAdminStatus',
+        {
+          roomCode,
+          targetUserId,
+        },
+        (response: any) => {
+          if (response.error) {
+            reject(new Error(response.error));
+          } else {
+            resolve(response);
+          }
         }
-      });
+      );
     });
   }
 
@@ -221,15 +240,19 @@ class WatchTogetherService {
     }
 
     return new Promise((resolve, reject) => {
-      this.socket?.emit('requestSharePermission', {
-        roomCode
-      }, (response: any) => {
-        if (response.error) {
-          reject(new Error(response.error));
-        } else {
-          resolve(response);
+      this.socket?.emit(
+        'requestSharePermission',
+        {
+          roomCode,
+        },
+        (response: any) => {
+          if (response.error) {
+            reject(new Error(response.error));
+          } else {
+            resolve(response);
+          }
         }
-      });
+      );
     });
   }
 

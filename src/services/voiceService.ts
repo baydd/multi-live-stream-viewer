@@ -1,6 +1,12 @@
 import { watchTogetherService } from './watchTogetherService';
 
-type PeerState = 'new' | 'setting-local-offer' | 'have-local-offer' | 'have-remote-offer' | 'stable' | 'closed';
+type PeerState =
+  | 'new'
+  | 'setting-local-offer'
+  | 'have-local-offer'
+  | 'have-remote-offer'
+  | 'stable'
+  | 'closed';
 
 export type VoicePeer = {
   pc: RTCPeerConnection;
@@ -14,9 +20,7 @@ export class VoiceService {
   private peers: Map<string, VoicePeer> = new Map();
   private roomCode: string | null = null;
   private isMicEnabled = false;
-  private iceServers: RTCIceServer[] = [
-    { urls: 'stun:stun.l.google.com:19302' },
-  ];
+  private iceServers: RTCIceServer[] = [{ urls: 'stun:stun.l.google.com:19302' }];
 
   async join(roomCode: string) {
     this.roomCode = roomCode;
@@ -37,8 +41,11 @@ export class VoiceService {
     });
 
     socket.on('voice:answer', async ({ fromUserId, sdp }) => {
-      console.log(`Received answer from ${fromUserId} in state:`, this.peers.get(fromUserId)?.connectionState || 'no peer');
-      
+      console.log(
+        `Received answer from ${fromUserId} in state:`,
+        this.peers.get(fromUserId)?.connectionState || 'no peer'
+      );
+
       const peer = this.peers.get(fromUserId);
       if (!peer) {
         console.log('Received answer from unknown peer:', fromUserId);
@@ -49,23 +56,21 @@ export class VoiceService {
       if (peer.connectionState === 'stable') {
         const currentRemoteDesc = peer.pc.remoteDescription?.sdp || '';
         const newRemoteDesc = sdp.sdp || '';
-        
+
         if (currentRemoteDesc === newRemoteDesc) {
           console.log('Already have the same remote description, ignoring duplicate answer');
           return;
         }
-        
+
         // If we're stable but the SDP is different, we need to handle this as a renegotiation
         console.log('Stable connection but different SDP, handling as renegotiation');
       }
 
       try {
         // Check if we're in a state where we can accept an answer
-        const canAcceptAnswer = [
-          'have-local-offer',
-          'have-remote-offer',
-          'stable'
-        ].includes(peer.connectionState);
+        const canAcceptAnswer = ['have-local-offer', 'have-remote-offer', 'stable'].includes(
+          peer.connectionState
+        );
 
         if (!canAcceptAnswer) {
           console.log(`Cannot accept answer in state: ${peer.connectionState}`);
@@ -73,10 +78,10 @@ export class VoiceService {
         }
 
         console.log(`Setting remote description for answer from ${fromUserId}`);
-        
+
         // Create a new RTCSessionDescription object
         const answer = new RTCSessionDescription(sdp);
-        
+
         // Set remote description with the answer
         try {
           await peer.pc.setRemoteDescription(answer);
@@ -167,13 +172,13 @@ export class VoiceService {
       iceTransportPolicy: 'all',
       bundlePolicy: 'max-bundle',
       rtcpMuxPolicy: 'require',
-      iceCandidatePoolSize: 10
+      iceCandidatePoolSize: 10,
     });
 
     // Add connection state change handler
     pc.onconnectionstatechange = () => {
       console.log(`Connection state changed for ${targetUserId}:`, pc.connectionState);
-      
+
       // If connection fails, clean up
       if (['disconnected', 'failed', 'closed'].includes(pc.connectionState)) {
         console.log(`Connection ${pc.connectionState} for peer ${targetUserId}, cleaning up...`);
@@ -185,11 +190,13 @@ export class VoiceService {
     pc.onsignalingstatechange = () => {
       console.log(`Signaling state changed for ${targetUserId}:`, pc.signalingState);
     };
-    
+
     const audioEl = new Audio();
     audioEl.autoplay = true;
     // playsInline TS tiplerinde yok; attribute olarak ekleyelim
-    try { (audioEl as any).playsInline = true; } catch {}
+    try {
+      (audioEl as any).playsInline = true;
+    } catch {}
     audioEl.setAttribute('playsinline', 'true');
     audioEl.muted = false;
     // Audio elementini DOM'a ekle (gizli bir container yoksa body'e ekleyelim)
@@ -231,10 +238,10 @@ export class VoiceService {
       this.localStream.getTracks().forEach((t) => pc.addTrack(t, this.localStream!));
     }
 
-    const peer: VoicePeer = { 
-      pc, 
-      audioEl, 
-      connectionState: 'new' 
+    const peer: VoicePeer = {
+      pc,
+      audioEl,
+      connectionState: 'new',
     };
     this.peers.set(targetUserId, peer);
     return peer;
@@ -242,7 +249,7 @@ export class VoiceService {
 
   private async createOffer(targetUserId: string) {
     if (!this.roomCode) return;
-    
+
     try {
       let peer = this.peers.get(targetUserId);
       if (!peer) {
@@ -253,23 +260,26 @@ export class VoiceService {
       }
 
       // Skip if we're already processing an offer for this peer
-      if (peer.connectionState === 'have-remote-offer' || peer.connectionState === 'setting-local-offer') {
+      if (
+        peer.connectionState === 'have-remote-offer' ||
+        peer.connectionState === 'setting-local-offer'
+      ) {
         console.log('Already processing an offer for', targetUserId);
         return;
       }
 
       peer.connectionState = 'have-local-offer';
-      
+
       try {
         // Create the offer
         const offer = await peer.pc.createOffer({
           offerToReceiveAudio: true,
-          offerToReceiveVideo: false
+          offerToReceiveVideo: false,
         });
-        
+
         // Set local description before sending the offer
         await peer.pc.setLocalDescription(offer);
-        
+
         // Send the offer to the other peer
         watchTogetherService.getSocket()?.emit('voice:offer', {
           roomCode: this.roomCode,
@@ -288,9 +298,12 @@ export class VoiceService {
 
   private async handleOffer(fromUserId: string, sdp: any) {
     if (!this.roomCode) return;
-    
-    console.log(`Handling offer from ${fromUserId} in state:`, this.peers.get(fromUserId)?.connectionState || 'no peer');
-    
+
+    console.log(
+      `Handling offer from ${fromUserId} in state:`,
+      this.peers.get(fromUserId)?.connectionState || 'no peer'
+    );
+
     try {
       let peer = this.peers.get(fromUserId);
       if (!peer) {
@@ -300,47 +313,54 @@ export class VoiceService {
         // Check if this is a renegotiation attempt
         const currentRemoteDesc = peer.pc.remoteDescription?.sdp || '';
         const newRemoteDesc = sdp.sdp || '';
-        
+
         if (currentRemoteDesc === newRemoteDesc) {
           console.log('Already have the same remote description, ignoring duplicate offer');
           return;
         }
-        
+
         console.log('Stable connection but different SDP, handling as renegotiation');
       }
 
       // Skip if we're already processing an offer for this peer
-      if (['have-remote-offer', 'setting-local-offer', 'have-local-offer'].includes(peer.connectionState)) {
-        console.log(`Already processing an offer/answer for ${fromUserId} in state:`, peer.connectionState);
+      if (
+        ['have-remote-offer', 'setting-local-offer', 'have-local-offer'].includes(
+          peer.connectionState
+        )
+      ) {
+        console.log(
+          `Already processing an offer/answer for ${fromUserId} in state:`,
+          peer.connectionState
+        );
         return;
       }
 
       const originalState = peer.connectionState;
       peer.connectionState = 'have-remote-offer';
-      
+
       try {
         // Create a new RTCSessionDescription object
         const offer = new RTCSessionDescription(sdp);
-        
+
         // Set remote description first
         console.log(`Setting remote description for offer from ${fromUserId}`);
         await peer.pc.setRemoteDescription(offer);
-        
+
         // Create answer
         console.log(`Creating answer for ${fromUserId}`);
         const answer = await peer.pc.createAnswer({
           offerToReceiveAudio: true,
-          offerToReceiveVideo: false
+          offerToReceiveVideo: false,
         });
-        
+
         // Set local description with the answer
         peer.connectionState = 'setting-local-offer';
         console.log(`Setting local description for answer to ${fromUserId}`);
         await peer.pc.setLocalDescription(answer);
-        
+
         // Only mark as stable after everything is set up
         peer.connectionState = 'stable';
-        
+
         // Send the answer back to the peer
         console.log(`Sending answer to ${fromUserId}`);
         watchTogetherService.getSocket()?.emit('voice:answer', {
@@ -348,27 +368,27 @@ export class VoiceService {
           targetUserId: fromUserId,
           sdp: answer,
         });
-        
+
         console.log(`Successfully handled offer from ${fromUserId}`);
       } catch (error) {
         console.error('Error handling offer:', error);
-        
+
         // Try to recover by rolling back to the original state
         try {
           if (error instanceof Error && error.name === 'InvalidStateError') {
             console.log('Attempting to recover from InvalidStateError');
             await peer.pc.setLocalDescription({ type: 'rollback' });
-            
+
             // If we had a previous state, try to restore it
             if (originalState) {
               peer.connectionState = originalState;
             }
-            
+
             // If we're still having issues, clean up and recreate the peer
             if (peer.pc.signalingState === 'have-remote-offer') {
               console.log('Recovery failed, cleaning up and recreating peer');
               this.cleanupPeer(fromUserId);
-              
+
               // Create a new peer and retry the offer
               setTimeout(() => {
                 this.handleOffer(fromUserId, sdp).catch(console.error);
@@ -376,7 +396,7 @@ export class VoiceService {
               return;
             }
           }
-          
+
           // If we get here, recovery failed or it wasn't an InvalidStateError
           throw error;
         } catch (recoveryError) {
@@ -394,12 +414,12 @@ export class VoiceService {
   private cleanupPeer(userId: string) {
     const peer = this.peers.get(userId);
     if (!peer) return;
-    
+
     console.log(`Cleaning up peer connection for user: ${userId}`);
-    
+
     // Remove from peers map first to prevent race conditions
     this.peers.delete(userId);
-    
+
     // Close the peer connection in a timeout to prevent blocking
     setTimeout(() => {
       try {
@@ -411,7 +431,7 @@ export class VoiceService {
         peer.pc.oniceconnectionstatechange = null;
         peer.pc.onicegatheringstatechange = null;
         peer.pc.onnegotiationneeded = null;
-        
+
         // Close the peer connection if not already closed
         if (peer.pc.connectionState !== 'closed') {
           try {
@@ -423,7 +443,7 @@ export class VoiceService {
       } catch (error) {
         console.error('Error while cleaning up peer connection:', error);
       }
-      
+
       // Clean up audio element in the next tick
       setTimeout(() => {
         try {
@@ -437,7 +457,7 @@ export class VoiceService {
         } catch (error) {
           console.error('Error while cleaning up audio element:', error);
         }
-        
+
         console.log(`Peer connection for user ${userId} fully cleaned up`);
       }, 0);
     }, 0);

@@ -22,4 +22,4 @@ export interface StreamState {
   isMuted: boolean;
   playbackRate: number;
   isFullscreen: boolean;
-} 
+}

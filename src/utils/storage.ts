@@ -14,12 +14,12 @@ export const getPreferences = (): UserPreferences => {
     channelCount: 6,
     layout: {
       columns: 3,
-      rows: 2
+      rows: 2,
     },
-    streams: []
+    streams: [],
   };
 
-  const settings: Settings = savedSettings 
+  const settings: Settings = savedSettings
     ? { ...defaultSettings, ...JSON.parse(savedSettings) }
     : defaultSettings;
 
@@ -36,7 +36,7 @@ export const getPreferences = (): UserPreferences => {
   return {
     settings,
     lastVisited: new Date().toISOString(),
-    version: VERSION
+    version: VERSION,
   };
 };
 
@@ -55,4 +55,4 @@ export const saveSettings = (settings: Partial<Settings>) => {
   const currentSettings = getPreferences().settings;
   const newSettings = { ...currentSettings, ...settings };
   localStorage.setItem('settings', JSON.stringify(newSettings));
-}; 
+};

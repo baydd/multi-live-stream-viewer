@@ -1,20 +1,24 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { BrowserRouter as Router, Route, Switch, useHistory } from 'react-router-dom';
 import styled, { ThemeProvider, createGlobalStyle } from 'styled-components';
 import { useTranslation } from 'react-i18next';
 import { 
-  FaCog, 
-  FaGlobe, 
-  FaEdit, 
-  FaUsers, 
-  FaSun, 
-  FaMoon, 
+  FaCog,
+  FaGlobe,
+  FaEdit,
+  FaUsers,
+  FaSun,
+  FaMoon,
   FaBookmark,
   FaChartLine,
   FaKeyboard,
   FaLink,
-  FaTv
+  FaTv,
+  FaBell,
+  FaArrowLeft,
 } from 'react-icons/fa';
 import ChannelList from './components/ChannelList';
+import UpdatesPage from './pages/UpdatesPage';
 import { Stream, Settings } from './types';
 import StreamGrid from './components/StreamGrid';
 import SettingsPanel from './components/SettingsPanel';
@@ -39,8 +43,8 @@ const GlobalStyle = createGlobalStyle`
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow: hidden;
-    background: ${props => props.theme.background};
-    color: ${props => props.theme.text};
+    background: ${(props) => props.theme.background};
+    color: ${(props) => props.theme.text};
     user-select: none;
   }
 
@@ -50,12 +54,12 @@ const GlobalStyle = createGlobalStyle`
   }
 
   .react-grid-item.react-grid-placeholder {
-    background: ${props => props.theme.primary}30;
+    background: ${(props) => props.theme.primary}30;
     opacity: 0.4;
     transition-duration: 100ms;
     z-index: 2;
     border-radius: 6px;
-    border: 1px dashed ${props => props.theme.primary};
+    border: 1px dashed ${(props) => props.theme.primary};
   }
 
   .react-grid-item > .react-resizable-handle {
@@ -65,7 +69,7 @@ const GlobalStyle = createGlobalStyle`
     bottom: 2px;
     right: 2px;
     cursor: se-resize;
-    background: ${props => props.theme.primary};
+    background: ${(props) => props.theme.primary};
     border-radius: 50%;
     opacity: 0;
     transition: opacity 0.2s ease;
@@ -93,26 +97,26 @@ const GlobalStyle = createGlobalStyle`
   }
 
   ::-webkit-scrollbar-track {
-    background: ${props => props.theme.scrollbar.track};
+    background: ${(props) => props.theme.scrollbar.track};
   }
 
   ::-webkit-scrollbar-thumb {
-    background: ${props => props.theme.scrollbar.thumb};
+    background: ${(props) => props.theme.scrollbar.thumb};
     border-radius: 3px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: ${props => props.theme.primary};
+    background: ${(props) => props.theme.primary};
   }
 `;
 
 const AppContainer = styled.div`
   min-height: 100vh;
-  background: ${props => props.theme.background};
-  color: ${props => props.theme.text};
+  background: ${(props) => props.theme.background};
+  color: ${(props) => props.theme.text};
   position: relative;
   padding-top: 64px; /* Match header height */
-  
+
   @media (max-width: 768px) {
     padding-top: 56px;
   }
@@ -123,10 +127,10 @@ const Header = styled.header`
   align-items: center;
   justify-content: space-between;
   padding: 0.5rem 1.5rem;
-  background: ${props => props.theme.cardBackground};
+  background: ${(props) => props.theme.cardBackground};
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid ${props => props.theme.border};
+  border-bottom: 1px solid ${(props) => props.theme.border};
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   position: fixed;
   top: 0;
@@ -135,7 +139,7 @@ const Header = styled.header`
   z-index: 1000;
   height: 64px;
   transition: all 0.3s ease;
-  
+
   &::before {
     content: '';
     position: absolute;
@@ -143,11 +147,11 @@ const Header = styled.header`
     left: 0;
     right: 0;
     bottom: 0;
-    background: ${props => props.theme.cardBackground};
+    background: ${(props) => props.theme.cardBackground};
     opacity: 0.9;
     z-index: -1;
   }
-  
+
   @media (max-width: 768px) {
     padding: 0.5rem 1rem;
     height: 56px;
@@ -157,7 +161,9 @@ const Header = styled.header`
 const Title = styled.h1`
   font-size: 1.5rem;
   font-weight: 700;
-  background: ${props => props.theme.gradient || `linear-gradient(135deg, ${props.theme.primary}, ${props.theme.secondary})`};
+  background: ${(props) =>
+    props.theme.gradient ||
+    `linear-gradient(135deg, ${props.theme.primary}, ${props.theme.secondary})`};
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -168,7 +174,7 @@ const Title = styled.h1`
   gap: 0.5rem;
   padding: 0.25rem 0;
   position: relative;
-  
+
   &::after {
     content: '';
     position: absolute;
@@ -176,10 +182,10 @@ const Title = styled.h1`
     left: 0;
     width: 100%;
     height: 2px;
-    background: ${props => props.theme.primary}20;
+    background: ${(props) => props.theme.primary}20;
     border-radius: 2px;
   }
-  
+
   @media (max-width: 768px) {
     font-size: 1.25rem;
   }
@@ -188,7 +194,7 @@ const Title = styled.h1`
 const DevBy = styled.a`
   font-size: 0.875rem;
   font-weight: 500;
-  color: ${props => props.theme.text};
+  color: ${(props) => props.theme.text};
   text-decoration: none;
   transition: all 0.2s ease;
   cursor: pointer;
@@ -199,17 +205,17 @@ const DevBy = styled.a`
   gap: 0.5rem;
   padding: 0.375rem 0.75rem;
   border-radius: 8px;
-  background: ${props => props.theme.background}40;
-  border: 1px solid ${props => props.theme.border};
-  
+  background: ${(props) => props.theme.background}40;
+  border: 1px solid ${(props) => props.theme.border};
+
   &:hover {
-    color: ${props => props.theme.primary};
-    background: ${props => props.theme.primary}15;
-    border-color: ${props => props.theme.primary}30;
+    color: ${(props) => props.theme.primary};
+    background: ${(props) => props.theme.primary}15;
+    border-color: ${(props) => props.theme.primary}30;
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
-  
+
   @media (max-width: 768px) {
     display: none;
   }
@@ -221,13 +227,13 @@ const ButtonGroup = styled.div`
   align-items: center;
   flex-wrap: nowrap;
   padding: 0.25rem;
-  background: ${props => props.theme.background}20;
+  background: ${(props) => props.theme.background}20;
   border-radius: 12px;
-  border: 1px solid ${props => props.theme.border};
+  border: 1px solid ${(props) => props.theme.border};
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  
+
   @media (max-width: 768px) {
     gap: 0.375rem;
     padding: 0.125rem;
@@ -235,14 +241,17 @@ const ButtonGroup = styled.div`
   }
 `;
 
-const IconButton = styled.button<{ active?: boolean; variant?: 'primary' | 'secondary' | 'success' }>`
-  background: ${props => {
+const IconButton = styled.button<{
+  active?: boolean;
+  variant?: 'primary' | 'secondary' | 'success';
+}>`
+  background: ${(props) => {
     if (props.active) return props.theme.primary;
     if (props.variant === 'success') return props.theme.success;
     return 'transparent';
   }};
   border: none;
-  color: ${props => {
+  color: ${(props) => {
     if (props.active || props.variant === 'success') return '#ffffff';
     return props.theme.text;
   }};
@@ -258,24 +267,25 @@ const IconButton = styled.button<{ active?: boolean; variant?: 'primary' | 'seco
   min-width: 36px;
   height: 36px;
   box-shadow: none;
-  opacity: ${props => props.disabled ? '0.5' : '1'};
-  
+  opacity: ${(props) => (props.disabled ? '0.5' : '1')};
+
   &:hover {
-    background: ${props => {
+    background: ${(props) => {
       if (props.active) return props.theme.primary;
       if (props.variant === 'success') return props.theme.success;
       return props.theme.background;
     }};
     transform: translateY(-1px);
-    box-shadow: 0 2px 12px ${props => props.theme.shadow || 'rgba(0, 0, 0, 0.1)'};
-    color: ${props => props.active || props.variant === 'success' ? '#ffffff' : props.theme.primary};
+    box-shadow: 0 2px 12px ${(props) => props.theme.shadow || 'rgba(0, 0, 0, 0.1)'};
+    color: ${(props) =>
+      props.active || props.variant === 'success' ? '#ffffff' : props.theme.primary};
   }
-  
+
   &:active {
     transform: translateY(0);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   }
-  
+
   @media (max-width: 768px) {
     min-width: 32px;
     height: 32px;
@@ -293,23 +303,23 @@ const LanguageButton = styled(IconButton)`
   padding: 0.5rem 0.75rem;
   min-width: auto;
   font-weight: 500;
-  background: ${props => props.theme.background}40 !important;
-  border: 1px solid ${props => props.theme.border} !important;
-  
+  background: ${(props) => props.theme.background}40 !important;
+  border: 1px solid ${(props) => props.theme.border} !important;
+
   &:hover {
-    background: ${props => props.theme.primary}15 !important;
-    border-color: ${props => props.theme.primary}30 !important;
+    background: ${(props) => props.theme.primary}15 !important;
+    border-color: ${(props) => props.theme.primary}30 !important;
   }
-  
+
   span {
     font-size: 0.75rem;
     font-weight: 600;
     letter-spacing: 0.025em;
   }
-  
+
   @media (max-width: 768px) {
     padding: 0.375rem 0.5rem;
-    
+
     span {
       display: none;
     }
@@ -321,13 +331,13 @@ const KeyboardShortcuts = styled.div<{ visible: boolean }>`
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: ${props => props.theme.cardBackground};
+  background: ${(props) => props.theme.cardBackground};
   backdrop-filter: blur(20px);
-  border: 1px solid ${props => props.theme.border};
+  border: 1px solid ${(props) => props.theme.border};
   border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: ${props => props.theme.shadowLg};
-  display: ${props => props.visible ? 'block' : 'none'};
+  box-shadow: ${(props) => props.theme.shadowLg};
+  display: ${(props) => (props.visible ? 'block' : 'none')};
   z-index: 1000;
   max-width: 450px;
   width: 90%;
@@ -338,21 +348,21 @@ const ShortcutItem = styled.div`
   justify-content: space-between;
   align-items: center;
   padding: 0.625rem 0;
-  border-bottom: 1px solid ${props => props.theme.border};
-  
+  border-bottom: 1px solid ${(props) => props.theme.border};
+
   &:last-child {
     border-bottom: none;
   }
 `;
 
 const ShortcutKey = styled.kbd`
-  background: ${props => props.theme.background};
-  border: 1px solid ${props => props.theme.border};
+  background: ${(props) => props.theme.background};
+  border: 1px solid ${(props) => props.theme.border};
   border-radius: 4px;
   padding: 0.25rem 0.5rem;
   font-family: monospace;
   font-size: 0.75rem;
-  color: ${props => props.theme.primary};
+  color: ${(props) => props.theme.primary};
   font-weight: 500;
 `;
 
@@ -360,7 +370,8 @@ const defaultChannelCount = 6;
 
 type Language = 'tr' | 'en' | 'ar' | 'es' | 'zh' | 'ru' | 'pt';
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
+  const history = useHistory();
   const { i18n } = useTranslation();
   const [streams, setStreams] = useState<Stream[]>([]);
   const [channelCount, setChannelCount] = useState<number>(defaultChannelCount);
@@ -431,14 +442,15 @@ const App: React.FC = () => {
           return; // Destek yoksa sessizce geç
         }
         const clipboardText = await navigator.clipboard.readText();
-        if (!clipboardText || !(clipboardText.startsWith('http') || clipboardText.includes('.'))) return;
+        if (!clipboardText || !(clipboardText.startsWith('http') || clipboardText.includes('.')))
+          return;
 
-        let targetIndex = streams.findIndex(stream => !stream.url || stream.url.trim() === '');
+        let targetIndex = streams.findIndex((stream) => !stream.url || stream.url.trim() === '');
         if (targetIndex === -1) {
           if (streams.length < channelCount) {
             targetIndex = streams.length;
           } else {
-            setChannelCount(prev => prev + 1);
+            setChannelCount((prev) => prev + 1);
             targetIndex = streams.length;
           }
         }
@@ -455,7 +467,7 @@ const App: React.FC = () => {
             y: Math.floor(targetIndex / 3),
             w: 1,
             h: 1,
-          }
+          },
         };
 
         if (targetIndex < streams.length) {
@@ -463,7 +475,7 @@ const App: React.FC = () => {
           updatedStreams[targetIndex] = newStream;
           setStreams(updatedStreams);
         } else {
-          setStreams(prev => [...prev, newStream]);
+          setStreams((prev) => [...prev, newStream]);
         }
       } catch (error) {
         console.error('Clipboard okunamadı:', error);
@@ -474,45 +486,54 @@ const App: React.FC = () => {
     return () => document.removeEventListener('keydown', handlePaste);
   }, [streams, channelCount]);
 
-  const handleAddStream = useCallback((stream: Stream) => {
-    setPreviousStreams(prev => [...prev, streams]);
-    const newStream = {
-      ...stream,
-      id: stream.id || `stream-${Date.now()}`,
-      layout: {
-        x: streams.length % 3,
-        y: Math.floor(streams.length / 3),
-        w: 1,
-        h: 1
+  const handleAddStream = useCallback(
+    (stream: Stream) => {
+      setPreviousStreams((prev) => [...prev, streams]);
+      const newStream = {
+        ...stream,
+        id: stream.id || `stream-${Date.now()}`,
+        layout: {
+          x: streams.length % 3,
+          y: Math.floor(streams.length / 3),
+          w: 1,
+          h: 1,
+        },
+      };
+      const newStreams = [...streams, newStream];
+      setStreams(newStreams);
+
+      // Auto-expand grid if needed
+      if (streams.length >= channelCount) {
+        setChannelCount((prev) => prev + 1);
       }
-    };
-    const newStreams = [...streams, newStream];
-    setStreams(newStreams);
-    
-    // Auto-expand grid if needed
-    if (streams.length >= channelCount) {
-      setChannelCount(prev => prev + 1);
-    }
-  }, [streams, channelCount]);
+    },
+    [streams, channelCount]
+  );
 
-  const handleRemoveStream = useCallback((id: string) => {
-    setPreviousStreams(prev => [...prev, streams]);
-    const newStreams = streams.filter(stream => stream.id !== id);
-    setStreams(newStreams);
-  }, [streams]);
+  const handleRemoveStream = useCallback(
+    (id: string) => {
+      setPreviousStreams((prev) => [...prev, streams]);
+      const newStreams = streams.filter((stream) => stream.id !== id);
+      setStreams(newStreams);
+    },
+    [streams]
+  );
 
-  const handleUpdateStreams = useCallback((newStreams: Stream[]) => {
-    setPreviousStreams(prev => [...prev, streams]);
-    setStreams(newStreams);
-    saveStreams(newStreams);
-  }, [streams]);
+  const handleUpdateStreams = useCallback(
+    (newStreams: Stream[]) => {
+      setPreviousStreams((prev) => [...prev, streams]);
+      setStreams(newStreams);
+      saveStreams(newStreams);
+    },
+    [streams]
+  );
 
   const handleUpdateChannelCount = useCallback((count: number) => {
     setChannelCount(count);
   }, []);
 
   const handleUndo = useCallback(() => {
-    setPreviousStreams(prev => {
+    setPreviousStreams((prev) => {
       if (prev.length === 0) return prev;
       const last = prev[prev.length - 1];
       setStreams(last);
@@ -529,7 +550,7 @@ const App: React.FC = () => {
       es: 'ES',
       zh: '中文',
       ru: 'РУС',
-      pt: 'PT'
+      pt: 'PT',
     };
     return labels[lang];
   };
@@ -549,212 +570,264 @@ const App: React.FC = () => {
     setIsSettingsOpen(!isSettingsOpen);
   }, [isSettingsOpen]);
 
-  const handleLoadPreset = useCallback((presetStreams: Stream[], presetChannelCount: number) => {
-    setPreviousStreams(prev => [...prev, streams]);
-    setStreams(presetStreams);
-    setChannelCount(presetChannelCount);
-  }, [streams]);
+  const handleLoadPreset = useCallback(
+    (presetStreams: Stream[], presetChannelCount: number) => {
+      setPreviousStreams((prev) => [...prev, streams]);
+      setStreams(presetStreams);
+      setChannelCount(presetChannelCount);
+    },
+    [streams]
+  );
+
+  const handleBack = useCallback(() => {
+    history.push('/');
+  }, [history]);
+
+  // Add Updates button to the header
+  const navigateToUpdates = useCallback(() => {
+    history.push('/updates');
+  }, [history]);
 
   return (
     <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
       <GlobalStyle />
-      <AppContainer>
-        <Header>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <Title>
-              <FaTv />
-              <span>Stream Viewer</span>
-            </Title>
-            <DevBy href="https://github.com/baydd" target="_blank" rel="noopener noreferrer">
-              <FaGlobe size={14} />
-              <span>by baydd</span>
-            </DevBy>
-          </div>
-          
-          <div style={{ flex: 1, maxWidth: '600px', margin: '0 1.5rem' }}>
-            <ChannelList onSelectChannel={handleAddStream} />
-          </div>
-          
-          <ButtonGroup>
-            <IconButton
-              as="a"
-              href="https://github.com/baydd/multi-live-stream-viewer/"
-              target="_blank"
-              rel="noopener noreferrer"
-              title="HLS Link Extension (GitHub)"
-              aria-label="HLS Link Extension (GitHub)"
-            >
-              <FaLink />
-              <span style={{ marginLeft: '0.25rem', display: 'inline-block', minWidth: '60px' }}>Extension</span>
-            </IconButton>
-            
-            <IconButton 
-              onClick={() => setIsEditMode(!isEditMode)} 
-              title="Edit Mode (Ctrl+E)"
-              aria-label="Edit Mode (Ctrl+E)"
-              active={isEditMode}
-            >
-              <FaEdit />
-            </IconButton>
-            
-            <IconButton 
-              onClick={() => setIsPresetsOpen(true)} 
-              title="Stream Presets (Ctrl+P)"
-              aria-label="Stream Presets (Ctrl+P)"
-            >
-              <FaBookmark />
-            </IconButton>
-            
-            <IconButton 
-              onClick={() => setIsWatchTogetherOpen(true)} 
-              title="Watch Together"
-              aria-label="Watch Together"
-            >
-              <FaUsers />
-            </IconButton>
-            
-            <IconButton 
-              onClick={() => setShowPerformanceMonitor(!showPerformanceMonitor)} 
-              title="Performance Monitor (Ctrl+M)"
-              aria-label="Performance Monitor (Ctrl+M)"
-              active={showPerformanceMonitor}
-            >
-              <FaChartLine />
-            </IconButton>
-            
-            <LanguageButton 
-              onClick={cycleLanguage} 
-              title={`Change Language (${getLanguageLabel(language)})`} 
-              aria-label={`Change Language (${getLanguageLabel(language)})`}
-            >
-              <FaGlobe />
-              <span>{getLanguageLabel(language)}</span>
-            </LanguageButton>
-            
-            <IconButton 
-              onClick={toggleTheme} 
-              title={`${isDarkMode ? "Light" : "Dark"} Mode (Ctrl+T)`} 
-              aria-label={`${isDarkMode ? "Light" : "Dark"} Mode (Ctrl+T)`}
-            >
-              {isDarkMode ? <FaSun /> : <FaMoon />}
-            </IconButton>
-            
-            <IconButton 
-              onClick={toggleSettings} 
-              title="Settings (Ctrl+S)" 
-              aria-label="Settings (Ctrl+S)"
-              style={{
-                background: isSettingsOpen ? `${darkTheme.primary}20` : 'transparent',
-                border: isSettingsOpen ? `1px solid ${darkTheme.primary}40` : 'none'
-              }}
-            >
-              <FaCog />
-            </IconButton>
-          </ButtonGroup>
-        </Header>
+      <Switch>
+        <Route path="/updates">
+          <UpdatesPage onBack={handleBack} />
+        </Route>
+        <Route path="/">
+          <AppContainer>
+            <Header>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <Title>
+                  <FaTv />
+                  <span>multiple.live</span>
+                </Title>
+                <DevBy href="https://github.com/baydd" target="_blank" rel="noopener noreferrer">
+                  <FaGlobe size={14} />
+                  <span>by baydd</span>
+                </DevBy>
+              </div>
 
-        <StreamGrid
-          streams={streams}
-          onRemoveStream={handleRemoveStream}
-          onUpdateStreams={handleUpdateStreams}
-          channelCount={channelCount}
-          isEditMode={isEditMode}
-        />
+              <div style={{ flex: 1, maxWidth: '600px', margin: '0 1.5rem' }}>
+                <ChannelList onSelectChannel={handleAddStream} />
+              </div>
 
-        <SettingsPanel
-          isOpen={isSettingsOpen}
-          onClose={() => setIsSettingsOpen(false)}
-          onAddStream={handleAddStream}
-          channelCount={channelCount}
-          setChannelCount={setChannelCount}
-          streams={streams}
-          onUpdateStreams={handleUpdateStreams}
-          language={language}
-          setLanguage={setLanguage}
-        />
+              <ButtonGroup>
+                <IconButton
+                  as="a"
+                  href="https://github.com/baydd/multi-live-stream-viewer/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="HLS Link Extension (GitHub)"
+                  aria-label="HLS Link Extension (GitHub)"
+                >
+                  <FaLink />
+                  <span style={{ marginLeft: '0.25rem', display: 'inline-block', minWidth: '60px' }}>
+                    Extension
+                  </span>
+                </IconButton>
 
-        <WatchTogetherPanel
-          isOpen={isWatchTogetherOpen}
-          onClose={() => setIsWatchTogetherOpen(false)}
-          streams={streams}
-          channelCount={channelCount}
-          onUpdateStreams={handleUpdateStreams}
-          onUpdateChannelCount={handleUpdateChannelCount}
-        />
+                <IconButton
+                  onClick={() => setIsEditMode(!isEditMode)}
+                  title="Edit Mode (Ctrl+E)"
+                  aria-label="Edit Mode (Ctrl+E)"
+                  active={isEditMode}
+                >
+                  <FaEdit />
+                </IconButton>
 
-        <StreamPresets
-          visible={isPresetsOpen}
-          onClose={() => setIsPresetsOpen(false)}
-          onLoadPreset={handleLoadPreset}
-          currentStreams={streams}
-          currentChannelCount={channelCount}
-        />
+                <IconButton
+                  onClick={() => setIsPresetsOpen(true)}
+                  title="Stream Presets (Ctrl+P)"
+                  aria-label="Stream Presets (Ctrl+P)"
+                >
+                  <FaBookmark />
+                </IconButton>
 
-        <PerformanceMonitor visible={showPerformanceMonitor} />
+                <IconButton
+                  onClick={() => setIsWatchTogetherOpen(true)}
+                  title="Watch Together"
+                  aria-label="Watch Together"
+                >
+                  <FaUsers />
+                </IconButton>
 
-        <KeyboardShortcuts visible={isShortcutsOpen} role="dialog" aria-modal="true" aria-labelledby="kb-title">
-          <h3 id="kb-title" style={{ marginBottom: '1rem', color: 'inherit', fontSize: '1.1rem', fontWeight: '600' }}>Keyboard Shortcuts</h3>
-          <ShortcutItem>
-            <span>Toggle Edit Mode</span>
-            <ShortcutKey>Ctrl + E</ShortcutKey>
-          </ShortcutItem>
-          <ShortcutItem>
-            <span>Open Settings</span>
-            <ShortcutKey>Ctrl + S</ShortcutKey>
-          </ShortcutItem>
-          <ShortcutItem>
-            <span>Open Presets</span>
-            <ShortcutKey>Ctrl + P</ShortcutKey>
-          </ShortcutItem>
-          <ShortcutItem>
-            <span>Toggle Theme</span>
-            <ShortcutKey>Ctrl + T</ShortcutKey>
-          </ShortcutItem>
-          <ShortcutItem>
-            <span>Performance Monitor</span>
-            <ShortcutKey>Ctrl + M</ShortcutKey>
-          </ShortcutItem>
-          <ShortcutItem>
-            <span>Paste Stream URL</span>
-            <ShortcutKey>Ctrl + V</ShortcutKey>
-          </ShortcutItem>
-          <ShortcutItem>
-            <span>Select All (Edit Mode)</span>
-            <ShortcutKey>Ctrl + A</ShortcutKey>
-          </ShortcutItem>
-          <ShortcutItem>
-            <span>Delete Selected</span>
-            <ShortcutKey>Delete</ShortcutKey>
-          </ShortcutItem>
-          <ShortcutItem>
-            <span>Close Panels</span>
-            <ShortcutKey>Escape</ShortcutKey>
-          </ShortcutItem>
-          <ShortcutItem>
-            <span>Show Shortcuts</span>
-            <ShortcutKey>Ctrl + /</ShortcutKey>
-          </ShortcutItem>
-          <div style={{ marginTop: '1rem', textAlign: 'center' }}>
-            <button 
-              onClick={() => setIsShortcutsOpen(false)}
-              autoFocus
-              style={{
-                background: 'transparent',
-                border: '1px solid currentColor',
-                color: 'inherit',
-                padding: '0.5rem 1rem',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '0.875rem',
-                transition: 'all 0.2s ease'
-              }}
+                <IconButton
+                  onClick={() => setShowPerformanceMonitor(!showPerformanceMonitor)}
+                  title="Performance Monitor (Ctrl+M)"
+                  aria-label="Performance Monitor (Ctrl+M)"
+                  active={showPerformanceMonitor}
+                >
+                  <FaChartLine />
+                </IconButton>
+
+                <LanguageButton
+                  onClick={cycleLanguage}
+                  title={`Change Language (${getLanguageLabel(language)})`}
+                  aria-label={`Change Language (${getLanguageLabel(language)})`}
+                >
+                  <FaGlobe />
+                  <span>{getLanguageLabel(language)}</span>
+                </LanguageButton>
+
+                <IconButton
+                  onClick={navigateToUpdates}
+                  title="Updates & News"
+                  aria-label="Check for updates and news"
+                >
+                  <FaBell />
+                </IconButton>
+
+                <IconButton
+                  onClick={toggleTheme}
+                  title={`${isDarkMode ? 'Light' : 'Dark'} Mode (Ctrl+T)`}
+                  aria-label={`${isDarkMode ? 'Light' : 'Dark'} Mode (Ctrl+T)`}
+                >
+                  {isDarkMode ? <FaSun /> : <FaMoon />}
+                </IconButton>
+
+                <IconButton
+                  onClick={toggleSettings}
+                  title="Settings (Ctrl+S)"
+                  aria-label="Settings (Ctrl+S)"
+                  style={{
+                    background: isSettingsOpen ? `${darkTheme.primary}20` : 'transparent',
+                    border: isSettingsOpen ? `1px solid ${darkTheme.primary}40` : 'none',
+                  }}
+                >
+                  <FaCog />
+                </IconButton>
+              </ButtonGroup>
+            </Header>
+
+            <StreamGrid
+              streams={streams}
+              onRemoveStream={handleRemoveStream}
+              onUpdateStreams={handleUpdateStreams}
+              channelCount={channelCount}
+              isEditMode={isEditMode}
+            />
+
+            <SettingsPanel
+              isOpen={isSettingsOpen}
+              onClose={() => setIsSettingsOpen(false)}
+              onAddStream={handleAddStream}
+              channelCount={channelCount}
+              setChannelCount={setChannelCount}
+              streams={streams}
+              onUpdateStreams={handleUpdateStreams}
+              language={language}
+              setLanguage={setLanguage}
+            />
+
+            <WatchTogetherPanel
+              isOpen={isWatchTogetherOpen}
+              onClose={() => setIsWatchTogetherOpen(false)}
+              streams={streams}
+              channelCount={channelCount}
+              onUpdateStreams={handleUpdateStreams}
+              onUpdateChannelCount={handleUpdateChannelCount}
+            />
+
+            <StreamPresets
+              visible={isPresetsOpen}
+              onClose={() => setIsPresetsOpen(false)}
+              onLoadPreset={handleLoadPreset}
+              currentStreams={streams}
+              currentChannelCount={channelCount}
+            />
+
+            <PerformanceMonitor visible={showPerformanceMonitor} />
+
+            <KeyboardShortcuts
+              visible={isShortcutsOpen}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="kb-title"
             >
-              Close
-            </button>
-          </div>
-        </KeyboardShortcuts>
-      </AppContainer>
+              <h3
+                id="kb-title"
+                style={{
+                  marginBottom: '1rem',
+                  color: 'inherit',
+                  fontSize: '1.1rem',
+                  fontWeight: '600',
+                }}
+              >
+                Keyboard Shortcuts
+              </h3>
+              <ShortcutItem>
+                <span>Toggle Edit Mode</span>
+                <ShortcutKey>Ctrl + E</ShortcutKey>
+              </ShortcutItem>
+              <ShortcutItem>
+                <span>Open Settings</span>
+                <ShortcutKey>Ctrl + S</ShortcutKey>
+              </ShortcutItem>
+              <ShortcutItem>
+                <span>Open Presets</span>
+                <ShortcutKey>Ctrl + P</ShortcutKey>
+              </ShortcutItem>
+              <ShortcutItem>
+                <span>Toggle Theme</span>
+                <ShortcutKey>Ctrl + T</ShortcutKey>
+              </ShortcutItem>
+              <ShortcutItem>
+                <span>Performance Monitor</span>
+                <ShortcutKey>Ctrl + M</ShortcutKey>
+              </ShortcutItem>
+              <ShortcutItem>
+                <span>Paste Stream URL</span>
+                <ShortcutKey>Ctrl + V</ShortcutKey>
+              </ShortcutItem>
+              <ShortcutItem>
+                <span>Select All (Edit Mode)</span>
+                <ShortcutKey>Ctrl + A</ShortcutKey>
+              </ShortcutItem>
+              <ShortcutItem>
+                <span>Delete Selected</span>
+                <ShortcutKey>Delete</ShortcutKey>
+              </ShortcutItem>
+              <ShortcutItem>
+                <span>Close Panels</span>
+                <ShortcutKey>Escape</ShortcutKey>
+              </ShortcutItem>
+              <ShortcutItem>
+                <span>Show Shortcuts</span>
+                <ShortcutKey>Ctrl + /</ShortcutKey>
+              </ShortcutItem>
+              <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+                <button
+                  onClick={() => setIsShortcutsOpen(false)}
+                  autoFocus
+                  style={{
+                    background: 'transparent',
+                    border: '1px solid currentColor',
+                    color: 'inherit',
+                    padding: '0.5rem 1rem',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  Close
+                </button>
+              </div>
+            </KeyboardShortcuts>
+          </AppContainer>
+        </Route>
+      </Switch>
     </ThemeProvider>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <Router>
+      <AppContent />
+    </Router>
   );
 };
 

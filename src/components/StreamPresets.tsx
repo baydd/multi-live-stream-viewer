@@ -28,12 +28,12 @@ const PresetsContainer = styled.div<{ visible: boolean }>`
   transform: translate(-50%, -50%);
   width: 600px;
   max-height: 80vh;
-  background: ${props => props.theme.cardBackground};
+  background: ${(props) => props.theme.cardBackground};
   backdrop-filter: blur(20px);
-  border: 1px solid ${props => props.theme.border};
+  border: 1px solid ${(props) => props.theme.border};
   border-radius: 16px;
-  box-shadow: ${props => props.theme.shadowLg};
-  display: ${props => props.visible ? 'flex' : 'none'};
+  box-shadow: ${(props) => props.theme.shadowLg};
+  display: ${(props) => (props.visible ? 'flex' : 'none')};
   flex-direction: column;
   z-index: 1000;
   overflow: hidden;
@@ -41,14 +41,14 @@ const PresetsContainer = styled.div<{ visible: boolean }>`
 
 const Header = styled.div`
   padding: 20px;
-  border-bottom: 1px solid ${props => props.theme.border};
+  border-bottom: 1px solid ${(props) => props.theme.border};
   display: flex;
   align-items: center;
   justify-content: space-between;
-  
+
   h2 {
     margin: 0;
-    color: ${props => props.theme.text};
+    color: ${(props) => props.theme.text};
     font-size: 1.5rem;
   }
 `;
@@ -56,7 +56,7 @@ const Header = styled.div`
 const CloseButton = styled.button`
   background: none;
   border: none;
-  color: ${props => props.theme.text};
+  color: ${(props) => props.theme.text};
   font-size: 1.25rem;
   cursor: pointer;
   padding: 8px;
@@ -64,8 +64,8 @@ const CloseButton = styled.button`
   transition: all 0.2s ease;
 
   &:hover {
-    background: ${props => props.theme.hover};
-    color: ${props => props.theme.primary};
+    background: ${(props) => props.theme.hover};
+    color: ${(props) => props.theme.primary};
   }
 `;
 
@@ -83,29 +83,29 @@ const PresetGrid = styled.div`
 `;
 
 const PresetCard = styled.div`
-  background: ${props => props.theme.background};
-  border: 1px solid ${props => props.theme.border};
+  background: ${(props) => props.theme.background};
+  border: 1px solid ${(props) => props.theme.border};
   border-radius: 12px;
   padding: 16px;
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover {
-    border-color: ${props => props.theme.primary};
+    border-color: ${(props) => props.theme.primary};
     transform: translateY(-2px);
-    box-shadow: ${props => props.theme.shadow};
+    box-shadow: ${(props) => props.theme.shadow};
   }
 `;
 
 const PresetName = styled.h3`
   margin: 0 0 8px 0;
-  color: ${props => props.theme.text};
+  color: ${(props) => props.theme.text};
   font-size: 1.1rem;
 `;
 
 const PresetDescription = styled.p`
   margin: 0 0 12px 0;
-  color: ${props => props.theme.secondary};
+  color: ${(props) => props.theme.secondary};
   font-size: 0.875rem;
   line-height: 1.4;
 `;
@@ -115,7 +115,7 @@ const PresetMeta = styled.div`
   justify-content: space-between;
   align-items: center;
   font-size: 0.75rem;
-  color: ${props => props.theme.secondary};
+  color: ${(props) => props.theme.secondary};
   margin-bottom: 12px;
 `;
 
@@ -125,7 +125,7 @@ const PresetActions = styled.div`
 `;
 
 const ActionButton = styled.button<{ variant?: 'primary' | 'danger' }>`
-  background: ${props => props.variant === 'danger' ? props.theme.error : props.theme.primary};
+  background: ${(props) => (props.variant === 'danger' ? props.theme.error : props.theme.primary)};
   border: none;
   color: white;
   padding: 6px 12px;
@@ -139,13 +139,13 @@ const ActionButton = styled.button<{ variant?: 'primary' | 'danger' }>`
 
   &:hover {
     transform: translateY(-1px);
-    box-shadow: ${props => props.theme.shadow};
+    box-shadow: ${(props) => props.theme.shadow};
   }
 `;
 
 const CreatePresetForm = styled.div`
-  background: ${props => props.theme.background};
-  border: 1px solid ${props => props.theme.border};
+  background: ${(props) => props.theme.background};
+  border: 1px solid ${(props) => props.theme.border};
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 20px;
@@ -158,23 +158,23 @@ const FormGroup = styled.div`
 const Label = styled.label`
   display: block;
   margin-bottom: 6px;
-  color: ${props => props.theme.text};
+  color: ${(props) => props.theme.text};
   font-weight: 500;
 `;
 
 const Input = styled.input`
   width: 100%;
   padding: 10px;
-  border: 1px solid ${props => props.theme.border};
+  border: 1px solid ${(props) => props.theme.border};
   border-radius: 8px;
-  background: ${props => props.theme.background};
-  color: ${props => props.theme.text};
+  background: ${(props) => props.theme.background};
+  color: ${(props) => props.theme.text};
   font-size: 0.875rem;
 
   &:focus {
     outline: none;
-    border-color: ${props => props.theme.primary};
-    box-shadow: 0 0 0 3px ${props => props.theme.primary}20;
+    border-color: ${(props) => props.theme.primary};
+    box-shadow: 0 0 0 3px ${(props) => props.theme.primary}20;
   }
 `;
 
@@ -182,22 +182,23 @@ const TextArea = styled.textarea`
   width: 100%;
   height: 80px;
   padding: 10px;
-  border: 1px solid ${props => props.theme.border};
+  border: 1px solid ${(props) => props.theme.border};
   border-radius: 8px;
-  background: ${props => props.theme.background};
-  color: ${props => props.theme.text};
+  background: ${(props) => props.theme.background};
+  color: ${(props) => props.theme.text};
   font-size: 0.875rem;
   resize: vertical;
 
   &:focus {
     outline: none;
-    border-color: ${props => props.theme.primary};
-    box-shadow: 0 0 0 3px ${props => props.theme.primary}20;
+    border-color: ${(props) => props.theme.primary};
+    box-shadow: 0 0 0 3px ${(props) => props.theme.primary}20;
   }
 `;
 
 const Button = styled.button<{ variant?: 'primary' | 'secondary' }>`
-  background: ${props => props.variant === 'secondary' ? props.theme.secondary : props.theme.primary};
+  background: ${(props) =>
+    props.variant === 'secondary' ? props.theme.secondary : props.theme.primary};
   border: none;
   color: white;
   padding: 10px 16px;
@@ -211,7 +212,7 @@ const Button = styled.button<{ variant?: 'primary' | 'secondary' }>`
 
   &:hover {
     transform: translateY(-1px);
-    box-shadow: ${props => props.theme.shadow};
+    box-shadow: ${(props) => props.theme.shadow};
   }
 `;
 
@@ -220,7 +221,7 @@ const StreamPresets: React.FC<StreamPresetsProps> = ({
   onClose,
   onLoadPreset,
   currentStreams,
-  currentChannelCount
+  currentChannelCount,
 }) => {
   const { t } = useTranslation();
   const [presets, setPresets] = useState<StreamPreset[]>(() => {
@@ -244,7 +245,7 @@ const StreamPresets: React.FC<StreamPresetsProps> = ({
       description: newPresetDescription,
       streams: currentStreams,
       channelCount: currentChannelCount,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
 
     savePresets([...presets, newPreset]);
@@ -258,7 +259,7 @@ const StreamPresets: React.FC<StreamPresetsProps> = ({
   };
 
   const handleDeletePreset = (presetId: string) => {
-    const updatedPresets = presets.filter(p => p.id !== presetId);
+    const updatedPresets = presets.filter((p) => p.id !== presetId);
     savePresets(updatedPresets);
   };
 
@@ -297,7 +298,7 @@ const StreamPresets: React.FC<StreamPresetsProps> = ({
         <h2>{t('presets.title')}</h2>
         <CloseButton onClick={onClose}>×</CloseButton>
       </Header>
-      
+
       <Content>
         <CreatePresetForm>
           <h3 style={{ marginTop: 0, color: 'inherit' }}>{t('presets.create_new')}</h3>
@@ -346,17 +347,23 @@ const StreamPresets: React.FC<StreamPresetsProps> = ({
               <PresetDescription>{preset.description}</PresetDescription>
               <PresetMeta>
                 <span>{t('presets.streams_count', { count: preset.streams.length })}</span>
-                <span>{t('presets.created_on', { date: new Date(preset.createdAt).toLocaleDateString() })}</span>
+                <span>
+                  {t('presets.created_on', {
+                    date: new Date(preset.createdAt).toLocaleDateString(),
+                  })}
+                </span>
               </PresetMeta>
               <PresetActions>
-                <ActionButton onClick={(e) => {
-                  e.stopPropagation();
-                  handleLoadPreset(preset);
-                }}>
+                <ActionButton
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleLoadPreset(preset);
+                  }}
+                >
                   <FaPlay />
                   {t('presets.load')}
                 </ActionButton>
-                <ActionButton 
+                <ActionButton
                   variant="danger"
                   onClick={(e) => {
                     e.stopPropagation();

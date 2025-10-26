@@ -38,7 +38,7 @@ const resources = {
           facebook: 'Facebook Live',
           instagram: 'Instagram Live',
           dlive: 'DLive',
-          trovo: 'Trovo'
+          trovo: 'Trovo',
         },
         stream_title_placeholder: 'Stream Title',
         stream_url_placeholder: 'URL or ID',
@@ -81,7 +81,7 @@ const resources = {
         no_channels: 'No channels found',
         no_results: 'No results found',
         expand_all: 'Expand All',
-        collapse_all: 'Collapse All'
+        collapse_all: 'Collapse All',
       },
       watch_together: {
         title: 'Watch Together',
@@ -210,7 +210,7 @@ const resources = {
           facebook: 'Facebook Live',
           instagram: 'Instagram Live',
           dlive: 'DLive',
-          trovo: 'Trovo'
+          trovo: 'Trovo',
         },
         stream_title_placeholder: 'Stream Title',
         stream_url_placeholder: 'URL or ID',
@@ -253,7 +253,7 @@ const resources = {
         no_channels: 'Kanal bulunamadı',
         no_results: 'Sonuç bulunamadı',
         expand_all: 'Tümünü Aç',
-        collapse_all: 'Tümünü Kapat'
+        collapse_all: 'Tümünü Kapat',
       },
       watch_together: {
         title: 'Birlikte İzle',
@@ -341,7 +341,7 @@ const resources = {
       optional: 'Opsiyonel',
       lock_grid: 'Grid Kilitle',
       unlock_grid: 'Grid Kilidini Aç',
-      enter_stream_url: 'Yayın URL\'sini girin',
+      enter_stream_url: "Yayın URL'sini girin",
       enter_stream_title: 'Yayın başlığını girin',
       enter_stream_notes: 'Yayın notlarını girin',
     },
@@ -378,7 +378,7 @@ const resources = {
           twitter: 'تويتر',
           kick: 'كيك',
           hls: 'اتش ال اس',
-          dash: 'داش'
+          dash: 'داش',
         },
         stream_title_placeholder: 'عنوان البث',
         stream_url_placeholder: 'URL أو ID',
@@ -421,7 +421,7 @@ const resources = {
         no_channels: 'لم يتم العثور على قنوات',
         no_results: 'لم يتم العثور على نتائج',
         expand_all: 'توسيع الكل',
-        collapse_all: 'طي الكل'
+        collapse_all: 'طي الكل',
       },
       watch_together: {
         title: 'مشاهدة معاً',
@@ -546,7 +546,7 @@ const resources = {
           twitter: 'Twitter',
           kick: 'Kick',
           hls: 'HLS',
-          dash: 'DASH'
+          dash: 'DASH',
         },
         stream_title_placeholder: 'Título del Stream',
         stream_url_placeholder: 'URL o ID',
@@ -589,7 +589,7 @@ const resources = {
         no_channels: 'No se encontraron canales',
         no_results: 'No se encontraron resultados',
         expand_all: 'Expandir Todo',
-        collapse_all: 'Contraer Todo'
+        collapse_all: 'Contraer Todo',
       },
       watch_together: {
         title: 'Ver Juntos',
@@ -666,7 +666,7 @@ const resources = {
           twitter: 'Twitter',
           kick: 'Kick',
           hls: 'HLS',
-          dash: 'DASH'
+          dash: 'DASH',
         },
         stream_title_placeholder: '流标题',
         stream_url_placeholder: 'URL或ID',
@@ -709,7 +709,7 @@ const resources = {
         no_channels: '未找到频道',
         no_results: '未找到结果',
         expand_all: '全部展开',
-        collapse_all: '全部折叠'
+        collapse_all: '全部折叠',
       },
       watch_together: {
         title: '一起观看',
@@ -786,7 +786,7 @@ const resources = {
           twitter: 'Twitter',
           kick: 'Kick',
           hls: 'HLS',
-          dash: 'DASH'
+          dash: 'DASH',
         },
         stream_title_placeholder: 'Название стрима',
         stream_url_placeholder: 'URL или ID',
@@ -829,7 +829,7 @@ const resources = {
         no_channels: 'Каналы не найдены',
         no_results: 'Ничего не найдено',
         expand_all: 'Развернуть все',
-        collapse_all: 'Свернуть все'
+        collapse_all: 'Свернуть все',
       },
       watch_together: {
         title: 'Смотреть Вместе',
@@ -856,7 +856,8 @@ const resources = {
         fill_all_fields: 'Пожалуйста, заполните все поля',
         create_room_error: 'Ошибка создания комнаты',
         join_room_error: 'Ошибка присоединения к комнате. Проверьте код комнаты.',
-        no_share_permission: 'У вас нет разрешения на совместное использование. Попросите разрешение у администратора.',
+        no_share_permission:
+          'У вас нет разрешения на совместное использование. Попросите разрешение у администратора.',
       },
       edit_stream: 'Редактировать источник',
       edit_source: 'Редактировать',
@@ -906,7 +907,7 @@ const resources = {
           twitter: 'Twitter',
           kick: 'Kick',
           hls: 'HLS',
-          dash: 'DASH'
+          dash: 'DASH',
         },
         stream_title_placeholder: 'Título do Stream',
         stream_url_placeholder: 'URL ou ID',
@@ -949,7 +950,7 @@ const resources = {
         no_channels: 'Nenhum canal encontrado',
         no_results: 'Nenhum resultado encontrado',
         expand_all: 'Expandir Tudo',
-        collapse_all: 'Recolher Tudo'
+        collapse_all: 'Recolher Tudo',
       },
       watch_together: {
         title: 'Assistir Juntos',
@@ -976,7 +977,8 @@ const resources = {
         fill_all_fields: 'Por favor, preencha todos os campos',
         create_room_error: 'Erro ao criar sala',
         join_room_error: 'Erro ao entrar na sala. Verifique o código da sala.',
-        no_share_permission: 'Você não tem permissão para compartilhar. Peça permissão ao administrador.',
+        no_share_permission:
+          'Você não tem permissão para compartilhar. Peça permissão ao administrador.',
       },
       edit_stream: 'Editar Fonte do Stream',
       edit_source: 'Editar Fonte',
@@ -993,18 +995,16 @@ const resources = {
       enter_stream_title: 'Digite o título do stream',
       enter_stream_notes: 'Digite notas do stream',
     },
-  }
+  },
 };
 
-i18n
-  .use(initReactI18next)
-  .init({
-    resources,
-    lng: 'tr',
-    fallbackLng: 'en',
-    interpolation: {
-      escapeValue: false,
-    },
-  });
+i18n.use(initReactI18next).init({
+  resources,
+  lng: 'tr',
+  fallbackLng: 'en',
+  interpolation: {
+    escapeValue: false,
+  },
+});
 
 export default i18n;

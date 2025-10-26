@@ -13,15 +13,15 @@ const MonitorContainer = styled.div<{ visible: boolean }>`
   position: fixed;
   bottom: 20px;
   left: 20px;
-  background: ${props => props.theme.cardBackground}ee;
+  background: ${(props) => props.theme.cardBackground}ee;
   backdrop-filter: blur(10px);
-  border: 1px solid ${props => props.theme.border};
+  border: 1px solid ${(props) => props.theme.border};
   border-radius: 12px;
   padding: 12px;
-  display: ${props => props.visible ? 'flex' : 'none'};
+  display: ${(props) => (props.visible ? 'flex' : 'none')};
   gap: 16px;
   z-index: 100;
-  box-shadow: ${props => props.theme.shadowLg};
+  box-shadow: ${(props) => props.theme.shadowLg};
   font-size: 0.75rem;
 `;
 
@@ -29,16 +29,16 @@ const Stat = styled.div`
   display: flex;
   align-items: center;
   gap: 6px;
-  color: ${props => props.theme.text};
-  
+  color: ${(props) => props.theme.text};
+
   .icon {
-    color: ${props => props.theme.primary};
+    color: ${(props) => props.theme.primary};
   }
-  
+
   .value {
     font-weight: 600;
   }
-  
+
   .unit {
     opacity: 0.7;
   }
@@ -49,7 +49,7 @@ const PerformanceMonitor: React.FC<{ visible: boolean }> = ({ visible }) => {
     fps: 0,
     memory: 0,
     latency: 0,
-    bandwidth: 0
+    bandwidth: 0,
   });
 
   useEffect(() => {
@@ -65,9 +65,9 @@ const PerformanceMonitor: React.FC<{ visible: boolean }> = ({ visible }) => {
 
       if (currentTime - lastTime >= 1000) {
         const fps = Math.round((frameCount * 1000) / (currentTime - lastTime));
-        
+
         // Get memory usage (if available)
-        const memory = (performance as any).memory 
+        const memory = (performance as any).memory
           ? Math.round((performance as any).memory.usedJSHeapSize / 1024 / 1024)
           : 0;
 
@@ -76,7 +76,7 @@ const PerformanceMonitor: React.FC<{ visible: boolean }> = ({ visible }) => {
         const bandwidth = Math.round(Math.random() * 100 + 50);
 
         setStats({ fps, memory, latency, bandwidth });
-        
+
         frameCount = 0;
         lastTime = currentTime;
       }
@@ -100,7 +100,7 @@ const PerformanceMonitor: React.FC<{ visible: boolean }> = ({ visible }) => {
         <span className="value">{stats.fps}</span>
         <span className="unit">FPS</span>
       </Stat>
-      
+
       {stats.memory > 0 && (
         <Stat>
           <FaMemory className="icon" />
@@ -108,13 +108,13 @@ const PerformanceMonitor: React.FC<{ visible: boolean }> = ({ visible }) => {
           <span className="unit">MB</span>
         </Stat>
       )}
-      
+
       <Stat>
         <FaClock className="icon" />
         <span className="value">{stats.latency}</span>
         <span className="unit">ms</span>
       </Stat>
-      
+
       <Stat>
         <FaWifi className="icon" />
         <span className="value">{stats.bandwidth}</span>
