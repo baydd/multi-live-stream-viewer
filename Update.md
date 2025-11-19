@@ -106,3 +106,15 @@ Improved error/success notifications and tooltips.**
 - **Bug Fixes & Stability Improvements**
 
 -----------------------------------------
+
+
+1.5 Beta
+
+
+- Home Page with modern hero and live statistics
+- Themed search and filter chips for consistent UX
+- Refined channel cards and badge variants (LIVE, VOD)
+- Modal visuals aligned with global theme
+- Added “Developed by baydd” label to Home Page
+
+-----------------------------------------
