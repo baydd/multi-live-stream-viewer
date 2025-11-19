@@ -22,6 +22,7 @@ declare module 'styled-components' {
     warning: string;
     info: string;
     hover: string;
+    shadowSm: string;
     shadow: string;
     shadowLg: string;
     gradient: string;

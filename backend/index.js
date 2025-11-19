@@ -341,11 +341,99 @@ io.on('connection', (socket) => {
   });
 });
 
+const CHANNEL_CACHE_TTL_MS = 1000 * 60 * 60 * 24;
+let channelCache = { timestamp: 0, channels: [] };
+
+function parseM3UContent(content, countryCode) {
+  const channels = [];
+  const lines = content.split('\n');
+  const cc = (countryCode || '').toLowerCase();
+  for (let i = 0; i < lines.length - 1; i++) {
+    const line = lines[i].trim();
+    if (line.startsWith('#EXTINF:')) {
+      const urlLine = lines[i + 1].trim();
+      if (urlLine && !urlLine.startsWith('#')) {
+        const nameMatch = line.match(/tvg-name="(.*?)"/) || line.match(/,(.*?)(?=\s*$)/);
+        const name = nameMatch ? nameMatch[1] : `Channel ${channels.length + 1}`;
+        let finalUrl = urlLine;
+        try {
+          const u = new URL(urlLine);
+          finalUrl = u.toString();
+        } catch (e) {
+          try {
+            const encodedUrl = encodeURI(urlLine);
+            new URL(encodedUrl);
+            finalUrl = encodedUrl;
+          } catch (e) {
+            continue;
+          }
+        }
+        if (!finalUrl.match(/\.(m3u8|mp4|mpd|ts|m3u8\?|mp4\?|mpd\?|ts\?)/i)) {
+          continue;
+        }
+        channels.push({
+          id: `${cc}_${channels.length}`,
+          name: name.replace(/\s*\([^)]*\)$/, '').trim(),
+          url: finalUrl,
+          country: cc.toUpperCase(),
+          countryCode: cc,
+        });
+      }
+    }
+  }
+  return channels;
+}
+
+function findStreamsDir() {
+  const candidates = [
+    path.join(__dirname, '../build/streams'),
+    path.join(__dirname, '../public/streams'),
+    path.join(__dirname, '../streams'),
+  ];
+  for (const dir of candidates) {
+    if (fs.existsSync(dir)) return dir;
+  }
+  return null;
+}
+
+async function loadAllChannelsServer() {
+  const now = Date.now();
+  if (channelCache.channels.length && now - channelCache.timestamp < CHANNEL_CACHE_TTL_MS) {
+    return channelCache.channels;
+  }
+  const dir = findStreamsDir();
+  if (!dir) return [];
+  const files = fs.readdirSync(dir).filter((f) => f.endsWith('.m3u'));
+  const channels = [];
+  for (const file of files) {
+    const cc = path.basename(file, '.m3u');
+    try {
+      const content = fs.readFileSync(path.join(dir, file), 'utf8');
+      const parsed = parseM3UContent(content, cc);
+      if (parsed.length) channels.push(...parsed);
+    } catch (e) {
+    }
+  }
+  channelCache = { timestamp: Date.now(), channels };
+  return channels;
+}
+
+app.get('/api/channels', async (req, res) => {
+  try {
+    const refresh = req.query.refresh === '1' || req.query.refresh === 'true';
+    if (refresh) channelCache = { timestamp: 0, channels: [] };
+    const channels = await loadAllChannelsServer();
+    res.json({ channels, count: channels.length, cachedAt: channelCache.timestamp });
+  } catch (e) {
+    res.status(500).json({ error: 'Kanallar yüklenemedi.' });
+  }
+});
+
 // React build klasörünü sun
 const buildPath = path.join(__dirname, '../build');
 if (fs.existsSync(buildPath)) {
   app.use(express.static(buildPath));
-  app.get('*', (req, res) => {
+  app.use((req, res) => {
     res.sendFile(path.join(buildPath, 'index.html'));
   });
 }

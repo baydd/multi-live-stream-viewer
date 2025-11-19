@@ -1,7 +1,17 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
-import { FaArrowLeft, FaRocket, FaBell, FaGithub, FaStar, FaInfoCircle, FaListAlt, FaQuestionCircle, FaCog } from 'react-icons/fa';
+import {
+  FaArrowLeft,
+  FaRocket,
+  FaBell,
+  FaGithub,
+  FaStar,
+  FaInfoCircle,
+  FaListAlt,
+  FaQuestionCircle,
+  FaCog,
+} from 'react-icons/fa';
 
 // Animation keyframes
 const float = keyframes`
@@ -48,43 +58,51 @@ const FloatingShape = styled.div`
   border-radius: 50%;
   filter: blur(60px);
   z-index: -1;
-  
+
   &.shape-1 {
     width: 600px;
     height: 600px;
     background: radial-gradient(circle, rgba(139, 92, 246, 0.6) 0%, transparent 70%);
     top: -150px;
     left: -150px;
-    animation: ${float} 25s ease-in-out infinite, ${pulse} 15s ease-in-out infinite;
+    animation:
+      ${float} 25s ease-in-out infinite,
+      ${pulse} 15s ease-in-out infinite;
   }
-  
+
   &.shape-2 {
     width: 400px;
     height: 400px;
     background: radial-gradient(circle, rgba(99, 102, 241, 0.5) 0%, transparent 70%);
     bottom: -100px;
     right: -100px;
-    animation: ${float} 30s ease-in-out infinite reverse, ${pulseFast} 12s ease-in-out infinite;
+    animation:
+      ${float} 30s ease-in-out infinite reverse,
+      ${pulseFast} 12s ease-in-out infinite;
   }
-  
+
   &.shape-3 {
     width: 500px;
     height: 500px;
     background: radial-gradient(circle, rgba(236, 72, 153, 0.4) 0%, transparent 70%);
     top: 40%;
     right: -150px;
-    animation: ${moveDiagonal} 40s linear infinite, ${pulse} 18s ease-in-out infinite;
+    animation:
+      ${moveDiagonal} 40s linear infinite,
+      ${pulse} 18s ease-in-out infinite;
   }
-  
+
   &.shape-4 {
     width: 300px;
     height: 300px;
     background: radial-gradient(circle, rgba(16, 185, 129, 0.3) 0%, transparent 70%);
     top: 60%;
     left: 10%;
-    animation: ${floatSlow} 35s ease-in-out infinite, ${pulse} 20s ease-in-out infinite alternate;
+    animation:
+      ${floatSlow} 35s ease-in-out infinite,
+      ${pulse} 20s ease-in-out infinite alternate;
   }
-  
+
   &.shape-5 {
     width: 700px;
     height: 700px;
@@ -92,7 +110,9 @@ const FloatingShape = styled.div`
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    animation: ${rotate} 120s linear infinite, ${pulse} 25s ease-in-out infinite;
+    animation:
+      ${rotate} 120s linear infinite,
+      ${pulse} 25s ease-in-out infinite;
   }
 `;
 
@@ -102,14 +122,14 @@ const GridPattern = styled.div`
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: 
+  background-image:
     linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
   background-size: 50px 50px;
   z-index: -2;
   opacity: 0.6;
   animation: ${pulse} 30s ease-in-out infinite alternate;
-  
+
   &::before {
     content: '';
     position: absolute;
@@ -135,9 +155,20 @@ const PageContainer = styled.div`
   overscroll-behavior-y: contain;
   padding: 2rem;
   box-sizing: border-box;
-  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family:
+    'Poppins',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    'Open Sans',
+    'Helvetica Neue',
+    sans-serif;
   line-height: 1.6;
-  
+
   &::before {
     content: '';
     position: fixed;
@@ -145,7 +176,7 @@ const PageContainer = styled.div`
     left: 0;
     width: 100%;
     height: 100%;
-    background: 
+    background:
       radial-gradient(circle at 20% 30%, rgba(99, 102, 241, 0.1) 0%, transparent 25%),
       radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.1) 0%, transparent 25%);
     z-index: -1;
@@ -172,7 +203,7 @@ const GitHubButton = styled.a`
   position: relative;
   overflow: hidden;
   z-index: 1;
-  
+
   &::before {
     content: '';
     position: absolute;
@@ -185,21 +216,21 @@ const GitHubButton = styled.a`
     transition: opacity 0.3s ease;
     z-index: -1;
   }
-  
+
   &:hover {
     color: #f0f6fc;
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-    
+
     &::before {
       opacity: 1;
     }
   }
-  
+
   &:active {
     transform: translateY(0);
   }
-  
+
   .star-icon {
     color: #f9c513;
     font-size: 0.9em;
@@ -213,10 +244,11 @@ const ButtonGroup = styled.div`
   gap: 1rem;
   margin-bottom: 2.5rem;
   flex-wrap: wrap;
-  
+
   @media (max-width: 480px) {
     gap: 0.8rem;
-    button, a {
+    button,
+    a {
       flex: 1;
       padding: 0.7rem 1rem;
     }
@@ -239,7 +271,7 @@ const BackButton = styled.button`
   position: relative;
   overflow: hidden;
   z-index: 1;
-  
+
   &::before {
     content: '';
     position: absolute;
@@ -252,16 +284,16 @@ const BackButton = styled.button`
     transition: opacity 0.3s ease;
     z-index: -1;
   }
-  
+
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
-    
+
     &::before {
       opacity: 1;
     }
   }
-  
+
   &:active {
     transform: translateY(0);
   }
@@ -279,8 +311,10 @@ const Content = styled.div`
   box-sizing: border-box;
   overflow: hidden;
   box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+
   &::before {
     content: '';
     position: absolute;
@@ -291,7 +325,7 @@ const Content = styled.div`
     background: linear-gradient(90deg, #6366f1, #8b5cf6);
     animation: ${pulse} 3s ease-in-out infinite;
   }
-  
+
   &::after {
     content: '';
     position: absolute;
@@ -299,13 +333,13 @@ const Content = styled.div`
     left: 0;
     right: 0;
     bottom: 0;
-    background: 
+    background:
       radial-gradient(circle at 20% 30%, rgba(99, 102, 241, 0.1) 0%, transparent 25%),
       radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.1) 0%, transparent 25%);
     pointer-events: none;
     z-index: -1;
   }
-  
+
   &:hover {
     transform: translateY(-5px);
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
@@ -393,7 +427,7 @@ const UpdateCard = styled.div`
   position: relative;
   overflow: hidden;
   backdrop-filter: blur(8px);
-  
+
   &::before {
     content: '';
     position: absolute;
@@ -404,7 +438,7 @@ const UpdateCard = styled.div`
     background: linear-gradient(to bottom, #6366f1, #8b5cf6);
     transition: all 0.4s ease;
   }
-  
+
   &::after {
     content: '';
     position: absolute;
@@ -413,21 +447,21 @@ const UpdateCard = styled.div`
     opacity: 0;
     transition: opacity 0.3s ease;
   }
-  
+
   &:hover {
     transform: translateY(-5px) scale(1.01);
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
     border-color: rgba(99, 102, 241, 0.2);
-    
+
     &::before {
       width: 5px;
     }
-    
+
     &::after {
       opacity: 1;
     }
   }
-  
+
   h3 {
     color: #ffffff;
     margin: 0 0 1rem 0;
@@ -438,7 +472,7 @@ const UpdateCard = styled.div`
     display: flex;
     align-items: center;
     gap: 0.8rem;
-    
+
     &::before {
       content: '→';
       position: static;
@@ -447,11 +481,11 @@ const UpdateCard = styled.div`
       transition: transform 0.3s ease;
     }
   }
-  
+
   &:hover h3::before {
     transform: translateX(5px);
   }
-  
+
   h3 {
     color: #a5b4fc;
     margin: 0 0 1.2rem 0;
@@ -459,7 +493,7 @@ const UpdateCard = styled.div`
     font-weight: 600;
     position: relative;
     padding-left: 1rem;
-    
+
     &::before {
       content: '•';
       position: absolute;
@@ -467,7 +501,7 @@ const UpdateCard = styled.div`
       color: #818cf8;
     }
   }
-  
+
   p {
     margin: 0;
     color: #94a3b8;
@@ -487,13 +521,15 @@ const FeatureCard = styled.div`
   border-radius: 8px;
   padding: 1.5rem;
   border: 1px solid rgba(255, 255, 255, 0.05);
-  transition: transform 0.2s, box-shadow 0.2s;
-  
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+
   &:hover {
     transform: translateY(-5px);
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   }
-  
+
   h3 {
     margin: 0 0 0.5rem 0;
     color: #e2e8f0;
@@ -501,7 +537,7 @@ const FeatureCard = styled.div`
     align-items: center;
     gap: 0.5rem;
   }
-  
+
   p {
     margin: 0;
     color: #94a3b8;
@@ -527,21 +563,32 @@ const UpdatesPage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           <BackButton onClick={onBack}>
             <FaArrowLeft /> Back to Streams
           </BackButton>
-          <GitHubButton 
-            href="https://github.com/baydd/multi-live-stream-viewer" 
-            target="_blank" 
+          <GitHubButton
+            href="https://github.com/baydd/multi-live-stream-viewer"
+            target="_blank"
             rel="noopener noreferrer"
           >
             <FaGithub /> Star on GitHub <FaStar className="star-icon" />
           </GitHubButton>
         </ButtonGroup>
-        
+
         <Title>
           <FaBell /> Version History
         </Title>
-        
+
         <Section>
-          <h2>Latest Version: 1.4 Beta</h2>
+          <h2>Latest Version: 1.5 Beta</h2>
+          <UpdateCard>
+            <h3>Version 1.5 Beta</h3>
+            <ul style={{ marginLeft: '1.5rem', paddingLeft: '0.5rem' }}>
+              <li>Home Page with modern hero and live stats</li>
+              <li>Themed search and filter chips for consistency</li>
+              <li>Refined channel cards with improved hover interactions</li>
+              <li>Badge variants for stream state (LIVE, VOD)</li>
+              <li>Modal visuals aligned with global theme</li>
+              <li>Added “Developed by baydd” label to Home Page</li>
+            </ul>
+          </UpdateCard>
           <UpdateCard>
             <h3>Version 1.4 Beta</h3>
             <ul style={{ marginLeft: '1.5rem', paddingLeft: '0.5rem' }}>
@@ -584,7 +631,7 @@ const UpdatesPage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             </ul>
           </UpdateCard>
         </Section>
-        
+
         <Section>
           <h2>Older Versions</h2>
           <UpdateCard>
@@ -619,32 +666,46 @@ const UpdatesPage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             <p>Grid system improvements</p>
           </UpdateCard>
         </Section>
-        
+
         <Section>
-          <h2>Coming Soon <FaRocket /></h2>
+          <h2>
+            Coming Soon <FaRocket />
+          </h2>
           <FeatureGrid>
             <FeatureCard>
-              <h3><FaRocket /> Multi-Device Sync</h3>
+              <h3>
+                <FaRocket /> Multi-Device Sync
+              </h3>
               <p>Synchronize your streams and settings across multiple devices in real-time.</p>
             </FeatureCard>
             <FeatureCard>
-              <h3><FaRocket /> Enhanced Mobile Experience</h3>
+              <h3>
+                <FaRocket /> Enhanced Mobile Experience
+              </h3>
               <p>Improved interface and controls for mobile devices.</p>
             </FeatureCard>
             <FeatureCard>
-              <h3><FaRocket /> More Streaming Platforms</h3>
+              <h3>
+                <FaRocket /> More Streaming Platforms
+              </h3>
               <p>Adding support for additional streaming services.</p>
             </FeatureCard>
             <FeatureCard>
-              <h3><FaRocket /> Advanced Analytics</h3>
+              <h3>
+                <FaRocket /> Advanced Analytics
+              </h3>
               <p>Get detailed statistics about your streaming habits and preferences.</p>
             </FeatureCard>
             <FeatureCard>
-              <h3><FaRocket /> Custom Themes</h3>
+              <h3>
+                <FaRocket /> Custom Themes
+              </h3>
               <p>Create and apply your own color schemes and layouts.</p>
             </FeatureCard>
             <FeatureCard>
-              <h3><FaRocket /> Offline Mode</h3>
+              <h3>
+                <FaRocket /> Offline Mode
+              </h3>
               <p>Record and save your favorite streams to watch offline anytime, anywhere.</p>
             </FeatureCard>
           </FeatureGrid>
@@ -654,19 +715,29 @@ const UpdatesPage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           <h2>Explore More</h2>
           <FeatureGrid>
             <FeatureCard as={Link} to="/about" style={{ textDecoration: 'none' }}>
-              <h3><FaInfoCircle /> About Us</h3>
-              <p>Learn more about multiple.live and our mission to enhance your streaming experience.</p>
+              <h3>
+                <FaInfoCircle /> About Us
+              </h3>
+              <p>
+                Learn more about multiple.live and our mission to enhance your streaming experience.
+              </p>
             </FeatureCard>
             <FeatureCard as={Link} to="/features" style={{ textDecoration: 'none' }}>
-              <h3><FaListAlt /> Features</h3>
+              <h3>
+                <FaListAlt /> Features
+              </h3>
               <p>Discover all the powerful features that multiple.live has to offer.</p>
             </FeatureCard>
             <FeatureCard as={Link} to="/how-it-works" style={{ textDecoration: 'none' }}>
-              <h3><FaQuestionCircle /> How It Works</h3>
+              <h3>
+                <FaQuestionCircle /> How It Works
+              </h3>
               <p>Get started with our step-by-step guide to using multiple.live.</p>
             </FeatureCard>
             <FeatureCard as={Link} to="/faq" style={{ textDecoration: 'none' }}>
-              <h3><FaQuestionCircle /> FAQ</h3>
+              <h3>
+                <FaQuestionCircle /> FAQ
+              </h3>
               <p>Find answers to frequently asked questions about multiple.live.</p>
             </FeatureCard>
           </FeatureGrid>

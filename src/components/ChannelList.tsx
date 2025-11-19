@@ -17,6 +17,29 @@ const spin = keyframes`
   100% { transform: rotate(360deg); }
 `;
 
+const DropdownBackdrop = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(3px);
+  z-index: 1100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+
+  &[data-visible='true'] {
+    opacity: 1;
+    pointer-events: auto;
+  }
+`;
+
+const EmptyState = styled.div`
+  padding: 24px;
+  text-align: center;
+  color: ${({ theme }) => theme.secondary || '#64748b'};
+  font-size: 14px;
+`;
+
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(-5px); }
   to { opacity: 1; transform: translateY(0); }
@@ -51,67 +74,67 @@ const ChannelListContainer = styled.div`
   font-family:
     -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   width: 100%;
-  max-width: 350px;
+  max-width: 380px;
 
-  @media (max-width: 480px) {
-    margin: 0 0 16px 0;
+  @media (max-width: 768px) {
     max-width: 100%;
+    margin-right: 0;
   }
 `;
 
 const ChannelButton = styled.button`
   width: 100%;
-  background: ${({ theme }) => theme.background || '#ffffff'};
+  min-height: 48px;
+  background: ${({ theme }) => theme.cardBackground || theme.background || '#ffffff'};
   color: ${({ theme }) => theme.text || '#1a202c'};
   border: 1px solid ${({ theme }) => theme.border || '#e2e8f0'};
   padding: 12px 16px;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  transition: all 0.2s ease;
+  gap: 12px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
   text-align: left;
 
-  &:hover {
+  &:not(:disabled):hover {
     border-color: ${({ theme }) => theme.primary || '#4a6cf7'};
-    box-shadow: 0 0 0 1px ${({ theme }) => theme.primary || '#4a6cf7'};
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+    transform: translateY(-1px);
   }
 
-  &:focus {
+  &:focus-visible {
     outline: none;
     border-color: ${({ theme }) => theme.primary || '#4a6cf7'};
-    box-shadow: 0 0 0 2px ${({ theme }) => (theme.primary || '#4a6cf7') + '40'};
-  }
-
-  &:hover {
-    background: ${({ theme }) => theme.primaryDark || '#3a5bd9'};
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(74, 108, 247, 0.3);
-  }
-
-  &:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 8px rgba(74, 108, 247, 0.3);
+    box-shadow: 0 0 0 3px ${({ theme }) => `${theme.primary || '#4a6cf7'}40`};
   }
 
   &:disabled {
-    background: #94a3b8;
     cursor: wait;
-    transform: none !important;
-    box-shadow: none !important;
+    opacity: 0.7;
   }
 `;
 
 const SearchContainer = styled.div`
-  padding: 12px 16px;
   position: sticky;
   top: 0;
-  background: ${({ theme }) => theme.background || '#ffffff'};
-  border-bottom: 1px solid ${({ theme }) => theme.border || '#e2e8f0'};
   z-index: 2;
+  padding: 16px;
+  background: ${({ theme }) => theme.cardBackground || theme.background || '#ffffff'};
+  border-bottom: 1px solid ${({ theme }) => theme.border || '#e2e8f0'};
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06);
+  border-radius: 14px 14px 0 0;
+`;
+
+const SearchInputWrapper = styled.div`
+  position: relative;
+  width: 100%;
 `;
 
 const SearchInput = styled.input`
@@ -132,24 +155,14 @@ const SearchInput = styled.input`
 
   &:focus {
     border-color: ${({ theme }) => theme.primary || '#4a6cf7'};
-    box-shadow: 0 0 0 2px ${({ theme }) => `${theme.primary || '#4a6cf7'}40`};
-  }
-
-  &::placeholder {
-    color: #94a3b8;
-    font-weight: 400;
-  }
-
-  &:focus {
-    border-color: ${({ theme }) => theme.primary || '#4a6cf7'};
-    box-shadow: 0 0 0 3px ${({ theme }) => `${theme.primary || '#4a6cf7'}40`};
+    box-shadow: 0 0 0 3px ${({ theme }) => `${theme.primary || '#4a6cf7'}33`};
     background: ${({ theme }) => theme.background || '#ffffff'};
   }
 `;
 
 const SearchIcon = styled(FaSearch)`
   position: absolute;
-  left: 26px;
+  left: 16px;
   top: 50%;
   transform: translateY(-50%);
   color: ${({ theme }) =>
@@ -158,27 +171,30 @@ const SearchIcon = styled(FaSearch)`
   pointer-events: none;
   transition: color 0.2s ease;
 
-  ${SearchInput}:focus ~ & {
+  ${SearchInputWrapper}:focus-within & {
     color: ${({ theme }) => theme.primary || '#4a6cf7'};
   }
 `;
 
-const Dropdown = styled.div`
+const Dropdown = styled.div<{ $isVisible: boolean }>`
   position: absolute;
   top: calc(100% + 8px);
   left: 0;
   right: 0;
   background: ${({ theme }) => theme.cardBackground || '#ffffff'};
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border-radius: 14px;
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.2);
   max-height: 60vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  z-index: 1000;
-  opacity: 0;
-  transform: translateY(10px);
-  transition: all 0.25s ease;
+  z-index: 1200;
+  opacity: ${({ $isVisible }) => ($isVisible ? 1 : 0)};
+  transform: ${({ $isVisible }) => ($isVisible ? 'translateY(0)' : 'translateY(10px)')};
+  pointer-events: ${({ $isVisible }) => ($isVisible ? 'auto' : 'none')};
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
   border: 1px solid ${({ theme }) => theme.border || '#e2e8f0'};
 
   @media (max-width: 768px) {
@@ -189,18 +205,9 @@ const Dropdown = styled.div`
     right: 0;
     width: 100%;
     max-width: 100%;
-    max-height: 70vh;
-    border-radius: 16px 16px 0 0;
-    transform: translateY(100%);
-
-    &[data-visible='true'] {
-      transform: translateY(0);
-    }
-  }
-
-  &[data-visible='true'] {
-    opacity: 1;
-    transform: translateY(0);
+    max-height: 80vh;
+    border-radius: 20px 20px 0 0;
+    transform: ${({ $isVisible }) => ($isVisible ? 'translateY(0)' : 'translateY(100%)')};
   }
 
   /* Custom scrollbar */
@@ -229,7 +236,7 @@ const DropdownContent = styled.div`
 const CountriesList = styled.div`
   flex: 1;
   overflow-y: auto;
-  padding: 8px;
+  padding: 8px 12px 16px;
 
   /* Custom scrollbar */
   &::-webkit-scrollbar {
@@ -264,7 +271,9 @@ interface ThemeProps {
   };
 }
 
-const CountrySection = styled.div<{ isExpanded: boolean } & ThemeProps>`
+const CountrySection = styled.div.attrs({ className: 'country-section' })<
+  { isExpanded: boolean } & ThemeProps
+>`
   margin: 0 12px 8px 12px;
   border-radius: 12px;
   overflow: hidden;
@@ -593,34 +602,33 @@ const ChannelListComponent: React.FC<ChannelListProps> = ({ onSelectChannel }) =
       );
   }, [filteredChannels, searchQuery, expandedCountries]);
 
-  const toggleCountry = useCallback((country: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const isCurrentlyExpanded = expandedCountries[country];
+  const toggleCountry = useCallback(
+    (country: string, e: React.MouseEvent) => {
+      e.stopPropagation();
+      const isCurrentlyExpanded = expandedCountries[country] !== false;
 
-    // Toggle the expanded state
-    setExpandedCountries((prev) => ({
-      ...prev,
-      [country]: !isCurrentlyExpanded,
-    }));
+      setExpandedCountries((prev) => ({
+        ...prev,
+        [country]: !isCurrentlyExpanded,
+      }));
 
-    // Only scroll if we're expanding, not collapsing
-    if (!isCurrentlyExpanded) {
-      const target = e.currentTarget.closest('.country-section');
+      if (!isCurrentlyExpanded) {
+        const target = e.currentTarget.closest('.country-section');
 
-      if (target) {
-        // Small delay to allow the DOM to update
-        setTimeout(() => {
-          target.scrollIntoView({
-            behavior: 'smooth',
-            block: 'nearest',
-          });
-        }, 50);
+        if (target) {
+          setTimeout(() => {
+            target.scrollIntoView({
+              behavior: 'smooth',
+              block: 'nearest',
+            });
+          }, 50);
+        }
       }
-    }
 
-    // Prevent event bubbling to parent elements
-    e.nativeEvent.stopImmediatePropagation();
-  }, []);
+      e.nativeEvent.stopImmediatePropagation();
+    },
+    [expandedCountries]
+  );
 
   const handleChannelSelect = useCallback(
     (channel: Channel, e: React.MouseEvent) => {
@@ -691,6 +699,7 @@ const ChannelListComponent: React.FC<ChannelListProps> = ({ onSelectChannel }) =
 
   return (
     <ChannelListContainer className="channel-list-container">
+      <DropdownBackdrop data-visible={isDropdownOpen} onClick={() => setIsDropdownOpen(false)} />
       <ChannelButton
         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
         aria-expanded={isDropdownOpen}
@@ -710,23 +719,21 @@ const ChannelListComponent: React.FC<ChannelListProps> = ({ onSelectChannel }) =
       <Dropdown
         className="channel-dropdown"
         onClick={(e) => e.stopPropagation()}
-        style={{
-          display: isDropdownOpen ? 'flex' : 'none',
-          opacity: isDropdownOpen ? 1 : 0,
-          transform: isDropdownOpen ? 'translateY(0)' : 'translateY(10px)',
-        }}
+        $isVisible={isDropdownOpen}
       >
         <SearchContainer>
-          <SearchIcon />
-          <SearchInput
-            type="text"
-            placeholder={t('channel_selector.search_placeholder') || 'Search channel or country'}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onClick={(e) => e.stopPropagation()}
-            autoFocus
-            disabled={isLoading}
-          />
+          <SearchInputWrapper>
+            <SearchInput
+              type="text"
+              placeholder={t('channel_selector.search_placeholder') || 'Search channel or country'}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              autoFocus={isDropdownOpen}
+              disabled={isLoading}
+            />
+            <SearchIcon />
+          </SearchInputWrapper>
         </SearchContainer>
         <CountriesList>
           <div>
@@ -834,18 +841,11 @@ const ChannelListComponent: React.FC<ChannelListProps> = ({ onSelectChannel }) =
                     );
                   })
                 ) : (
-                  <div
-                    style={{
-                      padding: '20px',
-                      textAlign: 'center',
-                      color: '#666',
-                      fontSize: '14px',
-                    }}
-                  >
+                  <EmptyState>
                     {searchQuery
                       ? t('channel_selector.no_results') || 'No results found'
                       : t('channel_selector.no_channels') || 'No channels found'}
-                  </div>
+                  </EmptyState>
                 )}
               </>
             )}

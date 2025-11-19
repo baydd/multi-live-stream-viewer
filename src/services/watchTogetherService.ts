@@ -20,13 +20,20 @@ class WatchTogetherService {
 
   private readonly SERVER_URL =
     process.env.NODE_ENV === 'production'
-      ? process.env.REACT_APP_BACKEND_URL || ''
+      ? process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : '')
       : 'http://localhost:3001';
 
   connect() {
     if (this.socket?.connected) return;
 
-    this.socket = io(this.SERVER_URL);
+    this.socket = io(this.SERVER_URL, {
+      transports: ['websocket', 'polling'],
+      withCredentials: true,
+      autoConnect: true,
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 500,
+    });
 
     this.socket.on('connect', () => {
       console.log('WebSocket sunucusuna bağlandı');

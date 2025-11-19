@@ -11,7 +11,7 @@ import {
   FaUnlock,
 } from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
-import Hls from 'hls.js';
+import Hls, { HlsConfig } from 'hls.js';
 import { Stream } from '../types';
 import ReactDOM from 'react-dom';
 
@@ -440,19 +440,54 @@ const HLSPlayer: React.FC<{
     setShowPlayButton(false);
     const video = ref.current;
     if (!video) return;
+
+    const isHttpsPage = typeof window !== 'undefined' && window.location.protocol === 'https:';
+    const isHttpStream = /^http:\/\//i.test(url);
+    if (isHttpsPage && isHttpStream) {
+      const message =
+        'Tarayıcı güvenliği nedeniyle HTTP protokolündeki yayınlar HTTPS sayfasında engelleniyor.';
+      setError(message);
+      onError(message);
+      return;
+    }
+
+    video.setAttribute('crossorigin', 'anonymous');
+
+    const cleanup = () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+      if (video) {
+        video.pause();
+        video.removeAttribute('src');
+        video.load();
+      }
+    };
+
     if (video.canPlayType('application/vnd.apple.mpegurl')) {
       video.src = url;
       video.onloadedmetadata = () => {
         video.play().catch(() => setShowPlayButton(true));
       };
       video.onerror = () => {
-        setError('Video playback error');
-        onError('Video playback error');
+        const message = 'Video playback error';
+        setError(message);
+        onError(message);
       };
-      return;
+      return cleanup;
     }
+
     if (Hls.isSupported()) {
-      const hls = new Hls();
+      const hlsConfig: Partial<HlsConfig> = {
+        enableWorker: true,
+        lowLatencyMode: true,
+        backBufferLength: 90,
+        liveSyncDuration: 3,
+        liveMaxLatencyDuration: 5,
+        progressive: true,
+      };
+      const hls = new Hls(hlsConfig);
       hlsRef.current = hls;
       hls.loadSource(url);
       hls.attachMedia(video);
@@ -464,22 +499,31 @@ const HLSPlayer: React.FC<{
       hls.on(Hls.Events.LEVEL_SWITCHED, (_, data) => {
         setSelectedLevel(data.level);
       });
-      hls.on(Hls.Events.ERROR, (event, data) => {
-        if (data && data.fatal) {
-          setError('HLS playback error');
-          onError('HLS playback error');
+      hls.on(Hls.Events.ERROR, (_, data) => {
+        if (!data) return;
+        if (data.fatal) {
+          switch (data.type) {
+            case Hls.ErrorTypes.NETWORK_ERROR:
+              hls.startLoad();
+              break;
+            case Hls.ErrorTypes.MEDIA_ERROR:
+              hls.recoverMediaError();
+              break;
+            default:
+              cleanup();
+              setError('HLS playback error');
+              onError('HLS playback error');
+              break;
+          }
         }
       });
-    } else {
-      setError('HLS is not supported in this browser.');
-      onError('HLS is not supported in this browser.');
+      return cleanup;
     }
-    return () => {
-      if (hlsRef.current) {
-        hlsRef.current.destroy();
-        hlsRef.current = null;
-      }
-    };
+
+    const message = 'HLS is not supported in this browser.';
+    setError(message);
+    onError(message);
+    return cleanup;
   }, [url, onError]);
 
   // Kalite değiştirici

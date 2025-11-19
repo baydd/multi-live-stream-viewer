@@ -193,6 +193,68 @@ const COUNTRY_NAMES: { [key: string]: string } = {
   zw: 'Zimbabwe',
 };
 
+const CHANNEL_CACHE_KEY = 'channel_cache_v1';
+const CHANNEL_CACHE_TTL = 1000 * 60 * 60 * 24;
+const MIN_CONCURRENCY = 4;
+const MAX_CONCURRENCY = 16;
+const FALLBACK_CONCURRENCY = 8;
+
+interface ChannelCachePayload {
+  timestamp: number;
+  channels: Channel[];
+}
+
+const getCachePayload = (): ChannelCachePayload | null => {
+  if (typeof window === 'undefined' || !window.localStorage) {
+    return null;
+  }
+
+  try {
+    const cached = window.localStorage.getItem(CHANNEL_CACHE_KEY);
+    if (!cached) return null;
+    return JSON.parse(cached) as ChannelCachePayload;
+  } catch (error) {
+    console.warn('Unable to read channel cache:', error);
+    return null;
+  }
+};
+
+const isCacheFresh = (payload: ChannelCachePayload | null): payload is ChannelCachePayload => {
+  if (!payload) return false;
+  return Date.now() - payload.timestamp < CHANNEL_CACHE_TTL;
+};
+
+const writeCachePayload = (channels: Channel[]) => {
+  if (typeof window === 'undefined' || !window.localStorage) {
+    return;
+  }
+
+  try {
+    const payload: ChannelCachePayload = {
+      timestamp: Date.now(),
+      channels,
+    };
+    window.localStorage.setItem(CHANNEL_CACHE_KEY, JSON.stringify(payload));
+  } catch (error) {
+    console.warn('Unable to store channel cache:', error);
+  }
+};
+
+const resolveConcurrency = (total: number): number => {
+  if (total <= 1) return total || 1;
+
+  if (typeof navigator !== 'undefined' && typeof navigator.hardwareConcurrency === 'number') {
+    const suggested = Math.floor(navigator.hardwareConcurrency);
+    const clamped = Math.max(
+      MIN_CONCURRENCY,
+      Math.min(MAX_CONCURRENCY, suggested || FALLBACK_CONCURRENCY)
+    );
+    return Math.min(total, Math.max(1, clamped));
+  }
+
+  return Math.min(total, FALLBACK_CONCURRENCY);
+};
+
 export const parseM3U = async (m3uContent: string, countryCode: string): Promise<Channel[]> => {
   const channels: Channel[] = [];
   const lines = m3uContent.split('\n');
@@ -260,26 +322,51 @@ export const fetchAndParseM3U = async (url: string, countryCode: string): Promis
 };
 
 export const loadAllChannels = async (): Promise<Channel[]> => {
-  const allChannels: Channel[] = [];
-  const countryCodes = Object.keys(COUNTRY_NAMES);
+  const cachedPayload = getCachePayload();
+  const fallbackChannels = cachedPayload?.channels ?? [];
 
-  // Process in batches to avoid overwhelming the browser
-  const batchSize = 5;
-  for (let i = 0; i < countryCodes.length; i += batchSize) {
-    const batch = countryCodes.slice(i, i + batchSize);
-    const batchPromises = batch.map((countryCode) =>
-      fetchAndParseM3U(`/streams/${countryCode}.m3u`, countryCode)
-    );
-
-    try {
-      const batchResults = await Promise.all(batchPromises);
-      batchResults.forEach((channels) => {
-        allChannels.push(...channels);
-      });
-    } catch (error) {
-      console.error('Error loading batch of channels:', error);
-    }
+  if (isCacheFresh(cachedPayload) && fallbackChannels.length) {
+    return fallbackChannels;
   }
 
-  return allChannels;
+  try {
+    const resp = await fetch('/api/channels');
+    if (resp.ok) {
+      const data = await resp.json();
+      const apiChannels = Array.isArray(data?.channels) ? data.channels as Channel[] : [];
+      if (apiChannels.length) {
+        writeCachePayload(apiChannels);
+        return apiChannels;
+      }
+    }
+  } catch {}
+
+  const allChannels: Channel[] = [];
+  const countryCodes = Object.keys(COUNTRY_NAMES);
+  const totalCountries = countryCodes.length;
+  const concurrency = Math.max(1, resolveConcurrency(totalCountries));
+  let nextIndex = 0;
+
+  const worker = async () => {
+    while (true) {
+      const currentIndex = nextIndex++;
+      if (currentIndex >= totalCountries) {
+        break;
+      }
+      const countryCode = countryCodes[currentIndex];
+      const channels = await fetchAndParseM3U(`/streams/${countryCode}.m3u`, countryCode);
+      if (channels.length) {
+        allChannels.push(...channels);
+      }
+    }
+  };
+
+  await Promise.all(Array.from({ length: concurrency }, worker));
+
+  if (allChannels.length) {
+    writeCachePayload(allChannels);
+    return allChannels;
+  }
+
+  return fallbackChannels;
 };

@@ -30,7 +30,7 @@ const Subtitle = styled.p`
 
 const Section = styled.section`
   margin-bottom: 3rem;
-  
+
   h2 {
     color: ${(props) => props.theme.primary};
     margin-bottom: 1.5rem;
@@ -39,7 +39,7 @@ const Section = styled.section`
     align-items: center;
     gap: 0.5rem;
   }
-  
+
   p {
     line-height: 1.8;
     margin-bottom: 1.5rem;
@@ -60,12 +60,12 @@ const TeamMember = styled.div`
   border-radius: 10px;
   text-align: center;
   border: 1px solid ${(props) => props.theme.border};
-  
+
   h3 {
     margin: 1rem 0 0.5rem;
     color: ${(props) => props.theme.primary};
   }
-  
+
   p {
     color: ${(props) => props.theme.textSecondary};
     margin: 0;
@@ -79,12 +79,12 @@ const CTA = styled.div`
   background: ${(props) => props.theme.background};
   border-radius: 12px;
   border: 1px solid ${(props) => props.theme.border};
-  
+
   h2 {
     color: ${(props) => props.theme.primary};
     margin-bottom: 1rem;
   }
-  
+
   p {
     margin-bottom: 2rem;
     color: ${(props) => props.theme.textSecondary};
@@ -100,7 +100,7 @@ const CTAButton = styled(Link)`
   text-decoration: none;
   font-weight: 600;
   transition: all 0.2s ease;
-  
+
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 20px ${(props) => props.theme.primary}40;
@@ -122,37 +122,45 @@ const AboutPage: React.FC = () => {
       </Header>
 
       <Section>
-        <h2><FaRocket /> Our Story</h2>
+        <h2>
+          <FaRocket /> Our Story
+        </h2>
         <p>
-          multiple.live was born out of a simple idea: watching multiple live streams shouldn't be complicated. 
-          As live streaming continues to grow in popularity, we noticed that there wasn't an easy way to 
-          watch multiple streams from different platforms simultaneously without technical hassles.
+          multiple.live was born out of a simple idea: watching multiple live streams shouldn't be
+          complicated. As live streaming continues to grow in popularity, we noticed that there
+          wasn't an easy way to watch multiple streams from different platforms simultaneously
+          without technical hassles.
         </p>
         <p>
-          Our team of streaming enthusiasts and developers came together to create a solution that's both 
-          powerful and easy to use. Whether you're an esports fan, content creator, or just someone who 
-          loves live content, multiple.live is designed with you in mind.
-        </p>
-      </Section>
-
-      <Section>
-        <h2><FaGlobe /> Our Mission</h2>
-        <p>
-          We're on a mission to revolutionize how people consume live content. We believe that you should 
-          be able to watch what you want, when you want, and how you want—without limitations.
-        </p>
-        <p>
-          Our platform is built with a focus on performance, reliability, and user experience. We're 
-          constantly improving and adding new features to make multiple.live the best multi-streaming 
-          platform available.
+          Our team of streaming enthusiasts and developers came together to create a solution that's
+          both powerful and easy to use. Whether you're an esports fan, content creator, or just
+          someone who loves live content, multiple.live is designed with you in mind.
         </p>
       </Section>
 
       <Section>
-        <h2><FaUsers /> The Team</h2>
+        <h2>
+          <FaGlobe /> Our Mission
+        </h2>
         <p>
-          multiple.live is developed and maintained by a passionate team of developers, designers, and 
-          streaming enthusiasts from around the world.
+          We're on a mission to revolutionize how people consume live content. We believe that you
+          should be able to watch what you want, when you want, and how you want—without
+          limitations.
+        </p>
+        <p>
+          Our platform is built with a focus on performance, reliability, and user experience. We're
+          constantly improving and adding new features to make multiple.live the best
+          multi-streaming platform available.
+        </p>
+      </Section>
+
+      <Section>
+        <h2>
+          <FaUsers /> The Team
+        </h2>
+        <p>
+          multiple.live is developed and maintained by a passionate team of developers, designers,
+          and streaming enthusiasts from around the world.
         </p>
         <TeamGrid>
           <TeamMember>
@@ -167,10 +175,12 @@ const AboutPage: React.FC = () => {
       </Section>
 
       <Section>
-        <h2><FaHeart /> Join Our Community</h2>
+        <h2>
+          <FaHeart /> Join Our Community
+        </h2>
         <p>
-          We're more than just a platform—we're a community of stream lovers. Join us on our journey to 
-          make live streaming more accessible and enjoyable for everyone.
+          We're more than just a platform—we're a community of stream lovers. Join us on our journey
+          to make live streaming more accessible and enjoyable for everyone.
         </p>
       </Section>
 

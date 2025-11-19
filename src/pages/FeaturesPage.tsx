@@ -1,7 +1,17 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
-import { FaTv, FaUsers, FaMobileAlt, FaSlidersH, FaBell, FaLock, FaSync, FaExpand, FaPalette } from 'react-icons/fa';
+import {
+  FaTv,
+  FaUsers,
+  FaMobileAlt,
+  FaSlidersH,
+  FaBell,
+  FaLock,
+  FaSync,
+  FaExpand,
+  FaPalette,
+} from 'react-icons/fa';
 
 const FeaturesContainer = styled.div`
   max-width: 1200px;
@@ -13,13 +23,13 @@ const FeaturesContainer = styled.div`
 const Header = styled.header`
   text-align: center;
   margin-bottom: 4rem;
-  
+
   h1 {
     font-size: 2.8rem;
     color: ${(props) => props.theme.primary};
     margin-bottom: 1rem;
   }
-  
+
   p {
     font-size: 1.25rem;
     color: ${(props) => props.theme.textSecondary};
@@ -39,27 +49,29 @@ const FeatureCard = styled.div`
   background: ${(props) => props.theme.cardBackground};
   border-radius: 12px;
   padding: 2rem;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
   border: 1px solid ${(props) => props.theme.border};
-  
+
   &:hover {
     transform: translateY(-5px);
     box-shadow: 0 10px 30px ${(props) => props.theme.shadow || 'rgba(0,0,0,0.1)'};
   }
-  
+
   .icon {
     font-size: 2.5rem;
     color: ${(props) => props.theme.primary};
     margin-bottom: 1.5rem;
     display: inline-block;
   }
-  
+
   h2 {
     font-size: 1.5rem;
     margin-bottom: 1rem;
     color: ${(props) => props.theme.text};
   }
-  
+
   p {
     color: ${(props) => props.theme.textSecondary};
     line-height: 1.6;
@@ -71,13 +83,13 @@ const FeatureHighlight = styled.div`
   display: flex;
   align-items: center;
   margin-bottom: 0.75rem;
-  
+
   svg {
     color: ${(props) => props.theme.primary};
     margin-right: 0.75rem;
     flex-shrink: 0;
   }
-  
+
   span {
     color: ${(props) => props.theme.text};
   }
@@ -90,13 +102,13 @@ const CTA = styled.div`
   background: ${(props) => props.theme.background};
   border-radius: 12px;
   border: 1px solid ${(props) => props.theme.border};
-  
+
   h2 {
     color: ${(props) => props.theme.primary};
     margin-bottom: 1rem;
     font-size: 2rem;
   }
-  
+
   p {
     color: ${(props) => props.theme.textSecondary};
     margin-bottom: 2rem;
@@ -115,7 +127,7 @@ const CTAButton = styled(Link)`
   text-decoration: none;
   font-weight: 600;
   transition: all 0.2s ease;
-  
+
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 20px ${(props) => props.theme.primary}40;
@@ -131,24 +143,26 @@ const FeaturesPage: React.FC = () => {
     {
       icon: <FaTv />,
       title: 'Multi-Stream Viewing',
-      description: 'Watch multiple live streams from different platforms in a single, customizable dashboard.',
+      description:
+        'Watch multiple live streams from different platforms in a single, customizable dashboard.',
       highlights: [
         'Support for all major streaming platforms',
         'Drag-and-drop interface for easy organization',
         'Customizable grid layouts',
-        'Picture-in-picture mode'
-      ]
+        'Picture-in-picture mode',
+      ],
     },
     {
       icon: <FaUsers />,
       title: 'Watch Together',
-      description: 'Create watch parties and enjoy streams with friends in real-time with synchronized playback.',
+      description:
+        'Create watch parties and enjoy streams with friends in real-time with synchronized playback.',
       highlights: [
         'Real-time synchronization',
         'Chat with other viewers',
         'Create private rooms',
-        'Invite friends easily'
-      ]
+        'Invite friends easily',
+      ],
     },
     {
       icon: <FaMobileAlt />,
@@ -158,8 +172,8 @@ const FeaturesPage: React.FC = () => {
         'Fully responsive design',
         'Progressive Web App support',
         'Works on all screen sizes',
-        'Offline capabilities'
-      ]
+        'Offline capabilities',
+      ],
     },
     {
       icon: <FaSlidersH />,
@@ -169,8 +183,8 @@ const FeaturesPage: React.FC = () => {
         'Adjustable stream quality',
         'Custom layouts and presets',
         'Dark/light theme',
-        'Keyboard shortcuts'
-      ]
+        'Keyboard shortcuts',
+      ],
     },
     {
       icon: <FaBell />,
@@ -180,20 +194,15 @@ const FeaturesPage: React.FC = () => {
         'Browser notifications',
         'Stream start alerts',
         'Custom notification sounds',
-        'Email notifications'
-      ]
+        'Email notifications',
+      ],
     },
     {
       icon: <FaLock />,
       title: 'Privacy Focused',
       description: 'Your data stays yours. We value your privacy.',
-      highlights: [
-        'No account required',
-        'Client-side processing',
-        'No tracking',
-        'Open source'
-      ]
-    }
+      highlights: ['No account required', 'Client-side processing', 'No tracking', 'Open source'],
+    },
   ];
 
   return (
@@ -223,7 +232,10 @@ const FeaturesPage: React.FC = () => {
 
       <CTA>
         <h2>Ready to Enhance Your Streaming Experience?</h2>
-        <p>Join thousands of users who are already enjoying multiple.live. No downloads required, start watching instantly.</p>
+        <p>
+          Join thousands of users who are already enjoying multiple.live. No downloads required,
+          start watching instantly.
+        </p>
         <CTAButton to="/app">Start Watching Now</CTAButton>
       </CTA>
     </FeaturesContainer>

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Route, Switch, useHistory } from 'react-router-dom';
 import styled, { ThemeProvider, createGlobalStyle } from 'styled-components';
 import { useTranslation } from 'react-i18next';
-import { 
+import {
   FaCog,
   FaGlobe,
   FaEdit,
@@ -19,6 +19,7 @@ import {
 } from 'react-icons/fa';
 import ChannelList from './components/ChannelList';
 import UpdatesPage from './pages/UpdatesPage';
+import HomePage from './pages/HomePage';
 import { Stream, Settings } from './types';
 import StreamGrid from './components/StreamGrid';
 import SettingsPanel from './components/SettingsPanel';
@@ -592,10 +593,7 @@ const AppContent: React.FC = () => {
     <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
       <GlobalStyle />
       <Switch>
-        <Route path="/updates">
-          <UpdatesPage onBack={handleBack} />
-        </Route>
-        <Route path="/">
+        <Route path="/app">
           <AppContainer>
             <Header>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -615,6 +613,13 @@ const AppContent: React.FC = () => {
 
               <ButtonGroup>
                 <IconButton
+                  onClick={() => history.push('/')}
+                  title="Home"
+                  aria-label="Home"
+                >
+                  <FaArrowLeft />
+                </IconButton>
+                <IconButton
                   as="a"
                   href="https://github.com/baydd/multi-live-stream-viewer/"
                   target="_blank"
@@ -623,7 +628,9 @@ const AppContent: React.FC = () => {
                   aria-label="HLS Link Extension (GitHub)"
                 >
                   <FaLink />
-                  <span style={{ marginLeft: '0.25rem', display: 'inline-block', minWidth: '60px' }}>
+                  <span
+                    style={{ marginLeft: '0.25rem', display: 'inline-block', minWidth: '60px' }}
+                  >
                     Extension
                   </span>
                 </IconButton>
@@ -817,6 +824,12 @@ const AppContent: React.FC = () => {
               </div>
             </KeyboardShortcuts>
           </AppContainer>
+        </Route>
+        <Route path="/updates">
+          <UpdatesPage onBack={handleBack} />
+        </Route>
+        <Route path="/">
+          <HomePage />
         </Route>
       </Switch>
     </ThemeProvider>

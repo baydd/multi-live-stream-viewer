@@ -27,6 +27,12 @@ export class VoiceService {
     const socket = watchTogetherService.getSocket();
     if (!socket) throw new Error('Socket yok');
 
+    socket.off('voice:peer-joined');
+    socket.off('voice:peer-left');
+    socket.off('voice:offer');
+    socket.off('voice:answer');
+    socket.off('voice:candidate');
+
     socket.on('voice:peer-joined', ({ userId }) => {
       // Yeni gelen kullanıcı için bağlantı başlat
       this.createOffer(userId).catch(console.error);
@@ -135,6 +141,11 @@ export class VoiceService {
     const socket = watchTogetherService.getSocket();
     if (this.roomCode && socket) {
       socket.emit('voice:leave', { roomCode: this.roomCode });
+      socket.off('voice:peer-joined');
+      socket.off('voice:peer-left');
+      socket.off('voice:offer');
+      socket.off('voice:answer');
+      socket.off('voice:candidate');
     }
     this.disableMic();
     // Tüm peerleri temizle
