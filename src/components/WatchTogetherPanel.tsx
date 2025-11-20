@@ -1121,6 +1121,7 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
                     if (!micOn) {
                       await voiceService.enableMic();
                       setMicOn(true);
+                      voiceService.resumeAudio();
                     } else {
                       voiceService.disableMic();
                       setMicOn(false);
@@ -1128,6 +1129,14 @@ const WatchTogetherPanel: React.FC<WatchTogetherPanelProps> = ({
                   }}
                 >
                   {micOn ? 'Mikrofonu Kapat' : 'Mikrofonu Aç'}
+                </Button>
+                <Button
+                  variant="success"
+                  onClick={() => {
+                    voiceService.resumeAudio();
+                  }}
+                >
+                  Sesleri Aç
                 </Button>
                 <Button
                   variant="secondary"

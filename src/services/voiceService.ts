@@ -13,6 +13,7 @@ export type VoicePeer = {
   audioEl: HTMLAudioElement;
   stream?: MediaStream;
   connectionState: PeerState;
+  pendingCandidates?: RTCIceCandidateInit[];
 };
 
 export class VoiceService {
@@ -20,7 +21,13 @@ export class VoiceService {
   private peers: Map<string, VoicePeer> = new Map();
   private roomCode: string | null = null;
   private isMicEnabled = false;
-  private iceServers: RTCIceServer[] = [{ urls: 'stun:stun.l.google.com:19302' }];
+  private iceServers: RTCIceServer[] = [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+    { urls: 'stun:stun2.l.google.com:19302' },
+    { urls: 'stun:global.stun.twilio.com:3478?transport=udp' },
+  ];
+  private audioContext: AudioContext | null = null;
 
   async join(roomCode: string) {
     this.roomCode = roomCode;
@@ -34,7 +41,8 @@ export class VoiceService {
     socket.off('voice:candidate');
 
     socket.on('voice:peer-joined', ({ userId }) => {
-      // Yeni gelen kullanıcı için bağlantı başlat
+      const me = socket.id;
+      if (userId === me) return;
       this.createOffer(userId).catch(console.error);
     });
 
@@ -93,6 +101,11 @@ export class VoiceService {
           await peer.pc.setRemoteDescription(answer);
           peer.connectionState = 'stable';
           console.log(`Successfully set remote description for answer from ${fromUserId}`);
+          const queue = peer.pendingCandidates || [];
+          peer.pendingCandidates = [];
+          for (const c of queue) {
+            try { await peer.pc.addIceCandidate(new RTCIceCandidate(c)); } catch {}
+          }
         } catch (setDescError) {
           // If we get a state error, try to recover by rolling back the local description
           if (setDescError instanceof Error && setDescError.name === 'InvalidStateError') {
@@ -103,6 +116,11 @@ export class VoiceService {
               await peer.pc.setRemoteDescription(answer);
               peer.connectionState = 'stable';
               console.log('Successfully recovered and set remote description');
+              const queue = peer.pendingCandidates || [];
+              peer.pendingCandidates = [];
+              for (const c of queue) {
+                try { await peer.pc.addIceCandidate(new RTCIceCandidate(c)); } catch {}
+              }
             } catch (recoveryError) {
               console.error('Failed to recover from InvalidStateError:', recoveryError);
               throw recoveryError; // Re-throw to be caught by the outer catch
@@ -122,18 +140,26 @@ export class VoiceService {
       const peer = this.peers.get(fromUserId);
       if (!peer) return;
       try {
+        if (!peer.pc.remoteDescription) {
+          peer.pendingCandidates = peer.pendingCandidates || [];
+          peer.pendingCandidates.push(candidate);
+          return;
+        }
         await peer.pc.addIceCandidate(new RTCIceCandidate(candidate));
       } catch (e) {
         console.error('ICE candidate eklenemedi', e);
       }
     });
 
-    await new Promise<void>((resolve, reject) => {
+    const res = await new Promise<any>((resolve, reject) => {
       socket.emit('voice:join', { roomCode }, (res: any) => {
         if (res?.error) reject(new Error(res.error));
-        else resolve();
+        else resolve(res);
       });
     });
+    if (res?.iceServers && Array.isArray(res.iceServers)) {
+      this.iceServers = res.iceServers as RTCIceServer[];
+    }
     console.log('Sesli sohbete katılındı:', roomCode);
   }
 
@@ -157,7 +183,7 @@ export class VoiceService {
   async enableMic() {
     if (this.isMicEnabled) return;
     try {
-      this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      this.localStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
       this.isMicEnabled = true;
       // Var olan tüm bağlantılara local track ekle
       this.peers.forEach(({ pc }) => {
@@ -185,6 +211,10 @@ export class VoiceService {
       rtcpMuxPolicy: 'require',
       iceCandidatePoolSize: 10,
     });
+
+    try {
+      pc.addTransceiver('audio', { direction: 'recvonly' });
+    } catch {}
 
     // Add connection state change handler
     pc.onconnectionstatechange = () => {
@@ -253,6 +283,7 @@ export class VoiceService {
       pc,
       audioEl,
       connectionState: 'new',
+      pendingCandidates: [],
     };
     this.peers.set(targetUserId, peer);
     return peer;
@@ -265,14 +296,12 @@ export class VoiceService {
       let peer = this.peers.get(targetUserId);
       if (!peer) {
         peer = this.createPeerConnection(targetUserId);
-      } else if (peer.connectionState === 'stable' || peer.connectionState === 'have-local-offer') {
-        console.log('Already have an active connection attempt with', targetUserId);
+      } else if (peer.connectionState === 'setting-local-offer') {
         return;
       }
 
       // Skip if we're already processing an offer for this peer
       if (
-        peer.connectionState === 'have-remote-offer' ||
         peer.connectionState === 'setting-local-offer'
       ) {
         console.log('Already processing an offer for', targetUserId);
@@ -354,11 +383,9 @@ export class VoiceService {
         const offer = new RTCSessionDescription(sdp);
 
         // Set remote description first
-        console.log(`Setting remote description for offer from ${fromUserId}`);
         await peer.pc.setRemoteDescription(offer);
 
         // Create answer
-        console.log(`Creating answer for ${fromUserId}`);
         const answer = await peer.pc.createAnswer({
           offerToReceiveAudio: true,
           offerToReceiveVideo: false,
@@ -366,14 +393,12 @@ export class VoiceService {
 
         // Set local description with the answer
         peer.connectionState = 'setting-local-offer';
-        console.log(`Setting local description for answer to ${fromUserId}`);
         await peer.pc.setLocalDescription(answer);
 
         // Only mark as stable after everything is set up
         peer.connectionState = 'stable';
 
         // Send the answer back to the peer
-        console.log(`Sending answer to ${fromUserId}`);
         watchTogetherService.getSocket()?.emit('voice:answer', {
           roomCode: this.roomCode,
           targetUserId: fromUserId,
@@ -472,6 +497,27 @@ export class VoiceService {
         console.log(`Peer connection for user ${userId} fully cleaned up`);
       }, 0);
     }, 0);
+  }
+
+  async resumeAudio() {
+    if (!this.audioContext) {
+      try {
+        const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext;
+        if (Ctx) this.audioContext = new Ctx();
+      } catch {}
+    }
+    if (this.audioContext && this.audioContext.state === 'suspended') {
+      try { await this.audioContext.resume(); } catch {}
+    }
+    this.peers.forEach((peer) => {
+      try {
+        peer.audioEl.muted = false;
+        const p = peer.audioEl.play();
+        if (p && typeof p.then === 'function') {
+          p.catch(() => {});
+        }
+      } catch {}
+    });
   }
 }
 

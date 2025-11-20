@@ -20,6 +20,25 @@ const PORT = process.env.PORT || 3001;
 // Watch Together odalarını ve katılımcılarını depolamak için basit bir bellek içi depolama
 const rooms = {}; // { roomCode: { name, participants: [{ id, username, isAdmin, isOwner, canShare }], streams: [], channelCount } }
 
+function getIceServers() {
+  const base = [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+    { urls: 'stun:stun2.l.google.com:19302' },
+    { urls: 'stun:global.stun.twilio.com:3478?transport=udp' },
+  ];
+  const turnUrl = (process.env.TURN_URL || '').trim();
+  const turnUsername = (process.env.TURN_USERNAME || '').trim();
+  const turnPassword = (process.env.TURN_PASSWORD || '').trim();
+  if (turnUrl) {
+    const turnServer = turnUsername
+      ? { urls: turnUrl, username: turnUsername, credential: turnPassword }
+      : { urls: turnUrl };
+    base.push(turnServer);
+  }
+  return base;
+}
+
 io.on('connection', (socket) => {
   console.log('Yeni bir istemci bağlandı:', socket.id);
 
@@ -274,9 +293,9 @@ io.on('connection', (socket) => {
       callback && callback({ error: 'Oda bulunamadı.' });
       return;
     }
-    // Voice katılımı bildirimini odaya yayınla
-    io.to(roomCode).emit('voice:peer-joined', { userId: socket.id });
-    callback && callback({ success: true, userId: socket.id });
+    // Voice katılımı bildirimini odaya yayınla (katılan hariç)
+    socket.broadcast.to(roomCode).emit('voice:peer-joined', { userId: socket.id });
+    callback && callback({ success: true, userId: socket.id, iceServers: getIceServers() });
   });
 
   socket.on('voice:leave', ({ roomCode }) => {

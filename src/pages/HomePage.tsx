@@ -199,6 +199,19 @@ const ChannelThumb = styled.div`
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
 `;
 
+const MagBadge = styled.div<{ $mag: number }>`
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: #fff;
+  background: ${(p) => (p.$mag >= 5 ? '#ef4444' : p.$mag >= 3 ? '#f59e0b' : '#22c55e')};
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+`;
+
 const SearchInput = styled.input`
   width: 100%;
   background: rgba(0, 0, 0, 0.3);
@@ -303,6 +316,7 @@ const useHls = (url: string | null, media: HTMLVideoElement | null) => {
 const HomePage: React.FC = () => {
   const { t, i18n } = useTranslation();
   const globeEl = useRef<GlobeMethods | undefined>(undefined);
+  type Quake = { id: string; place: string; mag: number; time: number; lat: number; lon: number; depth?: number; url?: string };
 
   // --- STATE ---
   const [channels, setChannels] = useState<Channel[]>([]);
@@ -316,6 +330,9 @@ const HomePage: React.FC = () => {
 
   const [preview, setPreview] = useState<Channel | null>(null);
   const [videoEl, setVideoEl] = useState<HTMLVideoElement | null>(null);
+  const [quakes, setQuakes] = useState<Quake[]>([]);
+  const [selectedQuake, setSelectedQuake] = useState<Quake | null>(null);
+  const [lastQuakeClickAt, setLastQuakeClickAt] = useState(0);
 
   const getLanguageLabel = (lang: Language) => {
     const labels: Record<Language, string> = {
@@ -367,6 +384,40 @@ const HomePage: React.FC = () => {
     init();
   }, []);
 
+  useEffect(() => {
+    let mounted = true;
+    const fetchQuakes = async () => {
+      try {
+        const res = await fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson');
+        if (!res.ok) return;
+        const data = await res.json();
+        const now = Date.now();
+        const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+        const items: Quake[] = (data.features || [])
+          .map((f: any): Quake => ({
+            id: f.id,
+            place: f.properties?.place || '',
+            mag: typeof f.properties?.mag === 'number' ? f.properties.mag : 0,
+            time: typeof f.properties?.time === 'number' ? f.properties.time : 0,
+            lat: Array.isArray(f.geometry?.coordinates) ? Number(f.geometry.coordinates[1]) : 0,
+            lon: Array.isArray(f.geometry?.coordinates) ? Number(f.geometry.coordinates[0]) : 0,
+            depth: Array.isArray(f.geometry?.coordinates) ? Number(f.geometry.coordinates[2]) : undefined,
+            url: f.properties?.url,
+          }))
+          .filter((q: Quake) => q.place && now - q.time <= MAX_AGE_MS)
+          .sort((a: Quake, b: Quake) => b.time - a.time)
+          .slice(0, 40);
+        if (mounted) setQuakes(items);
+      } catch {}
+    };
+    fetchQuakes();
+    const it = setInterval(fetchQuakes, 60000);
+    return () => {
+      mounted = false;
+      clearInterval(it);
+    };
+  }, []);
+
   // --- MEMO: Country Statistics ---
   const countryStats = useMemo(() => {
     const stats: Record<string, { count: number; name: string }> = {};
@@ -382,6 +433,11 @@ const HomePage: React.FC = () => {
     return stats;
   }, [channels]);
 
+  const filteredPolygons = useMemo(
+    () => (geoJson?.features ? geoJson.features.filter((d: any) => d.properties.ISO_A2 !== 'AQ') : []),
+    [geoJson]
+  );
+
   // --- MEMO: Active Channels for Side Panel ---
   const activeChannels = useMemo(() => {
     if (!selectedCountry) return [];
@@ -393,6 +449,7 @@ const HomePage: React.FC = () => {
 
   // --- HANDLERS ---
   const handlePolygonClick = (polygon: any) => {
+    if (Date.now() - lastQuakeClickAt < 300) return;
     const cc = polygon.properties?.ISO_A2;
     if (cc && countryStats[cc]) {
       setSelectedCountry(cc);
@@ -529,11 +586,9 @@ const HomePage: React.FC = () => {
               globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
               backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
               lineHoverPrecision={0}
-              polygonsData={geoJson.features.filter((d: any) => d.properties.ISO_A2 !== 'AQ')} // Antarktika hariç
+              polygonsData={filteredPolygons}
               // Appearance Logic
-              polygonAltitude={(d: any) =>
-                d === hoveredCountry || d.properties.ISO_A2 === selectedCountry ? 0.08 : 0.01
-              }
+              polygonAltitude={(d: any) => (d.properties.ISO_A2 === selectedCountry ? 0.06 : 0.01)}
               polygonCapColor={(d: any) => {
                 const cc = d.properties.ISO_A2;
                 // 1. Seçili Ülke (Parlak Neon Mavi)
@@ -550,19 +605,45 @@ const HomePage: React.FC = () => {
                 // 3. Kanalı Olmayan Ülkeler (Çok silik)
                 return 'rgba(255,255,255,0.04)';
               }}
-              polygonSideColor={() => 'rgba(0,0,0,0.3)'}
-              polygonStrokeColor={(d: any) => {
-                const cc = d.properties.ISO_A2;
-                // Kanalı olanların sınırları belli olsun
-                return countryStats[cc] ? 'rgba(14, 165, 233, 0.4)' : 'rgba(255,255,255,0.05)';
-              }}
+              polygonSideColor={() => 'rgba(0,0,0,0.25)'}
+              polygonStrokeColor={() => 'rgba(255,255,255,0.06)'}
               // Interaction
               polygonLabel={getPolygonLabel}
-              onPolygonHover={setHoveredCountry}
               onPolygonClick={handlePolygonClick}
               // Atmosphere Effect
               atmosphereColor="#0ea5e9"
-              atmosphereAltitude={0.15}
+              atmosphereAltitude={0.06}
+              pointsData={quakes}
+              pointLat={(q: any) => q.lat}
+              pointLng={(q: any) => q.lon}
+              pointAltitude={(q: any) => 0.08 + Math.max(0, q.mag) * 0.006}
+              pointColor={(q: any) =>
+                q.mag >= 6
+                  ? 'rgba(239,68,68,0.9)'
+                  : q.mag >= 4.5
+                  ? 'rgba(245,158,11,0.85)'
+                  : 'rgba(34,197,94,0.8)'
+              }
+              pointRadius={(q: any) => 0.28 + Math.max(0, q.mag) * 0.035}
+              pointResolution={18}
+              pointLabel={(q: any) => `
+                <div style="background: rgba(15,23,42,0.9); color: white; padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(56,189,248,0.3);">
+                  <div style="font-weight: 800; margin-bottom: 6px; color:#38bdf8;">Mw ${Number(q.mag).toFixed(1)}</div>
+                  <div style="font-weight: 700; margin-bottom: 4px;">${q.place}</div>
+                  <div style="font-size: 12px; opacity: 0.8;">${new Date(q.time).toLocaleTimeString('tr-TR')}</div>
+                </div>
+              `}
+              onPointClick={(q: any) => { setSelectedQuake(q); setLastQuakeClickAt(Date.now()); }}
+              labelsData={selectedQuake ? [selectedQuake] : []}
+              labelLat={(q: any) => q.lat}
+              labelLng={(q: any) => q.lon}
+              labelText={(q: any) => `Mw ${Number(q.mag).toFixed(1)}`}
+              labelSize={(q: any) => (q.mag >= 6 ? 1.6 : q.mag >= 4.5 ? 1.3 : 1.1)}
+              labelDotRadius={(q: any) => 0.5}
+              labelColor={(q: any) =>
+                q.mag >= 6 ? 'rgba(239,68,68,0.9)' : q.mag >= 4.5 ? 'rgba(245,158,11,0.9)' : 'rgba(34,197,94,0.9)'
+              }
+              onLabelClick={(q: any) => { setSelectedQuake(q); setLastQuakeClickAt(Date.now()); }}
             />
           )}
         </GlobeContainer>
@@ -770,6 +851,81 @@ const HomePage: React.FC = () => {
                 >
                   {t('home.multi_tv_add') || 'Add to Multi TV'}
                 </Link>
+              </div>
+            </Modal>
+          </Overlay>
+        )}
+
+        {selectedQuake && (
+          <Overlay onClick={() => setSelectedQuake(null)}>
+            <Modal onClick={(e) => e.stopPropagation()}>
+              <ModalHeader>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div
+                    style={{
+                      width: 8,
+                      height: 8,
+                      background: selectedQuake.mag >= 5 ? '#ef4444' : selectedQuake.mag >= 3 ? '#f59e0b' : '#22c55e',
+                      borderRadius: '50%',
+                      boxShadow: '0 0 8px rgba(56,189,248,0.6)',
+                    }}
+                  ></div>
+                  <strong style={{ fontSize: 18 }}>{selectedQuake.place}</strong>
+                </div>
+                <button
+                  onClick={() => setSelectedQuake(null)}
+                  style={{
+                    background: 'rgba(255,255,255,0.1)',
+                    border: 'none',
+                    color: '#fff',
+                    cursor: 'pointer',
+                    padding: 8,
+                    borderRadius: 8,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <FaTimes size={16} />
+                </button>
+              </ModalHeader>
+
+              <div style={{ padding: 20 }}>
+                <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+                  <MagBadge $mag={Number(selectedQuake.mag)}>
+                    {Number(selectedQuake.mag).toFixed(1)}
+                  </MagBadge>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <div style={{ opacity: 0.8, fontSize: 14 }}>
+                      {new Date(selectedQuake.time).toLocaleString('tr-TR')}
+                    </div>
+                    <div style={{ opacity: 0.8, fontSize: 14 }}>
+                      Lat {Number(selectedQuake.lat).toFixed(3)} • Lon {Number(selectedQuake.lon).toFixed(3)}
+                    </div>
+                    {typeof selectedQuake.depth === 'number' && (
+                      <div style={{ opacity: 0.8, fontSize: 14 }}>Derinlik {Number(selectedQuake.depth).toFixed(1)} km</div>
+                    )}
+                  </div>
+                </div>
+
+                <div style={{ marginTop: 20, display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+                  {selectedQuake.url && (
+                    <button
+                      onClick={() => window.open(String(selectedQuake.url), '_blank')}
+                      style={{
+                        background: 'transparent',
+                        border: '1px solid rgba(255,255,255,0.2)',
+                        color: '#fff',
+                        padding: '10px 20px',
+                        borderRadius: 8,
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                      }}
+                    >
+                      USGS
+                    </button>
+                  )}
+                </div>
               </div>
             </Modal>
           </Overlay>
