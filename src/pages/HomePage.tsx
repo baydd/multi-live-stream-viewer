@@ -260,10 +260,15 @@ const VideoShell = styled.div`
 // ===== UTILS & HOOKS =====
 const getInitials = (name: string) => {
   if (!name) return 'TV';
+  // İsimdeki ilk iki kelimenin baş harflerini al (Türkçe karakterleri dönüştürmeden)
   return name
-    .replace(/[^\w\s]/gi, '')
-    .substring(0, 2)
-    .toUpperCase();
+    .split(/\s+/) // Boşluklara göre ayır
+    .filter(Boolean) // Boş stringleri filtrele
+    .slice(0, 2) // İlk iki kelimeyi al
+    .map(word => word.charAt(0)) // Baş harflerini al
+    .join('')
+    .toUpperCase()
+    || 'TV';
 };
 
 const useHls = (url: string | null, media: HTMLVideoElement | null) => {
@@ -272,6 +277,7 @@ const useHls = (url: string | null, media: HTMLVideoElement | null) => {
     let hls: Hls | null = null;
 
     const playVideo = () => {
+      // Oynatma denemesi
       media.play().catch((err) => console.warn('Autoplay blocked:', err));
     };
 
@@ -282,12 +288,13 @@ const useHls = (url: string | null, media: HTMLVideoElement | null) => {
       hls.on(Hls.Events.MANIFEST_PARSED, () => playVideo());
     } else if (media.canPlayType('application/vnd.apple.mpegurl')) {
       media.src = url;
-      media.addEventListener('loadedmetadata', () => playVideo());
+      media.addEventListener('loadedmetadata', () => playVideo(), { once: true });
     }
 
     return () => {
       if (hls) hls.destroy();
       media.removeAttribute('src');
+      // Media elementi tekrar kullanılacağı için src'yi sıfırlamak iyi bir uygulamadır.
     };
   }, [url, media]);
 };
@@ -366,8 +373,11 @@ const HomePage: React.FC = () => {
     channels.forEach((c) => {
       if (!c.countryCode) return;
       const cc = c.countryCode.toUpperCase();
-      if (!stats[cc]) stats[cc] = { count: 0, name: c.country || c.countryCode };
+      // Ülke adı mevcutsa onu kullan, yoksa kodu kullan.
+      const countryName = c.country || c.countryCode || cc; 
+      if (!stats[cc]) stats[cc] = { count: 0, name: countryName };
       stats[cc].count++;
+      // GeoJSON'dan gelen ülke adı daha doğru olabilir, ancak m3u'dan gelen veriyi kullanıyoruz.
     });
     return stats;
   }, [channels]);
@@ -390,9 +400,12 @@ const HomePage: React.FC = () => {
 
       // Opsiyonel: Tıklanan ülkeye zoom yap
       if (globeEl.current) {
-        // Bounding box hesabı karmaşık olduğu için basitçe şimdilik tıklamada kalıyoruz.
+        // Şu anki versiyonumuzda zoom kodunu basitleştirdik, ancak bu kısım re-globe.gl ile daha da geliştirilebilir.
         // İstenirse pointOfView ayarlanabilir.
       }
+    } else {
+      // Kanalı olmayan bir ülkeye tıklanırsa paneli kapat.
+      setSelectedCountry(null);
     }
   };
 
@@ -430,6 +443,7 @@ const HomePage: React.FC = () => {
             <Brand>
               <FaGlobe color="#38bdf8" /> multiple.live
             </Brand>
+            {/* GitHub Butonu */}
             <a
               href="https://github.com/baydd"
               target="_blank"
@@ -440,6 +454,28 @@ const HomePage: React.FC = () => {
                 <FaGlobe /> by baydd
               </TopButton>
             </a>
+            {/* Hinekst Butonu (İstenen Eklenti) */}
+            <a
+              href="https://hinekst.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ textDecoration: 'none' }}
+            >
+              <TopButton>
+                <FaGlobe /> Hinekst
+              </TopButton>
+            </a>
+            {/* Botkurtz Butonu (İstenen Eklenti) */}
+            <a
+              href="https://botkurtz.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ textDecoration: 'none' }}
+            >
+              <TopButton>
+                <FaGlobe /> Botkurtz
+              </TopButton>
+            </a>
           </div>
 
           <div style={{ flex: 1, maxWidth: 560, margin: '0 12px' }}>
@@ -447,16 +483,18 @@ const HomePage: React.FC = () => {
               onSelectChannel={(stream: Stream) => {
                 const found = channels.find((c) => c.id === stream.id);
                 if (found) {
-                  setSelectedCountry(found.countryCode.toUpperCase());
+                  setSelectedCountry(found.countryCode?.toUpperCase() ?? null);
                   setPreview(found);
                 } else {
+                  // Kanal listesinde bulunmayan m3u linkleri için geçici önizleme
                   const fallback: Channel = {
                     id: stream.id,
-                    name: stream.title || stream.url,
+                    name: stream.title || 'External Stream',
                     url: stream.url,
                     country: '',
                     countryCode: '',
                   };
+                  setSelectedCountry(null); // Harita panelini kapat
                   setPreview(fallback);
                 }
               }}
@@ -675,6 +713,8 @@ const HomePage: React.FC = () => {
                     padding: 8,
                     borderRadius: 8,
                     display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
                 >
                   <FaTimes size={16} />
@@ -688,6 +728,8 @@ const HomePage: React.FC = () => {
                   autoPlay
                   playsInline
                   style={{ width: '100%', height: '100%' }}
+                  // Sadece URL güncellendiğinde yeniden oynatmayı tetiklemek için key kullanılabilir
+                  key={preview.url} 
                 />
               </VideoShell>
 
