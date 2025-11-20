@@ -20,7 +20,8 @@ class WatchTogetherService {
 
   private readonly SERVER_URL =
     process.env.NODE_ENV === 'production'
-      ? process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : '')
+      ? process.env.REACT_APP_BACKEND_URL ||
+        (typeof window !== 'undefined' ? window.location.origin : '')
       : 'http://localhost:3001';
 
   connect() {

@@ -333,7 +333,7 @@ export const loadAllChannels = async (): Promise<Channel[]> => {
     const resp = await fetch('/api/channels');
     if (resp.ok) {
       const data = await resp.json();
-      const apiChannels = Array.isArray(data?.channels) ? data.channels as Channel[] : [];
+      const apiChannels = Array.isArray(data?.channels) ? (data.channels as Channel[]) : [];
       if (apiChannels.length) {
         writeCachePayload(apiChannels);
         return apiChannels;

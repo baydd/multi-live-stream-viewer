@@ -91,7 +91,7 @@ const resources = {
         start_hint: 'Start by selecting a country on the left.',
         source_link: 'Source Link',
         multi_tv_add: 'Add to Multi TV',
-        loading_error: 'Failed to load channels.'
+        loading_error: 'Failed to load channels.',
       },
       channel_selector: {
         select_channel: 'Select Channel',
@@ -282,7 +282,7 @@ const resources = {
         start_hint: 'Sol menüden bir ülke seçerek başla.',
         source_link: 'Kaynak Bağlantı',
         multi_tv_add: "Multi TV'ye Ekle",
-        loading_error: 'Kanallar yüklenemedi.'
+        loading_error: 'Kanallar yüklenemedi.',
       },
       channel_selector: {
         select_channel: 'Kanal Seç',
@@ -567,7 +567,7 @@ const resources = {
         start_hint: 'ابدأ باختيار دولة من القائمة اليسرى.',
         source_link: 'رابط المصدر',
         multi_tv_add: 'أضف إلى Multi TV',
-        loading_error: 'فشل تحميل القنوات.'
+        loading_error: 'فشل تحميل القنوات.',
       },
     },
   },
@@ -706,7 +706,7 @@ const resources = {
         start_hint: 'Comienza seleccionando un país en la izquierda.',
         source_link: 'Enlace de origen',
         multi_tv_add: 'Agregar a Multi TV',
-        loading_error: 'No se pudieron cargar los canales.'
+        loading_error: 'No se pudieron cargar los canales.',
       },
     },
   },
@@ -845,7 +845,7 @@ const resources = {
         start_hint: '从左侧选择一个国家开始。',
         source_link: '源链接',
         multi_tv_add: '添加到 Multi TV',
-        loading_error: '加载频道失败。'
+        loading_error: '加载频道失败。',
       },
     },
   },
@@ -985,7 +985,7 @@ const resources = {
         start_hint: 'Начните с выбора страны слева.',
         source_link: 'Ссылка на источник',
         multi_tv_add: 'Добавить в Multi TV',
-        loading_error: 'Не удалось загрузить каналы.'
+        loading_error: 'Не удалось загрузить каналы.',
       },
     },
   },
@@ -1125,7 +1125,7 @@ const resources = {
         start_hint: 'Comece selecionando um país à esquerda.',
         source_link: 'Link da fonte',
         multi_tv_add: 'Adicionar ao Multi TV',
-        loading_error: 'Falha ao carregar os canais.'
+        loading_error: 'Falha ao carregar os canais.',
       },
     },
   },

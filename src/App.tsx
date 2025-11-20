@@ -612,11 +612,7 @@ const AppContent: React.FC = () => {
               </div>
 
               <ButtonGroup>
-                <IconButton
-                  onClick={() => history.push('/')}
-                  title="Home"
-                  aria-label="Home"
-                >
+                <IconButton onClick={() => history.push('/')} title="Home" aria-label="Home">
                   <FaArrowLeft />
                 </IconButton>
                 <IconButton
