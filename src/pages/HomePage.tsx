@@ -3,7 +3,7 @@ import styled, { createGlobalStyle, keyframes } from 'styled-components';
 import { Link } from 'react-router-dom';
 import Hls from 'hls.js';
 import Globe, { GlobeMethods } from 'react-globe.gl';
-import { FaTv, FaSearch, FaTimes, FaPlay, FaGlobe, FaChevronLeft, FaBell } from 'react-icons/fa';
+import { FaTv, FaSearch, FaTimes, FaPlay, FaGlobe, FaChevronLeft, FaBell, FaInfoCircle } from 'react-icons/fa';
 import { loadAllChannels, Channel } from '../utils/m3uParser';
 import { useTranslation } from 'react-i18next';
 import ChannelList from '../components/ChannelList';
@@ -102,6 +102,56 @@ const TopButton = styled(StatBadge)`
 const LanguageButton = styled(StatBadge)`
   cursor: pointer;
   gap: 8px;
+`;
+
+const LeftDock = styled.div`
+  position: fixed;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  @media (max-width: 600px) {
+    top: auto;
+    bottom: 16px;
+    transform: none;
+  }
+`;
+
+const DockButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(56, 189, 248, 0.15);
+    border-color: rgba(56, 189, 248, 0.5);
+    transform: translateY(-2px);
+  }
+
+  span {
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  @media (max-width: 768px) {
+    padding: 10px;
+    span {
+      display: none;
+    }
+  }
 `;
 
 // Sağ Panel (Kanal Listesi)
@@ -333,6 +383,7 @@ const HomePage: React.FC = () => {
   const [quakes, setQuakes] = useState<Quake[]>([]);
   const [selectedQuake, setSelectedQuake] = useState<Quake | null>(null);
   const [lastQuakeClickAt, setLastQuakeClickAt] = useState(0);
+  const [showInfo, setShowInfo] = useState(false);
 
   const getLanguageLabel = (lang: Language) => {
     const labels: Record<Language, string> = {
@@ -356,8 +407,13 @@ const HomePage: React.FC = () => {
     saveSettings({ language: next });
   };
 
-  // Hook: HLS Player Logic
-  useHls(preview?.url ?? null, videoEl);
+  useHls(((window as any).Playerjs ? null : (preview?.url ?? null)) as any, videoEl);
+
+  useEffect(() => {
+    const P = (window as any).Playerjs;
+    if (!P || !preview?.url) return;
+    new P({ id: 'preview_player', file: preview.url, hls: 1 });
+  }, [preview?.url]);
 
   // --- EFFECT: Load Data ---
   useEffect(() => {
@@ -767,6 +823,13 @@ const HomePage: React.FC = () => {
           </ChannelGrid>
         </SidePanel>
 
+        <LeftDock>
+          <DockButton onClick={() => setShowInfo(true)}>
+            <FaInfoCircle />
+            <span>{t('home.features_button')}</span>
+          </DockButton>
+        </LeftDock>
+
         {/* --- PREVIEW MODAL --- */}
         {preview && (
           <Overlay onClick={() => setPreview(null)}>
@@ -803,15 +866,18 @@ const HomePage: React.FC = () => {
               </ModalHeader>
 
               <VideoShell>
-                <video
-                  ref={setVideoEl}
-                  controls
-                  autoPlay
-                  playsInline
-                  style={{ width: '100%', height: '100%' }}
-                  // Sadece URL güncellendiğinde yeniden oynatmayı tetiklemek için key kullanılabilir
-                  key={preview.url} 
-                />
+                {typeof (window as any).Playerjs !== 'undefined' ? (
+                  <div id="preview_player" style={{ width: '100%', height: '100%' }} />
+                ) : (
+                  <video
+                    ref={setVideoEl}
+                    controls
+                    autoPlay
+                    playsInline
+                    style={{ width: '100%', height: '100%' }}
+                    key={preview.url}
+                  />
+                )}
               </VideoShell>
 
               <div
@@ -851,6 +917,78 @@ const HomePage: React.FC = () => {
                 >
                   {t('home.multi_tv_add') || 'Add to Multi TV'}
                 </Link>
+              </div>
+            </Modal>
+          </Overlay>
+        )}
+
+        {showInfo && (
+          <Overlay onClick={() => setShowInfo(false)}>
+            <Modal onClick={(e) => e.stopPropagation()}>
+              <ModalHeader>
+                <strong style={{ fontSize: 18 }}>{t('home.features_title')}</strong>
+                <button
+                  onClick={() => setShowInfo(false)}
+                  style={{
+                    background: 'rgba(255,255,255,0.1)',
+                    border: 'none',
+                    color: '#fff',
+                    cursor: 'pointer',
+                    padding: 8,
+                    borderRadius: 8,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <FaTimes size={16} />
+                </button>
+              </ModalHeader>
+              <div style={{ padding: 20, display: 'grid', gap: 16 }}>
+                <div style={{ opacity: 0.9, fontSize: 15 }}>{t('home.features_intro')}</div>
+                <div style={{ display: 'grid', gap: 8 }}>
+                  <div style={{ fontWeight: 700 }}>{t('home.features_highlights_title')}</div>
+                  <ul style={{ margin: 0, paddingLeft: 18, display: 'grid', gap: 6 }}>
+                    <li>{t('home.features_item_country_channels')}</li>
+                    <li>{t('home.features_item_quakes_map')}</li>
+                    <li>{t('home.features_item_multi_player')}</li>
+                    <li>{t('home.features_item_watch_together')}</li>
+                    <li>{t('home.features_item_platforms')}</li>
+                    <li>{t('home.features_item_chat_voice')}</li>
+                    <li>{t('home.features_item_share_layouts')}</li>
+                    <li>{t('home.features_item_save_load_settings')}</li>
+                    <li>{t('home.features_item_chrome_extension')}</li>
+                    <li>{t('home.features_item_layout_resize')}</li>
+                    <li>{t('home.features_item_shortcuts')}</li>
+                  </ul>
+                </div>
+                <div style={{ display: 'grid', gap: 8 }}>
+                  <div style={{ fontWeight: 700 }}>{t('home.features_tips_title')}</div>
+                  <ul style={{ margin: 0, paddingLeft: 18, display: 'grid', gap: 6 }}>
+                    <li>{t('home.features_tip_click_country')}</li>
+                    <li>
+                      {t('home.features_tip_open_multi')} <Link to="/app">{t('home.multi_tv_cta')}</Link>
+                    </li>
+                    <li>{t('home.features_tip_drag_resize')}</li>
+                    <li>{t('home.features_tip_paste_link')}</li>
+                  </ul>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <Link
+                    to="/app"
+                    style={{
+                      background: '#0ea5e9',
+                      color: '#fff',
+                      padding: '10px 20px',
+                      borderRadius: 8,
+                      textDecoration: 'none',
+                      fontWeight: 600,
+                      border: 'none',
+                    }}
+                  >
+                    {t('home.features_cta_open_multi')}
+                  </Link>
+                </div>
               </div>
             </Modal>
           </Overlay>

@@ -650,6 +650,19 @@ const HLSPlayer: React.FC<{
   );
 };
 
+const PlayerJSPlayer: React.FC<{
+  id: string;
+  url: string;
+}> = ({ id, url }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const P = (window as any).Playerjs;
+    if (!P) return;
+    new P({ id, file: url, hls: 1 });
+  }, [id, url]);
+  return <div id={id} ref={containerRef} style={{ width: '100%', height: '100%' }} />;
+};
+
 const StreamCard: React.FC<StreamCardProps> = ({
   stream,
   onRemove,
@@ -847,13 +860,10 @@ const StreamCard: React.FC<StreamCardProps> = ({
             />
           );
         case 'hls':
-          return (
-            <HLSPlayer
-              url={stream.url}
-              isMuted={isMuted}
-              onError={handleError}
-              videoRef={videoRef}
-            />
+          return typeof (window as any).Playerjs !== 'undefined' ? (
+            <PlayerJSPlayer id={`playerjs_${stream.id}`} url={stream.url} />
+          ) : (
+            <HLSPlayer url={stream.url} isMuted={isMuted} onError={handleError} videoRef={videoRef} />
           );
         case 'dash':
           return (
